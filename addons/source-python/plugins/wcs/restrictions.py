@@ -24,14 +24,17 @@ def load():
         userid = player.userid
         restrictions[userid] = ""	
 
-@ServerCommand('restrict')
+@ServerCommand('wcs_restrict')
 def command_restrict(command):
     index = index_from_userid(int(command[1]))
     weapons = str(command[2])
-    reverse = int(command[3])
+    if len(command) > 3:
+        reverse = int(command[3])
+    else:
+        reverse = 0
     restrict(index, weapons, reverse)
 
-@ServerCommand('unrestrict')
+@ServerCommand('wcs_unrestrict')
 def command_unrestrict(command):
     index = index_from_userid(int(command[1]))
     weapons = str(command[2])
