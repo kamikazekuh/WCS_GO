@@ -1,0 +1,4 @@
+block load
+{
+	es_load wcs/tools/abilities/warden
+}
