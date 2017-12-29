@@ -1,8 +1,17 @@
 block load
 {
-es_load wcs/tools/abilities
-es_load wcs/tools/foreach
-es_load wcs/tools/nearcoord
-es_load wcs/tools/ultimates
-es_load wcs/tools/xcommands
+	es_load wcs/tools/abilities
+	es_load wcs/tools/foreach
+	es_load wcs/tools/nearcoord
+	es_load wcs/tools/ultimates
+	es_load wcs/tools/xcommands
+}
+
+block unload
+{
+	es_unload wcs/tools/abilities
+	es_unload wcs/tools/foreach
+	es_unload wcs/tools/nearcoord
+	es_unload wcs/tools/ultimates
+	es_unload wcs/tools/xcommands
 }
