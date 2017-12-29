@@ -1,0 +1,8 @@
+block load
+{
+es_load wcs/tools/abilities
+es_load wcs/tools/foreach
+es_load wcs/tools/nearcoord
+es_load wcs/tools/ultimates
+es_load wcs/tools/xcommands
+}
