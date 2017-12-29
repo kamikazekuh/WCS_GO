@@ -74,8 +74,6 @@ public OnPluginStart()
 	RegServerCmd("wcs_give", GivePlayer);
 	RegServerCmd("wcs_dealdamage", DoDamage);
 	RegServerCmd("wcs_getwallbetween", GetWall_Register);
-	RegServerCmd("wcs_changeteam", ChangeTeam);
-	RegServerCmd("wcs_getplayerindex", GetIndex);
 	RegServerCmd("wcs_getgravity", GravityGet);
 	RegServerCmd("wcs_getgun", GunGet);
 	RegServerCmd("wcs_getdistance", DistanceRegister);
@@ -86,7 +84,6 @@ public OnPluginStart()
 	RegServerCmd("wcs_setdeaths", SetDeathRegister);
 	RegServerCmd("wcs_getscore", GetScoreRegister);
 	RegServerCmd("wcs_setscore", SetScoreRegister);
-	RegServerCmd("wcs_removeweapon", RemoveWeaponRegister);
 	RegServerCmd("wcs_shake", ShakeRegister);
 	RegServerCmd("wcs_getsmadmin", AdminRegister);
 	RegServerCmd("wcs_entitygethealth", EntityGetHealthRegister);
@@ -99,9 +96,7 @@ public OnPluginStart()
 	RegServerCmd("wcs_effect_prop", PropEffect);
 	RegServerCmd("wcs_geteyecoords", EyeCoords);
 	velocity = FindSendPropOffs( "CBasePlayer", "m_vecBaseVelocity" );
-	RegServerCmd("wcs_push", PushRegister);
 	cvModel = CreateConVar("sm_tripmines_model", "models/props_lab/tpplug.mdl");
-	RegServerCmd("wcs_tripmine", Command_TripMine, "");
 	HookEvent("player_hurt", Event_PlayerHurt, EventHookMode_Pre);
 	HookEvent("round_start", Event_RoundStart);
 	HookEvent("round_end", Event_RoundEnd);
