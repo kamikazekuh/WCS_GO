@@ -53,6 +53,7 @@ from wcs import saycommands
 from wcs import setfx
 from wcs import shopinfo
 from wcs import shopmenu
+from wcs import showitems
 from wcs import showskills
 from wcs import spendskills
 from wcs import svar
@@ -77,7 +78,6 @@ color_codes = ['\x03', '\x04', '\x05', '\x06', '\x07']
 
 #Config Part
 addon_config = ConfigManager('wcs')
-interval = addon_config.cvar('wcs_cfg_interval', '90')
 interval = addon_config.cvar('wcs_cfg_interval', '80')
 bonusxp = addon_config.cvar('wcs_cfg_bonusxp', '80')
 killxp = addon_config.cvar('wcs_cfg_killxp', '80')
@@ -1296,9 +1296,10 @@ def round_end(event):
 	gamestarted = 0
 	for player in PlayerIter():
 		userid = player.userid
-		queue_command_string('playerset color %s 255 255 255 255' % userid)
+		queue_command_string('wcs_color %s 255 255 255 255' % userid)
 		queue_command_string('wcs_setgravity %s 1.0' % userid)
-		queue_command_string('playerset speed %s 1.0' % userid)
+		queue_command_string('es playerset speed %s 1.0' % userid)
+		queue_command_string('es wcsgroup set longjump %s 1.0' % userid)
 		if player.team >= 2:
 			race = getPlayer(userid).player.currace
 			raceinfo = racedb.getRace(race)
