@@ -18,11 +18,12 @@ def showitems_menu_build(menu, index):
 	items = shopmenu.items
 	for x in items[player.userid]:
 		for y in items[player.userid][x]:
-			for z in item_ini:
-				if y in item_ini[z]:
-					name = item_ini[z][y]['name']
-					option = PagedOption('%s' % str(name), name)
-					menu.append(option)
+			if int(items[player.userid][x][y]) > 0:
+				for z in item_ini:
+					if y in item_ini[z]:
+						name = item_ini[z][y]['name']
+						option = PagedOption('%s' % str(name), name)
+						menu.append(option)
 		
 					
 def showitems_menu_select(menu, index, choice):
@@ -36,11 +37,15 @@ def _showitems_command(command, index, team=None):
 	items = shopmenu.items
 	count = 0
 	for x in items[player.userid]:
-		count += 1
+		for y in items[player.userid][x]:
+			if items[player.userid][x][y] > 0:
+				count += 1
 	if count > 0:
 		showitem_menu = PagedMenu(title='Inventory', build_callback=showitems_menu_build, select_callback=showitems_menu_select)
 		showitem_menu.send(index)
 	else:
 		SayText2("\x04[WCS] \x05You don't have any items!").send(index)
+					
+				
 					
 				
