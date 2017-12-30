@@ -14,6 +14,7 @@ from listeners import OnLevelInit
 from filters.players import PlayerIter
 import random
 from cvars import ConVar
+import core
 
 
 
@@ -199,7 +200,6 @@ def checkEvent(userid, event):
 			if event in items[userid]:
 				for item in items[userid][event]:
 					v = items[userid][event][item]
-
 					item, section = item, wcs.wcs.itemdb.getSectionFromItem(item)
 					iteminfo = wcs.wcs.ini.getItems[section][item]
 
@@ -208,10 +208,22 @@ def checkEvent(userid, event):
 
 					while v > 0:
 						if (iteminfo['cfg'] == 'player_buy' or event == 'player_buy') and iteminfo['cmdbuy']:
-							execute_server_command('es',iteminfo['cmdbuy'])
+							settings = iteminfo['cmdbuy']
+							if ';' in settings:
+								sub_settings = settings.split(';')
+								for com in sub_settings:
+									execute_server_command('es', com)
+							else:
+								execute_server_command('es', settings)
 
 						elif iteminfo['cmdactivate']:
-							execute_server_command('es',iteminfo['cmdactivate'])
+							settings = iteminfo['cmdactivate']
+							if ';' in settings:
+								sub_settings = settings.split(';')
+								for com in sub_settings:
+									execute_server_command('es', com)
+							else:
+								execute_server_command('es', settings)						
 
 						v -= 1
 							
@@ -237,8 +249,6 @@ def checkBuy(userid, item):
 def player_death(event):
 	victim = event.get_int('userid')
 	attacker = event.get_int('attacker')
-	assister = event.get_int('assister')
-	headshot = event.get_int('headshot')
 	weapon = event.get_string('weapon')
 	vic_entity = Player(index_from_userid(victim))
 
@@ -261,12 +271,7 @@ def player_death(event):
 def player_hurt(event):
 	victim = event.get_int('userid')
 	attacker = event.get_int('attacker')
-	health = event.get_int('health')
-	armor = event.get_int('armor')
 	weapon = event.get_string('weapon')
-	dmg_health = event.get_int('dmg_health')
-	dmg_armor = event.get_int('dmg_armor')
-	hitgroup = event.get_int('hitgroup')
 	
 	if victim:  
 		vic_entity = Player(index_from_userid(victim))
@@ -275,6 +280,7 @@ def player_hurt(event):
 	if attacker and victim and not weapon.lower() in ('point_hurt'):
 		if not victim == attacker:
 			if not atk_entity.team == vic_entity.team:
+				core.console_message('Yay')
 				checkEvent(victim, 'player_victim')
 				checkEvent(attacker, 'player_attacker')
 		checkEvent(victim, 'player_hurt')
