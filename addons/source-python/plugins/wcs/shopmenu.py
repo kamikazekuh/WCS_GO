@@ -214,7 +214,7 @@ def checkEvent(userid, event):
 
 					while v > 0:
 						if (iteminfo['cfg'] == 'player_buy' or event == 'player_buy') and iteminfo['cmdbuy']:
-							settings = iteminfo['cmdbuy']
+							settings = str(iteminfo['cmdbuy'])
 							if ';' in settings:
 								sub_settings = settings.split(';')
 								for com in sub_settings:
@@ -223,8 +223,9 @@ def checkEvent(userid, event):
 								execute_server_command('es', settings)
 
 						elif iteminfo['cmdactivate']:
-							settings = iteminfo['cmdactivate']
+							settings = str(iteminfo['cmdactivate'])
 							if ';' in settings:
+								core.console_message('testtesttest')
 								sub_settings = settings.split(';')
 								for com in sub_settings:
 									execute_server_command('es', com)
@@ -251,16 +252,16 @@ def checkBuy(userid, item):
 				sub_settings = settings.split(';')
 				for com in sub_settings:
 					execute_server_command('es', com)
-				else:
-					execute_server_command('es', settings)
+			else:
+				execute_server_command('es', settings)
 		elif iteminfo['cmdbuy']:
 			settings = iteminfo['cmdbuy']
 			if ';' in settings:
 				sub_settings = settings.split(';')
 				for com in sub_settings:
 					execute_server_command('es', com)
-				else:
-					execute_server_command('es', settings)
+			else:
+				execute_server_command('es', settings)
 	
 
 #Shopmenu Execution Stuff
@@ -360,6 +361,10 @@ def load():
 
 def unload():
 	items.clear()
+
+					
+					
+
 
 					
 					
