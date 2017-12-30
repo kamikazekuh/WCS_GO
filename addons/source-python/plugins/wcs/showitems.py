@@ -47,5 +47,4 @@ def _showitems_command(command, index, team=None):
 		SayText2("\x04[WCS] \x05You don't have any items!").send(index)
 					
 				
-					
 				
