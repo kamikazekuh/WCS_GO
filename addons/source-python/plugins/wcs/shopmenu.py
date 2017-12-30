@@ -5,7 +5,7 @@ from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
 from messages import SayText2
-from engines.server import queue_command_string
+from engines.server import queue_command_string,execute_server_command
 import wcs
 from wcs.extensions import PagedMenu
 import wcs.events
@@ -13,7 +13,7 @@ from events import Event
 from listeners import OnLevelInit
 from filters.players import PlayerIter
 import random
-
+from cvars import ConVar
 
 
 
@@ -56,7 +56,7 @@ def canBuy(userid, item, pay=True):
 		cfg = iteminfo['cfg']
 		if cfg in items[userid]:
 			if item in items[userid][cfg]:
-				if int(iteminfo['max']) and items[userid][cfg][item] >= int(iteminfo['max']):
+				if int(iteminfo['max']) and items[userid][cfg][item] <= int(iteminfo['max']):
 					return 1
 			
 		payment = player_entity.cash
@@ -188,42 +188,34 @@ def addItem(userid, item, pay=True, tell=True):
 		diffience = int(iteminfo['level']) - int(player.race.level)
 		if tell:
 			wcs.wcs.tell(userid, "\x04[WCS] \x05Sorry, you have not the required level, difference is \x04%s." % diffience)
+			
 
-
-def checkEvent(userid, event, other_userid=0, health=0, armor=0, weapon='', dmg_health=0, dmg_armor=0, hitgroup=0,assister=0,headshot=0):
+							
+def checkEvent(userid, event):
 	userid = int(userid)
-	player_entity = Player(index_from_userid(userid))
-	if userid is not None:
-		if int(player_entity.team) > 1:
-			if userid in items:
-				if event in items[userid]:
-					for item in items[userid][event]:
-						v = items[userid][event][item]
+	player = Player.from_userid(userid)
+	if player.team > 1:
+		if userid in items:
+			if event in items[userid]:
+				for item in items[userid][event]:
+					v = items[userid][event][item]
 
-						item, section = item, wcs.wcs.itemdb.getSectionFromItem(item)
-						iteminfo = wcs.wcs.ini.getItems[section][item]
-						if event == iteminfo['cfg'] and iteminfo['cmdactivate']:
-								if event == 'player_spawn':
-									command = wcs.wcs.format_command_spawn(iteminfo['cmdactivate'], userid)
-								elif event == 'player_kill':
-									command = wcs.wcs.format_command_kill(iteminfo['cmdactivate'], userid, other_userid, assister, headshot, weapon)
-								elif event == 'player_death':
-									command = wcs.wcs.format_command_death(iteminfo['cmdactivate'], userid, other_userid, assister, headshot, weapon)
-								elif event == 'player_attacker':
-									command = wcs.wcs.format_command_attacker(iteminfo['cmdactivate'], userid, other_userid, health, armor, weapon, dmg_health, dmg_armor, hitgroup)
-								elif event == 'player_victim':
-									command = wcs.wcs.format_command_victim(iteminfo['cmdactivate'], userid, other_userid, health, armor, weapon, dmg_health, dmg_armor, hitgroup)
-								queue_command_string(command)
-						while v > 0:
-							if iteminfo['cfg'] == 'player_buy' and iteminfo['cmdactivate']:
-								command = wcs.wcs.format_command(iteminfo['cmdactivate'], userid)
-								queue_command_string(command)
-							elif iteminfo['cmdbuy']:
-								command = wcs.wcs.format_command(iteminfo['cmdbuy'], userid)
-								queue_command_string(command)
+					item, section = item, wcs.wcs.itemdb.getSectionFromItem(item)
+					iteminfo = wcs.wcs.ini.getItems[section][item]
 
-							v -= 1
+					ConVar('wcs_userid').set_int(userid)
+					ConVar('wcs_dice').set_int(random.randint(0, 100))
 
+					while v > 0:
+						if (iteminfo['cfg'] == 'player_buy' or event == 'player_buy') and iteminfo['cmdbuy']:
+							execute_server_command('es',iteminfo['cmdbuy'])
+
+						elif iteminfo['cmdactivate']:
+							execute_server_command('es',iteminfo['cmdactivate'])
+
+						v -= 1
+							
+							
 def checkBuy(userid, item):
 	userid = int(userid)
 	iteminfo = wcs.wcs.ini.getItems[wcs.wcs.itemdb.getSectionFromItem(item)][item]
@@ -233,12 +225,12 @@ def checkBuy(userid, item):
 	else:
 		is_dead = 1
 	if is_dead == int(iteminfo['dab']) or int(iteminfo['dab']) == 2:
+		ConVar('wcs_userid').set_int(userid)
+		ConVar('wcs_dice').set_int(random.randint(0, 100))
 		if iteminfo['cfg'] == 'player_buy' and iteminfo['cmdactivate']:
-			command = wcs.wcs.format_command(iteminfo['cmdactivate'], userid)
-			queue_command_string(command)
+			execute_server_command('es',iteminfo['cmdactivate'])
 		elif iteminfo['cmdbuy']:
-			command = wcs.wcs.format_command(iteminfo['cmdbuy'], userid)
-			queue_command_string(command)
+			execute_server_command('es',iteminfo['cmdbuy'])	
 			
 #Shopmenu Execution Stuff
 @Event('player_death')					
@@ -254,8 +246,8 @@ def player_death(event):
 		atk_entity = Player(index_from_userid(attacker))
 		if not victim == attacker:
 			if not atk_entity.team == vic_entity.team:
-				checkEvent(victim,  'player_death',other_userid=attacker, assister=assister, headshot=headshot,weapon=weapon)
-				checkEvent(attacker, 'player_kill', other_userid=victim, assister=assister, headshot=headshot,weapon=weapon)
+				checkEvent(victim,  'player_death')
+				checkEvent(attacker, 'player_kill')
 
 	if victim and not attacker:
 		checkEvent(victim,  'player_death')
@@ -283,9 +275,9 @@ def player_hurt(event):
 	if attacker and victim and not weapon.lower() in ('point_hurt'):
 		if not victim == attacker:
 			if not atk_entity.team == vic_entity.team:
-				checkEvent(victim, 'player_victim', other_userid=attacker, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
-				checkEvent(attacker, 'player_attacker', other_userid=victim, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
-		checkEvent(victim, 'player_hurt', other_userid=attacker, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
+				checkEvent(victim, 'player_victim')
+				checkEvent(attacker, 'player_attacker')
+		checkEvent(victim, 'player_hurt')
 
 @Event('player_spawn')
 def player_spawn(event):
