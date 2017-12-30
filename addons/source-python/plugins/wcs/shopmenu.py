@@ -14,7 +14,6 @@ from listeners import OnLevelInit
 from filters.players import PlayerIter
 import random
 from cvars import ConVar
-import core
 
 
 
@@ -240,9 +239,21 @@ def checkBuy(userid, item):
 		ConVar('wcs_userid').set_int(userid)
 		ConVar('wcs_dice').set_int(random.randint(0, 100))
 		if iteminfo['cfg'] == 'player_buy' and iteminfo['cmdactivate']:
-			execute_server_command('es',iteminfo['cmdactivate'])
+			settings = iteminfo['cmdactivate']
+			if ';' in settings:
+				sub_settings = settings.split(';')
+				for com in sub_settings:
+					execute_server_command('es', com)
+				else:
+					execute_server_command('es', settings)
 		elif iteminfo['cmdbuy']:
-			execute_server_command('es',iteminfo['cmdbuy'])	
+			settings = iteminfo['cmdbuy']
+			if ';' in settings:
+				sub_settings = settings.split(';')
+				for com in sub_settings:
+					execute_server_command('es', com)
+				else:
+					execute_server_command('es', settings)
 			
 #Shopmenu Execution Stuff
 @Event('player_death')					
@@ -280,7 +291,6 @@ def player_hurt(event):
 	if attacker and victim and not weapon.lower() in ('point_hurt'):
 		if not victim == attacker:
 			if not atk_entity.team == vic_entity.team:
-				core.console_message('Yay')
 				checkEvent(victim, 'player_victim')
 				checkEvent(attacker, 'player_attacker')
 		checkEvent(victim, 'player_hurt')
