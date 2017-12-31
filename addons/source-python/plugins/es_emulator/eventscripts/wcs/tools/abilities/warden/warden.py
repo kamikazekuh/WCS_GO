@@ -1,11 +1,9 @@
 import es
-import core
 from wcs import wcsgroup
 from wcs.xtell import tell
 
 
 def warden():
-	core.console_message("ASDF")
 	userid = str(es.ServerVar('wcs_userid'))
 	count = int(wcsgroup.getUser(userid, 'ability_count'))
 
@@ -28,7 +26,6 @@ def warden():
 				color = '10 0 255 150'
 
 			x,y,z = es.getplayerlocation(userid)
-			core.console_message('wcs_warden '+userid+' '+param[0]+' '+param[1]+' '+param[2]+' '+teamtarget+' '+teamtargetn+' '+str(x)+' '+str(y)+' '+str(z)+' '+str(es.ServerVar('wcs_wardencounter')))
 			es.server.queuecmd('wcs_warden '+userid+' '+param[0]+' '+param[1]+' '+param[2]+' '+teamtarget+' '+teamtargetn+' '+str(x)+' '+str(y)+' '+str(z)+' '+str(es.ServerVar('wcs_wardencounter')))
 
 			tell(userid, 'a_wardencreated')
