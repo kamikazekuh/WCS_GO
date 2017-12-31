@@ -37,4 +37,4 @@ def warden():
 			wcsgroup.setUser(userid, 'ability_count', count-1)
 
 	else:
-		wcs.tell(userid, 'a_failed')
+		tell(userid, 'a_failed')
