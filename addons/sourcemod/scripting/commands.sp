@@ -42,8 +42,15 @@
 #define TRACE_START 24.0
 #define TRACE_END 64.0
 
+#define MDL_LASER "sprites/laser.vmt"
+
+#define SND_MINEPUT "npc/roller/blade_cut.wav"
+#define SND_MINEACT "npc/roller/mine/rmine_blades_in2.wav"
+
 #define TEAM_T 2
 #define TEAM_CT 3
+
+new gCount = 1;
 
 #define COLOR_T "255 0 0"
 #define COLOR_CT "0 0 255"
@@ -51,18 +58,33 @@
 
 #define MAX_LINE_LEN 256
 
+new bool:b_roundIsOver;
 new i_HasAnti[MAXPLAYERS+1];
 new i_Chance[MAXPLAYERS+1];
 new random;
+new String:mdlMine[256];
+new velocity;
+new Handle:cvModel = INVALID_HANDLE;
 
 new Handle:c_var = INVALID_HANDLE;
 new Handle:trace = INVALID_HANDLE;
 
 public OnPluginStart()
 {
+	RegServerCmd("wcs_getviewplayer", ViewPlayer);
+	RegServerCmd("wcs_getviewindex", ViewIndex);
 	RegServerCmd("wcs_give", GivePlayer);
 	RegServerCmd("wcs_dealdamage", DoDamage);
+	RegServerCmd("wcs_drop", DropPlayer);
+	RegServerCmd("wcs_spawn", SpawnPlayer);
+	RegServerCmd("wcs_strip", StripPlayer);
+	RegServerCmd("wcs_setgravity", SetGravityPlayer);
+	RegServerCmd("wcs_fire", FirePlayer);
+	RegServerCmd("wcs_exstinguish", ExtingPlayer);
 	RegServerCmd("wcs_getwallbetween", GetWall_Register);
+	RegServerCmd("wcs_changeteam", ChangeTeam);
+	RegServerCmd("wcs_color", ColorRegister);
+	RegServerCmd("wcs_getplayerindex", GetIndex);
 	RegServerCmd("wcs_getgravity", GravityGet);
 	RegServerCmd("wcs_getgun", GunGet);
 	RegServerCmd("wcs_getdistance", DistanceRegister);
@@ -73,6 +95,7 @@ public OnPluginStart()
 	RegServerCmd("wcs_setdeaths", SetDeathRegister);
 	RegServerCmd("wcs_getscore", GetScoreRegister);
 	RegServerCmd("wcs_setscore", SetScoreRegister);
+	RegServerCmd("wcs_removeweapon", RemoveWeaponRegister);
 	RegServerCmd("wcs_shake", ShakeRegister);
 	RegServerCmd("wcs_getsmadmin", AdminRegister);
 	RegServerCmd("wcs_entitygethealth", EntityGetHealthRegister);
@@ -84,8 +107,36 @@ public OnPluginStart()
 	RegServerCmd("wcs_leech", LeechPlayer);
 	RegServerCmd("wcs_effect_prop", PropEffect);
 	RegServerCmd("wcs_geteyecoords", EyeCoords);
+	velocity = FindSendPropOffs( "CBasePlayer", "m_vecBaseVelocity" );
+	RegServerCmd("wcs_push", PushRegister);
+	cvModel = CreateConVar("sm_tripmines_model", "models/props_lab/tpplug.mdl");
+	RegServerCmd("wcs_tripmine", Command_TripMine, "");
 	HookEvent("player_hurt", Event_PlayerHurt, EventHookMode_Pre);
+	HookEvent("round_start", Event_RoundStart);
+	HookEvent("round_end", Event_RoundEnd);
 	HookEvent("player_spawn", Event_PlayerSpawn);
+}
+
+public Action:PushRegister(args)
+{
+	new Float:vecvel[3];
+	new String:userid[128];
+	new String:x1[128];
+	new String:y1[128];
+	new String:z1[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, x1, sizeof(x1));
+	GetCmdArg(3, y1, sizeof(y1));
+	GetCmdArg(4, z1, sizeof(z1));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	new Float:f_x1 = StringToFloat(x1);
+	new Float:f_y1 = StringToFloat(y1);
+	new Float:f_z1 = StringToFloat(z1);
+	vecvel[0] = f_x1;
+	vecvel[1] = f_y1;
+	vecvel[2] = f_z1;
+	SetEntDataVector(useridc, velocity, vecvel);
 }
 
 public Action:EyeCoords(args)
@@ -146,6 +197,167 @@ public Action:Prop_Remove(Handle:timer, any:g_iEnt)
 	timer = INVALID_HANDLE;
 }
 
+public Action:Command_TripMine(args)
+{ 
+	new String:client_s[128];
+	GetCmdArg(1, client_s, sizeof(client_s));
+	new client_i = StringToInt(client_s);
+	new client = GetClientOfUserId(client_i);
+	if (!IsPlayerAlive(client))
+		return Plugin_Handled;
+    
+	SetMine(client);
+	return Plugin_Handled;
+}
+
+SetMine(client)
+{
+  
+	new String:beam[64];
+	new String:beammdl[64];
+	new String:tmp[128];
+	Format(beam, sizeof(beam), "tmbeam%d", gCount);
+	Format(beammdl, sizeof(beammdl), "tmbeammdl%d", gCount);
+	gCount++;
+	if (gCount>10000)
+	{
+		gCount = 1;
+	}
+  
+	decl Float:start[3], Float:angle[3], Float:end[3], Float:normal[3], Float:beamend[3];
+	GetClientEyePosition( client, start );
+	GetClientEyeAngles( client, angle );
+	GetAngleVectors(angle, end, NULL_VECTOR, NULL_VECTOR);
+	NormalizeVector(end, end);
+
+	start[0]=start[0]+end[0]*TRACE_START;
+	start[1]=start[1]+end[1]*TRACE_START;
+	start[2]=start[2]+end[2]*TRACE_START;
+  
+	end[0]=start[0]+end[0]*TRACE_END;
+	end[1]=start[1]+end[1]*TRACE_END;
+	end[2]=start[2]+end[2]*TRACE_END;
+  
+	TR_TraceRayFilter(start, end, CONTENTS_SOLID, RayType_EndPoint, FilterAll, 0);
+  
+	if (TR_DidHit(INVALID_HANDLE))
+	{
+		TR_GetEndPosition(end, INVALID_HANDLE);
+		TR_GetPlaneNormal(INVALID_HANDLE, normal);
+		GetVectorAngles(normal, normal);
+    
+		TR_TraceRayFilter(end, normal, CONTENTS_SOLID, RayType_Infinite, FilterAll, 0);
+		TR_GetEndPosition(beamend, INVALID_HANDLE);
+    
+
+		new ent = CreateEntityByName("prop_physics_override");
+		SetEntityModel(ent,mdlMine);
+		SetEntProp(ent, Prop_Send, "m_usSolidFlags", 152);
+		SetEntProp(ent, Prop_Send, "m_CollisionGroup", 1);
+		SetEntProp(ent, Prop_Data, "m_MoveCollide", 0);
+		SetEntProp(ent, Prop_Send, "m_nSolidType", 6);
+		SetEntPropEnt(ent, Prop_Data, "m_hLastAttacker", client);
+		DispatchKeyValue(ent, "targetname", beammdl);
+		DispatchKeyValue(ent, "ExplodeRadius", "256");
+		DispatchKeyValue(ent, "ExplodeDamage", "400");
+		Format(tmp, sizeof(tmp), "%s,Break,,0,-1", beammdl);
+		DispatchKeyValue(ent, "OnHealthChanged", tmp);
+		Format(tmp, sizeof(tmp), "%s,Kill,,0,-1", beam);
+		DispatchKeyValue(ent, "OnBreak", tmp);
+		SetEntProp(ent, Prop_Data, "m_takedamage", 2);
+		DispatchSpawn(ent);
+		ActivateEntity(ent);
+		TeleportEntity(ent, end, normal, NULL_VECTOR);
+		AcceptEntityInput(ent, "DisableMotion");
+		HookSingleEntityOutput(ent, "OnBreak", mineBreak, true);
+
+		ent = CreateEntityByName("env_beam");
+		TeleportEntity(ent, beamend, NULL_VECTOR, NULL_VECTOR);
+		SetEntityModel(ent, MDL_LASER);
+		DispatchKeyValue(ent, "texture", MDL_LASER);
+		DispatchKeyValue(ent, "targetname", beam);
+		DispatchKeyValue(ent, "TouchType", "4");
+		DispatchKeyValue(ent, "LightningStart", beam);
+		DispatchKeyValue(ent, "BoltWidth", "4.0");
+		DispatchKeyValue(ent, "life", "0");
+		DispatchKeyValue(ent, "rendercolor", "0 0 0");
+		DispatchKeyValue(ent, "renderamt", "0");
+		DispatchKeyValue(ent, "HDRColorScale", "1.0");
+		DispatchKeyValue(ent, "decalname", "Bigshot");
+		DispatchKeyValue(ent, "StrikeTime", "0");
+		DispatchKeyValue(ent, "TextureScroll", "35");
+		Format(tmp, sizeof(tmp), "%s,Break,,0,-1", beammdl);
+		DispatchKeyValue(ent, "OnTouchedByEntity", tmp);   
+		SetEntPropVector(ent, Prop_Data, "m_vecEndPos", end);
+		SetEntPropFloat(ent, Prop_Data, "m_fWidth", 4.0);
+		AcceptEntityInput(ent, "TurnOff");
+
+		new Handle:data = CreateDataPack();
+		CreateTimer(2.0, TurnBeamOn, data);
+		WritePackCell(data, client);
+		WritePackCell(data, ent);
+		WritePackFloat(data, end[0]);
+		WritePackFloat(data, end[1]);
+		WritePackFloat(data, end[2]);
+    
+		EmitSoundToAll(SND_MINEPUT, ent, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, 100, ent, end, NULL_VECTOR, true, 0.0);
+    
+	}
+	else
+	{
+		PrintHintText(client, "Invalid location for Tripmine");
+	}
+}
+
+public Action:TurnBeamOn(Handle:timer, Handle:data)
+{
+	decl String:color[26];
+
+	ResetPack(data);
+	new client = ReadPackCell(data);
+	new ent = ReadPackCell(data);
+
+	if (IsValidEntity(ent))
+	{
+		new team = GetClientTeam(client);
+		if(team == TEAM_T) color = COLOR_T;
+		else if(team == TEAM_CT) color = COLOR_CT;
+		else color = COLOR_DEF;
+
+		DispatchKeyValue(ent, "rendercolor", color);
+		AcceptEntityInput(ent, "TurnOn");
+
+		new Float:end[3];
+		end[0] = ReadPackFloat(data);
+		end[1] = ReadPackFloat(data);
+		end[2] = ReadPackFloat(data);
+
+		EmitSoundToAll(SND_MINEACT, ent, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, 100, ent, end, NULL_VECTOR, true, 0.0);
+	}
+
+	CloseHandle(data);
+}
+
+public mineBreak (const String:output[], caller, activator, Float:delay)
+{
+	UnhookSingleEntityOutput(caller, "OnBreak", mineBreak);
+	AcceptEntityInput(caller,"kill");
+}
+
+public bool:FilterAll (entity, contentsMask)
+{
+	return false;
+}
+
+public OnMapStart()
+{
+	GetConVarString(cvModel, mdlMine, sizeof(mdlMine));
+	PrecacheModel(mdlMine, true);
+	PrecacheModel(MDL_LASER, true);
+	PrecacheSound(SND_MINEPUT, true);
+	PrecacheSound(SND_MINEACT, true);
+}
+
 public Action:LeechPlayer(args)
 {
 	new String:userid[128];
@@ -189,6 +401,17 @@ public Action:StealPlayer(args)
 	}
 }
 
+public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	b_roundIsOver = false;
+}
+
+
+public Action:Event_RoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	b_roundIsOver = true;
+}
+
 public Event_PlayerSpawn(Handle:event,const String:name[],bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event,"userid"));
@@ -223,7 +446,7 @@ public Action:Event_PlayerHurt(Handle:event, const String:name[], bool:dontBroad
 			new e_health = GetEventInt(event, "dmg_health");
 			new c_health = GetClientHealth(client);
 			SetEntityHealth(client, (c_health + e_health));
-			CPrintToChat(client, "{green}[WCS] {lightgreen}Evasion - You've evaded an incoming attack");
+			PrintToChat(client, "\x01 \x04[WCS] \x05Evasion - You've evaded an incoming attack");
 
 		}
 	}
@@ -286,6 +509,33 @@ public Action:ShakeRegister(args)
 	Client_Shake(useridc, SHAKE_START, StringToFloat(amplitude), StringToFloat(frequenzy), StringToFloat(duration));
 }
 
+public Action:RemoveWeaponRegister(args)
+{
+	new String:userid[128];
+	new String:value[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, value, sizeof(value));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	if(StrEqual(value, "1")||StrEqual(value, "2")||StrEqual(value, "3")||StrEqual(value, "4")||StrEqual(value, "5"))
+	{
+		new slot = StringToInt(value);
+		new wpn_ent = GetPlayerWeaponSlot(useridc, slot-1);
+		new active_weapon = Client_GetActiveWeapon(useridc);
+		new String:classname[128];
+		GetEntityClassname(wpn_ent, classname, sizeof(classname))
+		Client_RemoveWeapon(useridc, classname, true, true);
+		if (wpn_ent == active_weapon)
+		{
+			new new_weapon = Client_GetFirstWeapon(useridc)
+			Client_SetActiveWeapon(useridc, new_weapon)
+		}
+	}
+	else
+	{
+		Client_RemoveWeapon(useridc, value, true, true);
+	}
+}
 
 public Action:SetScoreRegister(args)
 {
@@ -395,6 +645,17 @@ public Action:DistanceRegister(args)
 	SetConVarFloat(c_var, distance);
 }
 
+public Action:GetIndex(args)
+{
+	new String:bvar[128];
+	new String:userid[128];
+	GetCmdArg(1, bvar, sizeof(bvar));
+	GetCmdArg(2, userid, sizeof(userid));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	c_var = FindConVar(bvar);
+	SetConVarInt(c_var, useridc);
+}
 
 public Action:GunGet(args)
 {
@@ -424,6 +685,173 @@ public Action:GravityGet(args)
 	c_var = FindConVar(bvar);
 	SetConVarFloat(c_var, value);
 }
+
+public Action:ColorRegister(args)
+{
+	new String:userid[128];
+	new String:red[128];
+	new String:green[128];
+	new String:blue[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, red, sizeof(red));
+	GetCmdArg(3, green, sizeof(green));
+	GetCmdArg(4, blue, sizeof(blue));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	new redi = StringToInt(red);
+	new greeni = StringToInt(green);
+	new bluei = StringToInt(blue);
+	SetEntityRenderMode(useridc, RENDER_TRANSCOLOR);
+	if(redi > 255)
+	{
+		redi = 255;
+	}
+	if(greeni > 255)
+	{
+		greeni = 255;
+	}
+	if(bluei > 255)
+	{
+		bluei = 255;
+	}
+	if(redi < 0)
+	{
+		redi = 0;
+	}
+	if(greeni < 0)
+	{
+		greeni = 0;
+	}
+	if(bluei < 0)
+	{
+		bluei = 0;
+	}
+	if(GetCmdArgs() == 4)
+	{
+		SetEntityRenderColor(useridc, redi, greeni, bluei, 255);
+	}
+	if(GetCmdArgs() > 4)
+	{
+		new String:alpha[128];
+		GetCmdArg(5, alpha, sizeof(alpha));
+		new alphai = StringToInt(alpha);
+		SetEntityRenderColor(useridc, redi, greeni, bluei, alphai);
+		if(GetCmdArgs() > 5)
+		{
+			new String:boole[128];
+			GetCmdArg(6, boole, sizeof(boole));
+			new boolei = StringToInt(boole);
+			if(boolei == 1)
+			{
+				SetEntityRenderColor(GetPlayerWeaponSlot(useridc, 1), redi, greeni, bluei, alphai);
+				SetEntityRenderMode(GetPlayerWeaponSlot(useridc, 1), RENDER_TRANSCOLOR);
+				SetEntityRenderColor(GetPlayerWeaponSlot(useridc, 2), redi, greeni, bluei, alphai);
+				SetEntityRenderMode(GetPlayerWeaponSlot(useridc, 2), RENDER_TRANSCOLOR);
+			}
+		}
+	}	
+}
+
+public Action:ExtingPlayer(args)
+{
+	new String:userid[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	new ent = GetEntPropEnt(useridc, Prop_Data, "m_hEffectEntity");
+	if (IsValidEdict(ent))
+     		SetEntPropFloat(ent, Prop_Data, "m_flLifetime", 0.0);  
+}
+
+public Action:FirePlayer(args)
+{
+	new String:userid[128];
+	new String:duration[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, duration, sizeof(duration));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	new Float:dur = StringToFloat(duration);
+	IgniteEntity(useridc, dur);
+}
+
+public Action:SetGravityPlayer(args)
+{
+	new String:userid[128];
+	new String:gravity[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, gravity, sizeof(gravity));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	new Float:value = StringToFloat(gravity);
+	SetEntityGravity(useridc, value);
+	ServerCommand("es wcsgroup set gravity %i %f", useridi, value)
+}
+
+public Action:StripPlayer(args)
+{
+	new String:userid[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	for (new j = 0; j < 5; j++)
+	{
+		new w = -1;
+		while ((w = GetPlayerWeaponSlot(useridc,j)) != -1)
+			if (IsValidEntity(w)) RemovePlayerItem(useridc,w);
+	}
+	return Plugin_Handled;
+}  
+
+public Action:SpawnPlayer(args)
+{
+	decl String:userid[64];
+	if(b_roundIsOver)
+	{
+		return Plugin_Handled;
+	}
+	
+	GetCmdArg(1, userid, sizeof(userid));
+	new useridc = GetClientOfUserId(StringToInt(userid));
+	if (GetClientTeam(useridc) != 1 && GetClientTeam(useridc) != 0)
+	{
+		CS_RespawnPlayer(useridc);
+		return Plugin_Handled;
+	}
+	return Plugin_Handled;
+}
+
+public Action:DropPlayer(args)
+{
+	decl String:userid[64];
+	decl String:weapon[64];
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, weapon, sizeof(weapon));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	new slot = StringToInt(weapon);
+	if(useridc > 0 && IsClientConnected(useridc) && IsClientInGame(useridc) && IsPlayerAlive(useridc))
+	{
+		if(slot > 0 && slot <= 5)
+		{
+			new wpn_ent = GetPlayerWeaponSlot(useridc, slot-1);
+			if(IsValidEntity(wpn_ent))
+			{
+				SDKHooks_DropWeapon(useridc, wpn_ent);
+			}
+		}
+		else
+		{
+			new wpn_ent = Client_GetWeapon(useridc, weapon);
+			if(wpn_ent != INVALID_ENT_REFERENCE)
+			{
+				SDKHooks_DropWeapon(useridc, wpn_ent);
+			}
+		}
+	}
+	
+	return Plugin_Handled;
+}	
 
 public Action:GivePlayer(args)
 {
@@ -469,6 +897,47 @@ public Action:GivePlayer(args)
 			}
 		}		
 	}
+	
+	return Plugin_Handled;
+}
+
+public Action:ViewPlayer(args)
+{
+	new String:userid[128];
+	new String:bvar[128];
+	new String:s_target[128]
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, bvar, sizeof(bvar));
+
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+
+	new target = GetClientAimTarget(useridc, true);
+	if (target != -1)
+	{
+		new targetid = GetClientUserId(target);
+		IntToString(targetid, s_target, sizeof(s_target));
+		c_var = FindConVar(bvar);
+		SetConVarString(c_var, s_target);
+	}	
+	return Plugin_Handled;
+}
+
+public Action:ViewIndex(args)
+{
+	new String:userid[128];
+	new String:bvar[128];
+	new String:s_target[128]
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, bvar, sizeof(bvar));
+
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+
+	new target = GetClientAimTarget(useridc, false);
+	IntToString(target, s_target, sizeof(s_target));
+	c_var = FindConVar(bvar);
+	SetConVarString(c_var, s_target);
 	
 	return Plugin_Handled;
 }
@@ -519,6 +988,24 @@ DealDamage(victim,damage,attacker=0,dmg_type=DMG_GENERIC,String:weapon[]="")
 	}
 }
 
+public Action:ChangeTeam(args)
+{
+	new String:userid[128];
+	new String:team[128];
+	GetCmdArg(1, userid, sizeof(userid));
+	GetCmdArg(2, team, sizeof(team));
+	new useridi = StringToInt(userid);
+	new useridc = GetClientOfUserId(useridi);
+	new teami = StringToInt(team);
+	if(teami == 2||teami == 3)
+	{
+		CS_SwitchTeam(useridc, teami);
+	}
+	if(teami == 0)
+	{
+		ChangeClientTeam(useridc, teami);
+	}
+}
 
 public Action:GetWall_Register(args)
 {
