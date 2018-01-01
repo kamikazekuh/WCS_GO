@@ -77,5 +77,5 @@ block levitation
 
 block bomb
 {
-	es wcs_ulti_suicide event_var(userid) server_var(wcs_radius) server_var(wcs_magnitude)
+	es wcs_explosion event_var(userid) server_var(wcs_magnitude) server_var(wcs_radius)
 }

@@ -1,7 +1,22 @@
 event player_death
 {
-	es wcsgroup get phoenix wcs_phoenix event_var(userid) event_var(es_userteam)
+	if (event_var(es_userteam) = 2) then es_xset wcs_team #t
+	if (event_var(es_userteam) = 3) then es_xset wcs_team #ct
+	es wcsgroup get phoenix wcs_phoenix server_var(wcs_team)
+	if (server_var(wcs_phoenix) > 0) do
+	{
+		es_tell event_var(userid) #multi #green[WCS] #lightgreenPhoenix - You will be ressurected in 3 seconds!
+		es_delayed 3 wcs spawn event_var(userid) 1
+		es_math wcs_phoenix - 1
+		es wcsgroup set phoenix server_var(wcs_team) server_var(wcs_phoenix)
+	}
 
+}
+
+event round_end
+{
+	es wcsgroup set phoenix #ct 0
+	es wcsgroup set phoenix #t 0
 }
 
 block spawn
@@ -32,10 +47,12 @@ block spawn
 
 block phoenix
 {
-		es wcsgroup get phoenix wcs_phoenix event_var(userid) event_var(es_userteam)
-		es_xmath wcs_phoenix + 1
-		es wcsgroup set phoenix event_var(userid) server_var(wcs_phoenix) event_var(es_userteam)
-		es_tell event_var(userid) #multi #green[WCS]#lightgreen Phoenix - The first from your team to die will be revived
+	if (event_var(es_userteam) = 2) then es_xset wcs_team #t
+	if (event_var(es_userteam) = 3) then es_xset wcs_team #ct
+	es wcsgroup get phoenix wcs_phoenix server_var(wcs_team)
+	es_xmath wcs_phoenix + 1
+	es wcsgroup set phoenix server_var(wcs_team) server_var(wcs_phoenix)
+	es_tell event_var(userid) #multi #green[WCS]#lightgreen Phoenix - The first from your team to die will be revived
 }
 
 block banish
