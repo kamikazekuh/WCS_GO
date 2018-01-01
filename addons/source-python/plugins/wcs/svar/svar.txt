@@ -6,6 +6,9 @@ wcs_smokestack_counter
 ex
 vector1
 vector2
+vector3
+vector4
+vector5
 wcs_x
 wcs_y
 wcs_z
