@@ -8,6 +8,7 @@ from messages import Fade, FadeFlags
 from colors import Color
 from entities.constants import MoveType
 from wcs import wcsgroup
+from engines.precache import Model
 
 '''	PrintToServer("   slow         |     =     | any float");
 	PrintToServer("   rebirth      |     =     | 1/0");
@@ -205,10 +206,34 @@ def _setfx_command(command):
 					time = 999
 				player.ignite_lifetime(float(time))		
 			else:
-				player.ignite_lifetime(0)		
+				player.ignite_lifetime(0)
+	if todo == "god":
+		if operator == "=":
+			player.godmode = int(amount)
+			if time:
+				Delay(time,removefx, ('god',player,int(amount)))
+				
+	if todo == "disguise":
+		if operator == "=":
+			if int(amount) == 2:
+				player.model = Model("models/player/custom_player/legacy/tm_leet_variantB.mdl")
+			if int(amount) == 3:
+				player.model = Model("models/player/custom_player/legacy/ctm_idf_variantC.mdl")
+			if time:
+				Delay(time,removefx,('disguise',player,amount))
 	
 		
 def removefx(todo,player,amount):
+	if todo == 'disguise':
+		if int(amount) == 3:
+			player.model = Model("models/player/custom_player/legacy/tm_leet_variantB.mdl")
+		if int(amount) == 2:
+			player.model = Model("models/player/custom_player/legacy/ctm_idf_variantC.mdl")
+	if todo == "god":
+		if int(amount) == 1:
+			player.godmode = 0
+		else:
+			player.godmode = 1
 	if todo == "invis":
 		player.color = Color(player.color[0], player.color[1],player.color[2],player.color[3] + int(amount))
 	if todo == "invisp":
