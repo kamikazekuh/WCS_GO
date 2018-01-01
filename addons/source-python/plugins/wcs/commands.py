@@ -134,18 +134,21 @@ def _spawn(command):
 	
 @ServerCommand('wcs_color')
 def _color(command):
-	if len(command) >= 7:
+	if len(command) >= 5:
 		userid = int(command[1])
 		r = int(command[2])
 		g = int(command[3])
 		b = int(command[4])
-		a = int(command[5])
-		wpn = int(command[6])
+		a = 255
+		if len(command) >= 6:
+			a = int(command[5])
 		player = Player.from_userid(userid)
 		player.color = Color(r,g,b,a)
-		if len(command) == 8:
-			for weapon in player.weapons():
-				weapon.color = Color(r,g,b,a)
+		if len(command) == 7:
+			wpn = int(command[6])
+			if wpn == 1:
+				for weapon in player.weapons():
+					weapon.color = Color(r,g,b,a)
 	
 @ServerCommand('wcs_getdistance')
 def _getdistance(command):
@@ -226,28 +229,32 @@ def _regeneration(command):
 	maxhp = int(command[4])
 	maxheal = int(command[5])
 	radius = float(command[6])
+	wcsgroup.setUser(userid,'regeneration_active',1)
 	player = Player.from_userid(userid)
 	reg_repeat = Repeat(_regeneration_repeat,(player,amount,maxhp,maxheal,radius))
 	repeat_dict[player.userid] = reg_repeat
 	reg_repeat.start(time)
 	
 def _regeneration_repeat(player,amount,maxhp,maxheal,radius):
-	if regen_dict[player.userid] < maxheal:
-		if player.health+amount <= maxhp:	
-			player.health += amount
-			SayText2('\x04[WCS] \x05You got healed by a spell').send(player.index)
-			regen_dict[player.userid] += amount
-		else:
-			player.health = maxhp
-		for play in PlayerIter('all'):
-			if play != player:
-				if play.origin.get_distance(player.origin) <= radius:
-					if play.team == player.team:
-						if (play.health+amount <= maxhp):
-							SayText2('\x04[WCS] \x05You got healed by a spell').send(play.index)
-							play.health += amount
-						else:
-							play.health = maxhp	
+	if wcsgroup.getUser(player.userid,'regeneration_active') == 1:
+		if regen_dict[player.userid] < maxheal:
+			if player.health+amount <= maxhp:	
+				player.health += amount
+				SayText2('\x04[WCS] \x05You got healed by a spell').send(player.index)
+				regen_dict[player.userid] += amount
+			else:
+				player.health = maxhp
+			for play in PlayerIter('all'):
+				if play != player:
+					if play.origin.get_distance(player.origin) <= radius:
+						if play.team == player.team:
+							if (play.health+amount <= maxhp):
+								SayText2('\x04[WCS] \x05You got healed by a spell').send(play.index)
+								play.health += amount
+							else:
+								play.health = maxhp
+	else:
+		repeat_dict[player.userid].stop
 
 @ServerCommand('wcs_drug')
 def _drug(command):

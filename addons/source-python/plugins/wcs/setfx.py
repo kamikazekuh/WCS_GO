@@ -195,7 +195,18 @@ def _setfx_command(command):
 			player.cash += int(amount)
 			if time:
 				Delay(time, removefx, ('cash',player,amount))
-			
+	if todo == "burn":
+		if operator == "=":
+			if int(amount) == 1:
+				if time:
+					if time == 0:
+						time = 999
+				else:
+					time = 999
+				player.ignite_lifetime(float(time))		
+			else:
+				player.ignite_lifetime(0)		
+	
 		
 def removefx(todo,player,amount):
 	if todo == "invis":

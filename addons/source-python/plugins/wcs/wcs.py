@@ -1299,6 +1299,7 @@ def round_end(event):
 		queue_command_string('wcs_color %s 255 255 255 255' % userid)
 		queue_command_string('wcs_setgravity %s 1.0' % userid)
 		queue_command_string('es playerset speed %s 1.0' % userid)
+		queue_command_string('es wcsgroup set regeneration_active %s 0' % userid)
 		if player.team >= 2:
 			race = getPlayer(userid).player.currace
 			raceinfo = racedb.getRace(race)
@@ -1346,8 +1347,7 @@ def player_death(event):
 	assister = event.get_int('assister')
 	headshot = event.get_int('headshot')
 	weapon = event.get_string('weapon')
-
-    
+	queue_command_string('es wcsgroup set regeneration_active %s 0' % victim)
 	
 	#player_death execution
 	victim_entity = Player(index_from_userid(victim))
@@ -1421,10 +1421,12 @@ def _player_hurt(event):
 		if not victim == attacker:
 			if not victim_entity.team == attacker_entity.team:
 				checkEvent(victim, 'player_victim', other_userid=attacker, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
-				checkEvent(attacker, 'player_attacker', other_userid=victim, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
+				if health > 0:
+					checkEvent(attacker, 'player_attacker', other_userid=victim, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
 				
 			checkEvent(victim, 'player_hurt', other_userid=attacker, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
-			checkEvent(attacker, 'player_hurt', other_userid=victim, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
+			if health > 0:
+				checkEvent(attacker, 'player_hurt', other_userid=victim, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
 
 @Event('player_spawn')			
 def _player_spawn(event):

@@ -48,9 +48,7 @@ def raceinfo_menu_select(menu, index, choice):
 	while x <= numberofskills:
 		raceinfo_race_menu.append(PagedOption('%s' % skillnames[x], value=None, highlight=True, selectable=False))
 		#raceinfo_race_menu.append(Text('o %s' % skillnames[x]))
-		print(skilldesc[x])
 		v = str(skilldesc[x]).split('+')
-		print(v)
 		raceinfo_race_menu.append(Text('%s' % v[0]))
 		for y in v[1:]:
 			raceinfo_race_menu.append(Text('%s' % y))
