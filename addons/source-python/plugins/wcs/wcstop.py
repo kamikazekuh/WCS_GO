@@ -1,5 +1,5 @@
 import wcs
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 from players.entity import Player
 from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index
 from menus import SimpleMenu

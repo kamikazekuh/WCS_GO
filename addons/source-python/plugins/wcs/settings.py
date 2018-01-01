@@ -13,7 +13,7 @@ from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
 from filters.players import PlayerIter
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 
 import wcs
 
@@ -50,7 +50,7 @@ amount_menu = PagedMenu(title='Amount Menu', select_callback=wcs_amount_select)
 
 def wcsadmin_givexp_menu_select(menu, index, choice):
 	if choice.value == 'xp' or choice.value == 'level':
-		amount_menu.previous_menu = menu
+		amount_menu.parent_menu = menu
 		amount_menu.append(PagedOption('1', choice.value))
 		amount_menu.append(PagedOption('10', choice.value))
 		amount_menu.append(PagedOption('50', choice.value))
@@ -59,7 +59,7 @@ def wcsadmin_givexp_menu_select(menu, index, choice):
 		amount_menu.append(PagedOption('500', choice.value))
 		amount_menu.send(index)
 	if choice.value == 'cash':
-		amount_menu.previous_menu = menu
+		amount_menu.parent_menu = menu
 		amount_menu.append(PagedOption('100', choice.value))
 		amount_menu.append(PagedOption('1000', choice.value))
 		amount_menu.append(PagedOption('3000', choice.value))

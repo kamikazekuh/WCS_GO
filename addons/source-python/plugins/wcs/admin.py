@@ -11,7 +11,7 @@ from events import Event
 from menus import SimpleMenu
 from menus import SimpleOption
 from menus import Text
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 
 import wcs
 from wcs import givexp

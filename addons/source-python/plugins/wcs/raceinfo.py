@@ -7,7 +7,7 @@ from menus import PagedOption
 from menus import Text
 from messages import SayText2
 import wcs
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 
 
 def raceinfo_menu_build(menu, index):
@@ -36,7 +36,7 @@ def raceinfo_menu_select(menu, index, choice):
 	skilldesc = raceinfo['skilldescr'].split('|')
 	numberofskills = int(raceinfo['numberofskills'])-1
 	
-	raceinfo_race_menu = PagedMenu(title='Raceinfo - %s' % race,previous_menu=menu)
+	raceinfo_race_menu = PagedMenu(title='Raceinfo - %s' % race,parent_menu=menu)
 	raceinfo_race_menu.append(Text('Required level: %s' % required))
 	raceinfo_race_menu.append(Text('Maximum level: %s' % maximum))
 	if allowonly:

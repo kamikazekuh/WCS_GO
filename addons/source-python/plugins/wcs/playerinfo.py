@@ -5,7 +5,7 @@ from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
 import wcs
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 from filters.players import PlayerIter
 
 def playerinfo_player_build(menu, index):

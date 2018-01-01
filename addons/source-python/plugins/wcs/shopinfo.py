@@ -6,7 +6,7 @@ from menus import PagedOption
 from menus import Text
 from messages import SayText2
 import wcs
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 
 #2
 def shopinfo_menu_cats_build(menu, index):
@@ -39,7 +39,7 @@ def shopinfo_menu_subcats_build(menu, index):
 	menu.clear()
 	userid = userid_from_index(index)
 	section = menu.title
-	shopinfo_menu_subcats.previous_menu = shopinfo_menu_cats
+	shopinfo_menu_subcats.parent_menu = shopinfo_menu_cats
 	items_all = wcs.wcs.ini.getItems
 	items_all.walk(gather_subsection)
 	for item in item_names:
@@ -75,7 +75,7 @@ def shopinfo_menu_subcats_select(menu, index, choice):
 	if duration == 0:
 		duration = '<One round>'
 	maximum = int(iteminfo['max'])
-	shopinfo_race_menu = PagedMenu(title='%s' % iteminfo['name'],previous_menu=menu)
+	shopinfo_race_menu = PagedMenu(title='%s' % iteminfo['name'],parent_menu=menu)
 	shopinfo_race_menu.append(Text('o %s' % desc))
 	shopinfo_race_menu.append(Text('Required level: %s' % required))
 	shopinfo_race_menu.append(Text('Cost: %s' % cost))
@@ -83,7 +83,7 @@ def shopinfo_menu_subcats_select(menu, index, choice):
 	shopinfo_race_menu.append(Text('Duration: %s' % duration))
 	shopinfo_race_menu.send(index)
 
-shopinfo_menu_subcats = PagedMenu(build_callback=shopinfo_menu_subcats_build, select_callback=shopinfo_menu_subcats_select,display_page_info=True)
+shopinfo_menu_subcats = PagedMenu(build_callback=shopinfo_menu_subcats_build, select_callback=shopinfo_menu_subcats_select)
 
 #4			
 def doCommand1(userid, value):

@@ -6,7 +6,7 @@ from menus import PagedOption
 from menus import Text
 from messages import SayText2
 import wcs
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 
 listofargs = {}
 popups = []

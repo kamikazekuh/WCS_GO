@@ -14,7 +14,7 @@ from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
 from filters.players import PlayerIter
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 import wcs.admin
 from listeners import OnLevelInit
 from sqlite3 import dbapi2 as sqlite
@@ -196,7 +196,7 @@ amount_menu = PagedMenu(title='Amount Menu', select_callback=wcs_amount_select)
 def wcsadmin_bank_menu_select(menu, index, choice):
 	player_entity = choice.value
 	amount_menu.clear()
-	amount_menu.previous_menu = menu
+	amount_menu.parent_menu = menu
 	amount_menu.append(PagedOption('1', player_entity))
 	amount_menu.append(PagedOption('5', player_entity))
 	amount_menu.append(PagedOption('10', player_entity))

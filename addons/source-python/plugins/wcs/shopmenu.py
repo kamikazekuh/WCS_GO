@@ -9,7 +9,7 @@ from engines.server import queue_command_string,execute_server_command
 import wcs
 from commands.say import SayCommand
 from commands.client import ClientCommand
-from wcs.extensions import PagedMenu
+from menus import PagedMenu
 import wcs.events
 from events import Event
 from listeners import OnLevelInit
@@ -102,7 +102,7 @@ def shopmenu_menu_subcats_build(menu, index):
 	menu.clear()
 	userid = userid_from_index(index)
 	section = menu.title
-	shopmenu_menu_subcats.previous_menu = shopmenu_menu_cats
+	shopmenu_menu_subcats.parent_menu = shopmenu_menu_cats
 	items_all = wcs.wcs.ini.getItems
 	items_all.walk(gather_subsection)
 	for item in item_names:
@@ -122,7 +122,7 @@ def shopmenu_menu_subcats_select(menu, index, choice):
 	userid = userid_from_index(index)
 	addItem(userid, choice.value)
 
-shopmenu_menu_subcats = PagedMenu(build_callback=shopmenu_menu_subcats_build, select_callback=shopmenu_menu_subcats_select,display_page_info=True)
+shopmenu_menu_subcats = PagedMenu(build_callback=shopmenu_menu_subcats_build, select_callback=shopmenu_menu_subcats_select)
 
 			
 def doCommand1(userid, value):
@@ -361,10 +361,6 @@ def load():
 
 def unload():
 	items.clear()
-
-					
-					
-
 
 					
 					

@@ -1299,7 +1299,6 @@ def round_end(event):
 		queue_command_string('wcs_color %s 255 255 255 255' % userid)
 		queue_command_string('wcs_setgravity %s 1.0' % userid)
 		queue_command_string('es playerset speed %s 1.0' % userid)
-		queue_command_string('es wcsgroup set longjump %s 1.0' % userid)
 		if player.team >= 2:
 			race = getPlayer(userid).player.currace
 			raceinfo = racedb.getRace(race)
