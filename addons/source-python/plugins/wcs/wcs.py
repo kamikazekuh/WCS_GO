@@ -10,6 +10,8 @@ from base64 import encodestring as estr, decodestring as dstr
 from configobj import ConfigObj
 import string
 import re
+from messages import HudMsg
+from listeners import OnTick
 
 from translations.strings import LangStrings
 
@@ -87,6 +89,7 @@ xpsaver = addon_config.cvar('wcs_cfg_savexponround', '5')
 racecategories = addon_config.cvar('wcs_racecats', '0')
 defaultcategory	= addon_config.cvar('wcs_racecats_defaultcategory',	'Default category')
 showracelevel = addon_config.cvar('wcs_cfg_showracelevel', '1')
+keymenu = addon_config.cvar('wcs_activate_keymenu', '0')
 addon_config.write()
 
 cfgdata = {'interval':				interval.cvar.get_int(),
@@ -1788,3 +1791,19 @@ def getInfoRegister(command):
 			if hasattr(v, info):
 				returned = getattr(v, info)
 				ConVar(var).set_string(str(returned))
+				
+@OnTick
+def on_tick():
+	if keymenu.get_int() == 1:
+		for player in PlayerIter('all'):
+			userid = player.userid
+			p = getPlayer(userid)
+
+			race = p.player.currace
+			totallevel = p.player.totallevel
+			level = p.race.level
+			xp = p.race.xp
+			needed = int(interval.get_int())*level if level else int(interval.get_int())
+			rank = database.getRank(es.getplayersteamid(userid))
+			text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
+			HudMsg(text, 0.025, 0.4,hold_time=0.5).send(player.index)
