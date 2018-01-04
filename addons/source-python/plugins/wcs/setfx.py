@@ -112,11 +112,23 @@ def _setfx_command(command):
 				Delay(time, removefx, ('invis', player, -amount))				
 			
 	if todo == "longjump":
-		longjump = float(wcsgroup.getUser(userid, 'longjump'))
+		longjump = wcsgroup.getUser(userid, 'longjump')
+		if longjump != None:
+			longjump = float(longjump)
+		else:
+			longjump = 1.0
 		if operator == "=":
 			wcsgroup.setUser(userid, 'longjump', amount)
 			if time > 0:
 				Delay(time, wcsgroup.setUser,(userid,'longjump',0))
+		if operator == "+":
+			wcsgroup.setUser(userid, 'longjump', longjump+float(amount))
+			if time > 0:
+				Delay(time, wcsgroup.setUser,(userid,'longjump',float(wcsgroup.getUser(userid,'longjump'))-float(amount)))
+		if operator == "-":
+			wcsgroup.setUser(userid, 'longjump', longjump-float(amount))
+			if time > 0:
+				Delay(time, wcsgroup.setUser,(userid,'longjump',float(wcsgroup.getUser(userid,'longjump'))+float(amount)))
 				
 	if todo == "speed":
 		current_speed = player.speed
