@@ -65,6 +65,7 @@ block unholy
 		es_set wcs_speed_var server_var(wcs_speed)
 		es_xmath wcs_speed_var * 100
 		es_xmath wcs_speed_var - 100
+		es wcs_decimal wcs_speed_var server_var(wcs_speed_var)
 		es_tell event_var(userid) #multi #green[WCS]#lightgreen Unholy Aura - Increased your speed by server_var(wcs_speed_var)%
 }
 
