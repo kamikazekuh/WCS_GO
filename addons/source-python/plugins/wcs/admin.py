@@ -31,43 +31,43 @@ def _wcs_admin_menu_select(menu, index, choice):
 		if has_flag(userid, 'wcsadmin_settings'):
 			settings.doCommand(userid)
 		else:
-			wcs.wcs.tell(userid, '\x04[WCS] \x05You \x04access \x05this menu!')
+			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
 			wcs_admin_menu.send(index)
 	if choice.choice_index == 2:
 		if has_flag(userid, 'wcsadmin_givexp'):
 			givexp.doCommand(userid)
 		else:
-			wcs.wcs.tell(userid, '\x04[WCS] \x05You \x04access \x05this menu!')
+			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
 			wcs_admin_menu.send(index)
 	if choice.choice_index == 3:
 		if has_flag(userid, 'wcsadmin_givelevels'):
 			givelevel.doCommand(userid)
 		else:
-			wcs.wcs.tell(userid, '\x04[WCS] \x05You \x04access \x05this menu!')
+			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
 			wcs_admin_menu.send(index)
 	if choice.choice_index == 4:
 		if has_flag(userid, 'wcsadmin_givecash'):
 			givecash.doCommand(userid)
 		else:
-			wcs.wcs.tell(userid, '\x04[WCS] \x05You \x04access \x05this menu!')
+			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
 			wcs_admin_menu.send(index)
 	if choice.choice_index == 5:
 		if has_flag(userid, 'wcsadmin_resetrace'):
 			resetrace.doCommand(userid)
 		else:
-			wcs.wcs.tell(userid, '\x04[WCS] \x05You \x04access \x05this menu!')
+			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
 			wcs_admin_menu.send(index)
 	if choice.choice_index == 6:
 		if has_flag(userid, 'wcsadmin_resetplayer'):
 			resetplayer.doCommand(userid)
 		else:
-			wcs.wcs.tell(userid, '\x04[WCS] \x05You \x04access \x05this menu!')
+			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
 			wcs_admin_menu.send(index)
 	if choice.choice_index == 7:
 		if has_flag(userid, 'wcsadmin_bank'):
 			levelbank.doCommand(userid)
 		else:
-			wcs.wcs.tell(userid, '\x04[WCS] \x05You \x04access \x05this menu!')
+			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
 			wcs_admin_menu.send(index)
 	if choice.choice_index == 9:
 		menu.close(index)
