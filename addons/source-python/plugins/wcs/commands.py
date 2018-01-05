@@ -289,6 +289,8 @@ def set_cooldown(command):
 	amount = int(command[2])
 	timed = int(float(time.time()))
 	cooldown = wcs.wcs.get_cooldown(userid)
+	if cooldown == None:
+		cooldown = 0
 	wcsgroup.setUser(userid, 'player_ultimate_cooldown', timed+amount-cooldown)
 	
 @ServerCommand('wcs_getviewcoords')
