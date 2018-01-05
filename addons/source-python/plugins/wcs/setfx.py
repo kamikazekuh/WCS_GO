@@ -55,6 +55,67 @@ def _setfx_command(command):
 			color = Color(255,255,255,int(amount))
 			Fade(int(time), int(time),color,FadeFlags.PURGE).send(player.index)
 			
+	if todo == "1stclip":
+		clip = player.get_weapon(is_filters="primary").clip
+		if operator == "=":
+			player.get_weapon(is_filters="primary").clip = int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_clip,(clip,))
+		if operator == "+":
+			player.get_weapon(is_filters="primary").clip += int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_clip,(player.get_weapon(is_filters="primary").clip-int(amount),))
+		if operator == "-":
+			player.get_weapon(is_filters="primary").clip -= int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_clip,(player.get_weapon(is_filters="primary").clip+int(amount),))				
+
+
+	if todo == "2ndclip":
+		clip = player.get_weapon(is_filters="secondary").clip
+		if operator == "=":
+			player.get_weapon(is_filters="secondary").clip = int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="secondary").set_clip,(clip,))
+		if operator == "+":
+			player.get_weapon(is_filters="secondary").clip += int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_clip,(player.get_weapon(is_filters="secondary").clip-int(amount),))	
+		if operator == "-":
+			player.get_weapon(is_filters="secondary").clip -= int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_clip,(player.get_weapon(is_filters="secondary").clip+int(amount),))					
+				
+	if todo == "1stammo":
+		ammo = player.get_weapon(is_filters="primary").ammo
+		if operator == "=":
+			player.get_weapon(is_filters="primary").ammo = int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_ammo,(ammo,))			
+		if operator == "+":
+			player.get_weapon(is_filters="primary").ammo += int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_clip,(player.get_weapon(is_filters="primary").ammo-int(amount),))
+		if operator == "-":
+			player.get_weapon(is_filters="primary").ammo -= int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="primary").set_clip,(player.get_weapon(is_filters="primary").ammo+int(amount),))				
+				
+	if todo == "2ndammo":
+		ammo = player.get_weapon(is_filters="secondary").ammo
+		if operator == "=":	
+			player.get_weapon(is_filters="secondary").ammo = int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="secondary").set_ammo,(ammo,))		
+		if operator == "+":
+			player.get_weapon(is_filters="secondary").ammo += int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="secondary").set_ammo,(player.get_weapon(is_filters="primary").ammo-int(amount),))	
+		if operator == "-":
+			player.get_weapon(is_filters="secondary").ammo -= int(amount)
+			if time:
+				Delay(time,player.get_weapon(is_filters="secondary").set_ammo,(player.get_weapon(is_filters="primary").ammo+int(amount),))
+				
 	if todo == "invisp":
 		old_color = player.color
 		if operator == "=":
