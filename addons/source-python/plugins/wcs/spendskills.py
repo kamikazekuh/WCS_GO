@@ -64,7 +64,8 @@ def popupHandler(menu, index, choice):
 			skills = player.race.skills.split('|')
 			if int(skills[choice.value-1]) < nol and int(needed[choice.value-1]) <= player.race.level:
 				level = player.race.addPoint(choice.value)
-				wcs.wcs.tell(userid, '\x04[WCS] \x05Your skill \x04%s \x05is now on level \x04%s.' % (db['skillnames'].split('|')[choice.value-1], level))
+				if level != None:
+					wcs.wcs.tell(userid, '\x04[WCS] \x05Your skill \x04%s \x05is now on level \x04%s.' % (db['skillnames'].split('|')[choice.value-1], level))
 
 				if player.race.unused:
 					doCommand(userid)
