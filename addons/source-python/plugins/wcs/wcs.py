@@ -90,6 +90,8 @@ racecategories = addon_config.cvar('wcs_racecats', '0')
 defaultcategory	= addon_config.cvar('wcs_racecats_defaultcategory',	'Default category')
 showracelevel = addon_config.cvar('wcs_cfg_showracelevel', '1')
 keymenu = addon_config.cvar('wcs_activate_keymenu', '0')
+categories = addon_config.cvar('wcs_activate_categories', '0')
+unassigned_cat = addon_config.cvar('wcs_unassigned_category', '1')
 addon_config.write()
 
 cfgdata = {'interval':				interval.cvar.get_int(),
@@ -764,6 +766,7 @@ class PlayerObject(object):
         self.race.save()
         if kill:
             self.player_entity.client_command("kill", True)
+        tell(self.player_entity.userid, '\x04[WCS] \x05You changed your race to \x04%s.' % race)
         event_instance = wcs.events.wcs_changerace(userid=self.userid, oldrace=oldrace, newrace=race)
         event_instance.fire()
 
