@@ -12,7 +12,6 @@ def warden():
 
 		if param:
 			param = param.split('_')
-			core.console_message("Lenght: "+str(len(param)))
 			team = int(es.getplayerteam(userid))
 
 			if team == 2:
