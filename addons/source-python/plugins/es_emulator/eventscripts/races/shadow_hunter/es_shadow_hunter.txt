@@ -14,6 +14,7 @@ block load
 	es_xset wcs_y3 0
 	es_xset wcs_z3 0
 	es_xset wcs_exists 0
+	es_xset wcs_roundcounter 0
 	es_xexists wcs_exists command wcs_warden
 	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_warden races/shadow_hunter/wcs_warden "Warden, deals damage on nearby enemies"
 }
