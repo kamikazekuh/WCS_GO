@@ -3,7 +3,6 @@ from players.helpers import index_from_userid, playerinfo_from_userid, index_fro
 from menus import SimpleMenu
 from menus import SimpleOption
 from menus import Text
-from messages import SayText2
 import wcs
 
 

@@ -4,6 +4,8 @@ from random import choice
 import time
 import sys
 
+from core import SOURCE_ENGINE_BRANCH
+
 from path import path as Path
 from sqlite3 import dbapi2 as sqlite
 from base64 import encodestring as estr, decodestring as dstr
@@ -12,6 +14,7 @@ import string
 import re
 from messages import HudMsg
 from listeners import OnTick
+import core
 
 from translations.strings import LangStrings
 
@@ -450,6 +453,8 @@ def tell(userid, message):
 	text_message = 1
 	index = index_from_userid(userid)
 	if text_message == 1:
+		if SOURCE_ENGINE_BRANCH == "css":
+			message = message.replace('\x05','\x03')
 		SayText2(message).send(index)
 	if text_message == 2:
 		message = format_message(message)
@@ -1436,10 +1441,8 @@ def _player_hurt(event):
 
 @Event('player_spawn')			
 def _player_spawn(event):
-	#player_spawn variables
 	userid = event.get_int('userid')
 	
-	#player_spawn execution
 	index = index_from_userid(userid)
 	player_entity = Player(index)
 
@@ -1450,26 +1453,20 @@ def _player_spawn(event):
 		player_entity.gravity = 1.0
 		player_entity.color = Color(255,255,255,255)
 
-		#playerlib.getPlayer(userid).setColor(255, 255, 255, 255)
 
 		player = getPlayer(userid)
 
-		#if not str(ev['es_steamid']).lower() == 'bot':
-			#if spawntext and player.player.totallevel <= disabletextonlvl:
-				#tell(userid, 'main: help text')
 
 		wcsgroup.addUser(userid)
 
 		player.showXp()
 
-		#player.raceUpdate()
 		checkEvent(userid, 'player_spawn')
 
 		race = player.player.currace
 		raceinfo = racedb.getRace(race)
 		if int(raceinfo['restrictteam']) and not player_entity.steamid == 'BOT':
 			if player_entity.team == int(raceinfo['restrictteam']) and player_entity.team >= 2 and not player_entity.steamid == 'BOT':
-				#tell(userid, 'main: race restricted team', {'race':race, 'team':{2:'T',3:'CT'}[team]})
 				player_entity.team = 1
 				changerace.doCommand(userid, 'changerace')
 				wcsgroup.setUser(userid, 'restrictteam', team)
@@ -1479,17 +1476,13 @@ def _player_spawn(event):
 			if q:
 				v = wcsgroup.getUser({2:'T',3:'CT'}[player_entity.team], 'restricted')
 				if v > q:
-					#tell(userid, 'main: race team limit', {'race':race, 'team':{2:'T',3:'CT'}[team]})
 					player_entity.team = 1
 					changerace.doCommand(userid, 'changerace')
-					#wcsgroup.setUser(userid, 'restricted', team)
 
 		elif curmap in raceinfo['restrictmap'].split('|'):
 			if not player_entity.steamid == 'BOT':
-					#tell(userid, 'main: race restricted map', {'race':race, 'map':curmap})
 					player_entity.team = 1
 					changerace.doCommand(userid, 'changerace')
-					#wcsgroup.setUser(userid, 'restricted', team)
 
 		if raceinfo['spawncmd']:
 			command = raceinfo['spawncmd']
@@ -1633,10 +1626,6 @@ def checkEvent(userid, event, other_userid=0, health=0, armor=0, weapon='', dmg_
 					if level:
 						wcs_dice = ConVar('wcs_dice')
 						wcs_dice.set_int(random.randint(0, 100))
-						while y < 10:
-							wcs_dice = ConVar('wcs_dice%s' %y)
-							wcs_dice.set_int(random.randint(0, 100))
-							y+=1
 						skill = 'skill'+str(int(index)+1)
 
 						try:

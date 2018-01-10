@@ -4,7 +4,6 @@ from menus import SimpleMenu
 from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
-from messages import SayText2
 import wcs
 from menus import PagedMenu
 from cvars import ConVar
@@ -12,6 +11,7 @@ from configobj import ConfigObj
 from listeners import OnConVarChanged
 import os
 from paths import PLUGIN_PATH
+import core
 listofargs = {}
 popups = []
 

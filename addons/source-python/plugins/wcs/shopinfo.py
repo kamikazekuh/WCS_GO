@@ -4,7 +4,6 @@ from menus import SimpleMenu
 from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
-from messages import SayText2
 import wcs
 from menus import PagedMenu
 

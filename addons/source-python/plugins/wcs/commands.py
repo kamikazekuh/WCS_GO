@@ -26,6 +26,7 @@ from wcs import wcsgroup
 from weapons.entity import Weapon
 import time
 from random import choice
+from core import SOURCE_ENGINE_BRANCH
 
 beam_blood = Model('decals/bloodstain_003.vmt')
 beam_glow = Model('sprites/light_glow02.vmt')
@@ -240,7 +241,10 @@ def _regeneration_repeat(player,amount,maxhp,maxheal,radius):
 		if regen_dict[player.userid] < maxheal:
 			if player.health+amount <= maxhp:	
 				player.health += amount
-				SayText2('\x04[WCS] \x05You got healed by a spell').send(player.index)
+				if SOURCE_ENGINE_BRANCH	== 'css':
+					SayText2('\x04[WCS] \x03You got healed by a spell').send(player.index)
+				else:
+					SayText2('\x04[WCS] \x05You got healed by a spell').send(player.index)	
 				regen_dict[player.userid] += amount
 			else:
 				player.health = maxhp
@@ -249,7 +253,10 @@ def _regeneration_repeat(player,amount,maxhp,maxheal,radius):
 					if play.origin.get_distance(player.origin) <= radius:
 						if play.team == player.team:
 							if (play.health+amount <= maxhp):
-								SayText2('\x04[WCS] \x05You got healed by a spell').send(play.index)
+								if SOURCE_ENGINE_BRANCH	== 'css':
+									SayText2('\x04[WCS] \x03You got healed by a spell').send(play.index)
+								else:
+									SayText2('\x04[WCS] \x05You got healed by a spell').send(play.index)									
 								play.health += amount
 							else:
 								play.health = maxhp
@@ -292,6 +299,20 @@ def set_cooldown(command):
 	if cooldown == None:
 		cooldown = 0
 	wcsgroup.setUser(userid, 'player_ultimate_cooldown', timed+amount-cooldown)
+	
+@ServerCommand('wcs_get_cooldown')
+def get_cooldown(command):
+	userid = int(command[1])
+	var = str(command[2])
+	cooldown = wcs.wcs.get_cooldown(userid)
+	timed = int(float(time.time()))
+	cooldown = wcsgroup.getUser(userid,'player_ultimate_cooldown')
+	downtime = wcs.wcs.get_cooldown(userid)
+	if cooldown == None:
+		ConVar(var).set_int(downtime)
+		return
+	ConVar(var).set_int(downtime-(timed-cooldown))
+	
 	
 @ServerCommand('wcs_getviewcoords')
 def viewcoord(command):
@@ -426,8 +447,12 @@ def orc_damage(command):
     max = int(command[4])
     damage = random.randint(min, max)
     queue_command_string('wcs_dealdamage %s %s %s' % (userid, attacker, damage))
-    SayText2('\x04[WCS] \x04Critical Strike -  \x05You got \x04%s Extra Damage \x05from \x04%s!' % (damage, atk_player.name)).send(player.index)
-    SayText2('\x04[WCS] \x04Critical Strike - \x05You did \x04%s Extra Damage \x05to \x04%s!' % (damage, player.name)).send(atk_player.index)
+    if SOURCE_ENGINE_BRANCH	== 'css':
+        SayText2('\x04[WCS] \x04Critical Strike -  \x03You got \x04%s Extra Damage \x03from \x04%s!' % (damage, atk_player.name)).send(player.index)
+        SayText2('\x04[WCS] \x04Critical Strike - \x03You did \x04%s Extra Damage \x03to \x04%s!' % (damage, player.name)).send(atk_player.index)
+    else:
+        SayText2('\x04[WCS] \x04Critical Strike -  \x05You got \x04%s Extra Damage \x05from \x04%s!' % (damage, atk_player.name)).send(player.index)
+        SayText2('\x04[WCS] \x04Critical Strike - \x05You did \x04%s Extra Damage \x05to \x04%s!' % (damage, player.name)).send(atk_player.index)	
     origin = player.origin
     atk_origin = atk_player.origin
     queue_command_string('est_effect 3 #a 0 sprites/laserbeam.vmt %s %s %s %s %s %s 0.5 8 8 255 71 36 255' % (atk_origin[0], atk_origin[1], atk_origin[2]+20.0, origin[0], origin[1], origin[2]+20.0))
@@ -442,8 +467,12 @@ def orc_grenade(command):
     mult = float(command[4]) + 1.0
     damage = float(dmg) * mult
     queue_command_string('wcs_dealdamage %s %s %s' % (userid, attacker, int(damage)))
-    SayText2('\x04[WCS] \x04Critical Grenade -  \x05You got \x04%s Extra Damage \x05from \x04%s!' % (int(damage), atk_player.name)).send(player.index)
-    SayText2('\x04[WCS] \x04Critical Grenade - \x05You did \x04%s Extra Damage \x05to \x04%s!' % (int(damage), player.name)).send(atk_player.index)
+    if SOURCE_ENGINE_BRANCH	== 'css':
+        SayText2('\x04[WCS] \x04Critical Grenade -  \x03You got \x04%s Extra Damage \x03from \x04%s!' % (int(damage), atk_player.name)).send(player.index)
+        SayText2('\x04[WCS] \x04Critical Grenade - \x03You did \x04%s Extra Damage \x03to \x04%s!' % (int(damage), player.name)).send(atk_player.index)
+    else:
+        SayText2('\x04[WCS] \x04Critical Grenade -  \x05You got \x04%s Extra Damage \x05from \x04%s!' % (int(damage), atk_player.name)).send(player.index)
+        SayText2('\x04[WCS] \x04Critical Grenade - \x05You did \x04%s Extra Damage \x05to \x04%s!' % (int(damage), player.name)).send(atk_player.index)		
     origin = player.origin
     atk_origin = atk_player.origin
     queue_command_string('est_effect 10 #a 0 sprites\laserbeam.vmt %s %s %s 25 26 0.75 8 5 0 255 71 36 255 0' % (origin[0], origin[1], origin[2]+20.0))
@@ -507,8 +536,12 @@ def _trueshot_aura(command):
 	queue_command_string("est_effect 10 #a 0 sprites/laserbeam.vmt %s %s %s 40 41 1 10 100 0 0 175 0 255 1" % (origin[0], origin[1], origin[2]+10.0))
 	queue_command_string("est_effect 3 #a 0 sprites/laserbeam.vmt %s %s %s %s %s %s 1 15 15 0 175 0 255" % (origin[0], origin[1], origin[2]+20.0, atk_origin[0], atk_origin[1], atk_origin[2]+20.0))
 	queue_command_string("est_effect 10 #a 0 sprites/laserbeam.vmt %s %s %s 40 41 1 10 100 0 0 175 0 255 1" % (origin[0], origin[1], origin[2]+30.0))
-	SayText2('\x04[WCS] \x05You got \x04%s Extra Damage \x05from \x04%s!' % (amount, player_ent.name)).send(player.index)
-	SayText2('\x04[WCS] \x05You did \x04%s Extra Damage \x05to \x04%s' % (amount, player.name)).send(player_ent.index)
+	if SOURCE_ENGINE_BRANCH	== 'css':
+		SayText2('\x04[WCS] \x03You got \x04%s Extra Damage \x03from \x04%s!' % (amount, player_ent.name)).send(player.index)
+		SayText2('\x04[WCS] \x03You did \x04%s Extra Damage \x03to \x04%s' % (amount, player.name)).send(player_ent.index)
+	else:
+		SayText2('\x04[WCS] \x05You got \x04%s Extra Damage \x05from \x04%s!' % (amount, player_ent.name)).send(player.index)
+		SayText2('\x04[WCS] \x05You did \x04%s Extra Damage \x05to \x04%s' % (amount, player.name)).send(player_ent.index)		
 
 @ServerCommand('entanglin_roots')
 def _entanglin_roots(command):
@@ -522,8 +555,12 @@ def _entanglin_roots(command):
 			if distance <= range:
 				if not player.isdead:
 					queue_command_string('wcs_setfx freeze %s = 1 %s' % (player.userid, duration))
-					SayText2('\x04[WCS] \x04Entangling roots - \x05You were stunned by \x04%s!' % player_ent.name).send(player.index)
-					SayText2('\x04[WCS] \x05Entangling roots - \x05You stunned \x04%s' % player.name).send(player_ent.index)
+					if SOURCE_ENGINE_BRANCH	== 'css':
+						SayText2('\x04[WCS] \x04Entangling roots - \x03You were stunned by \x04%s!' % player_ent.name).send(player.index)
+						SayText2('\x04[WCS] \x05Entangling roots - \x03You stunned \x04%s' % player.name).send(player_ent.index)
+					else:
+						SayText2('\x04[WCS] \x04Entangling roots - \x05You were stunned by \x04%s!' % player_ent.name).send(player.index)
+						SayText2('\x04[WCS] \x05Entangling roots - \x05You stunned \x04%s' % player.name).send(player_ent.index)						
 					queue_command_string('est_effect_08 #a 0 sprites/blueglow1.vmt "%s, %s, %s" 60 40 1 1 90 400 0 0 255 0 255 20 1' % (player.origin[0], player.origin[1], player.origin[2]+40))
                     
 					
@@ -667,7 +704,10 @@ def _speed_ulti(command):
     player = Player(index_from_userid(userid))
     player.speed += speed
     queue_command_string('es_delayed %s playerset speed %s %s' % (delay, userid, player.speed-speed))
-    SayText2('\x04[WCS] \x05You got \x04%s%% Extra Speed \x05for \x04%s Seconds!' % (speed*100.0, delay)).send(index_from_userid(userid))
+    if SOURCE_ENGINE_BRANCH	== 'css':
+        SayText2('\x04[WCS] \x03You got \x04%s%% Extra Speed \x03for \x04%s Seconds!' % (speed*100.0, delay)).send(index_from_userid(userid))
+    else:
+        SayText2('\x04[WCS] \x05You got \x04%s%% Extra Speed \x05for \x04%s Seconds!' % (speed*100.0, delay)).send(index_from_userid(userid))
     
     
 	
@@ -684,8 +724,12 @@ def _wcs_ice_age(command):
             if distance <= range:
                 if not player.isdead:
                     player.speed -= speed
-                    SayText2('\x04[WCS] \x05You were slowed by \x04%s Ice Age!' % player_ent.name).send(player.index)
-                    SayText2('\x04[WCS] \x05You slowed \x04%s \x05with your \x04Ice Age' % player.name).send(player_ent.index)
+                    if SOURCE_ENGINE_BRANCH	== 'css':
+                        SayText2('\x04[WCS] \x03You were slowed by \x04%s Ice Age!' % player_ent.name).send(player.index)
+                        SayText2('\x04[WCS] \x03You slowed \x04%s \x03with your \x04Ice Age' % player.name).send(player_ent.index)
+                    else:
+                        SayText2('\x04[WCS] \x05You were slowed by \x04%s Ice Age!' % player_ent.name).send(player.index)
+                        SayText2('\x04[WCS] \x05You slowed \x04%s \x05with your \x04Ice Age' % player.name).send(player_ent.index)						
                     queue_command_string('es_delayed %s playerset speed %s %s' % (delay, player.userid, player.speed+speed))
                     queue_command_string('est_effect_08 #a 0 sprites/blueglow1.vmt "%s, %s, %s" 60 40 1 1 90 400 0 255 255 255 255 20 1' % (player.origin[0], player.origin[1], player.origin[2]+40))
                     
@@ -697,7 +741,10 @@ def _wcs_jetpack_ulti(command):
     player = Player(index_from_userid(userid))
     player.set_jetpack(1)
     player.push(0, 200, True)
-    SayText2('\x04[WCS] \x05Flying activated for \x04%s seconds!' % delay)
+    if SOURCE_ENGINE_BRANCH	== 'css':
+        SayText2('\x04[WCS] \x03Flying activated for \x04%s seconds!' % delay)
+    else:
+        SayText2('\x04[WCS] \x05Flying activated for \x04%s seconds!' % delay)
     queue_command_string('es_delayed %s playerset jetpack %s 0' % (delay, userid))
     
     
@@ -715,9 +762,13 @@ def _wcs_explode_command(command):
 			if distance <= range:
 				if not player.isdead:
 					queue_command_string('wcs_dealdamage %s %s %s' % (player.userid, player_ent.userid, damage))
-					SayText2("\x04[WCS] \x05You were hit by \x04%s's Suicide Explosion!" % player_ent.name).send(player.index)
-					SayText2('\x04[WCS] \x05You hit \x04%s \x05with your \x04Suicide Explosion' % player.name).send(player_ent.index)
-
+					if SOURCE_ENGINE_BRANCH	== 'css':	
+						SayText2("\x04[WCS] \x03You were hit by \x04%s's Suicide Explosion!" % player_ent.name).send(player.index)
+						SayText2('\x04[WCS] \x03You hit \x04%s \x03with your \x04Suicide Explosion' % player.name).send(player_ent.index)
+					else:	
+						SayText2("\x04[WCS] \x05You were hit by \x04%s's Suicide Explosion!" % player_ent.name).send(player.index)
+						SayText2('\x04[WCS] \x05You hit \x04%s \x05with your \x04Suicide Explosion' % player.name).send(player_ent.index)
+						
 @ServerCommand('wcs_chainlightning')
 def _wcs_chainlightning_command(command):
     userid = int(command[1])
@@ -735,8 +786,13 @@ def _wcs_chainlightning_command(command):
                     if not player.isdead:
                         queue_command_string('wcs_dealdamage %s %s %s' % (player.userid, player_ent.userid, damage))
                         chainlightning_effect(userid, player.userid)
-                        SayText2('\x04[WCS] \x05You were hit by \x04%s Chainlightning!' % player_ent.name).send(player.index)
-                        SayText2('\x04[WCS] \x05You hit \x04%s \x05with your \x04Chainlightning' % player.name).send(player_ent.index)
+						
+                        if SOURCE_ENGINE_BRANCH	== 'css':			
+                            SayText2('\x04[WCS] \x03You were hit by \x04%s Chainlightning!' % player_ent.name).send(player.index)
+                            SayText2('\x04[WCS] \x03You hit \x04%s \x03with your \x04Chainlightning' % player.name).send(player_ent.index)
+                        else:
+                            SayText2('\x04[WCS] \x05You were hit by \x04%s Chainlightning!' % player_ent.name).send(player.index)
+                            SayText2('\x04[WCS] \x05You hit \x04%s \x05with your \x04Chainlightning' % player.name).send(player_ent.index)							
                         x += 1
                     
 	

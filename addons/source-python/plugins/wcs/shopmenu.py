@@ -4,7 +4,6 @@ from menus import SimpleMenu
 from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
-from messages import SayText2
 from engines.server import queue_command_string,execute_server_command
 import wcs
 from commands.say import SayCommand
@@ -15,7 +14,6 @@ from events import Event
 from listeners import OnLevelInit
 from filters.players import PlayerIter
 import random
-import core
 from cvars import ConVar
 
 

@@ -8,6 +8,7 @@ from configobj import ConfigObj
 import os
 from paths import PLUGIN_PATH
 from messages import SayText2
+from core import SOURCE_ENGINE_BRANCH
 
 item_path = os.path.join(PLUGIN_PATH+"\wcs", 'items', 'items.ini')
 item_ini = ConfigObj(item_path)
@@ -44,7 +45,10 @@ def _showitems_command(command, index, team=None):
 		showitem_menu = PagedMenu(title='Inventory', build_callback=showitems_menu_build, select_callback=showitems_menu_select)
 		showitem_menu.send(index)
 	else:
-		SayText2("\x04[WCS] \x05You don't have any items!").send(index)
+		if SOURCE_ENGINE_BRANCH == "css":
+			SayText2("\x04[WCS] \x03You don't have any items!").send(index)
+		else:
+			SayText2("\x04[WCS] \x03You don't have any items!").send(index)
 					
 				
 				

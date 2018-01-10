@@ -6,7 +6,6 @@ from menus import Text
 from menus import SimpleOption
 from players.entity import Player
 from decimal import Decimal
-from messages import SayText2
 import wcs
 
 race_dict = {}

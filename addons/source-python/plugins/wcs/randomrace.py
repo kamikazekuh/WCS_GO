@@ -1,6 +1,5 @@
 from players.entity import Player
 from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index
-from messages import SayText2
 import wcs
 import random
 from commands.say import SayCommand
@@ -28,7 +27,6 @@ def doCommand(userid):
 	change_to = random.choice(allraces)
 	player = wcs.wcs.getPlayer(userid)
 	player.changeRace(change_to)
-	SayText2('\x04[WCS] \x05You changed your race to \x04%s' % change_to).send(index_from_userid(userid))
 	
 
 

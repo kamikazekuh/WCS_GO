@@ -9,6 +9,7 @@ from events import Event
 from entities.entity import Entity
 from mathlib import Vector
 from messages import Fade, FadeFlags
+from core import SOURCE_ENGINE_BRANCH
 
 @ServerCommand('wcs')
 def register(command):
@@ -251,8 +252,10 @@ def dealPoison(userid, attacker, dmg, time):
 	
 def _poison_repeat(userid,attacker,dmg):
 	damage(userid,attacker,dmg)
-	SayText2("\x04[WCS] \x05Poison did \x04%s \x05damage to you!" % (dmg)).send(Player.from_userid(int(userid)).index)
-
+	if SOURCE_ENGINE_BRANCH == 'css':
+		SayText2("\x04[WCS] \x03Poison did \x04%s \x03damage to you!" % (dmg)).send(Player.from_userid(int(userid)).index)
+	else:
+		SayText2("\x04[WCS] \x03Poison did \x04%s \x03damage to you!" % (dmg)).send(Player.from_userid(int(userid)).index)
 
 def changeTeam(userid, team):
 	Player.from_userid(userid).set_team(int(team))

@@ -3,7 +3,6 @@ import es
 from cmdlib import registerServerCommand, unregisterServerCommand
 from playerlib import getUseridList, getPlayer
 import langlib
-import saytextlib
 from paths import PLUGIN_PATH
 import os
 import sys
