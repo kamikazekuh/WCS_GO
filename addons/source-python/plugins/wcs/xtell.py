@@ -109,7 +109,7 @@ def tell(userid, text, tokens={}, extra='', lng=True):
 				if '#darkgreen' in text or '#darkgreen' in extra:
 					es.tell(userid, '#multi', str(text%extra).replace('#darkgreen', '\x05'))
 				else:
-					saytextlib.sayText2(userid, es.getindexfromhandle(es.getplayerhandle(userid)), str(text%extra))
+					es.tell(userid, '#multi', str(text%extra))
 			else:
 				if '%s' in text:
 					text = text.replace('%s', '')
@@ -117,6 +117,6 @@ def tell(userid, text, tokens={}, extra='', lng=True):
 				if '#darkgreen' in text:
 					es.tell(userid, '#multi', text.replace('#darkgreen', '\x05'))
 				else:
-					saytextlib.sayText2(userid, es.getindexfromhandle(es.getplayerhandle(user)), text)
+					es.tell(userid, '#multi', text)
 				
 reg()
