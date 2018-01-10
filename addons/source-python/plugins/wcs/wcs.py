@@ -1633,6 +1633,10 @@ def checkEvent(userid, event, other_userid=0, health=0, armor=0, weapon='', dmg_
 					if level:
 						wcs_dice = ConVar('wcs_dice')
 						wcs_dice.set_int(random.randint(0, 100))
+						while y < 10:
+							wcs_dice = ConVar('wcs_dice%s' %y)
+							wcs_dice.set_int(random.randint(0, 100))
+							y+=1
 						skill = 'skill'+str(int(index)+1)
 
 						try:
