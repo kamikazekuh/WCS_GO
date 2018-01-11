@@ -5,19 +5,19 @@ block load
 
 block spawn
 {
-		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
-		es_xmath wcs_z1 + 5
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 40 3.6 10 50 2 155 0 0 255 2
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 50 3.6 10 50 2 155 0 0 255 2
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 60 3.6 10 50 2 155 0 0 255 2
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 70 3.6 10 50 2 155 0 0 255 2
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 80 3.6 10 50 2 155 0 0 255 2
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 90 3.6 10 50 2 155 0 0 255 2
+	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+	es_xmath wcs_z1 + 5
+	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 40 3.6 10 50 2 155 0 0 255 2
+	es_xmath wcs_z1 + 10
+	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 50 3.6 10 50 2 155 0 0 255 2
+	es_xmath wcs_z1 + 10
+	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 60 3.6 10 50 2 155 0 0 255 2
+	es_xmath wcs_z1 + 10
+	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 70 3.6 10 50 2 155 0 0 255 2
+	es_xmath wcs_z1 + 10
+	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 80 3.6 10 50 2 155 0 0 255 2
+	es_xmath wcs_z1 + 10
+	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 90 3.6 10 50 2 155 0 0 255 2
 }
 
 block vampire
@@ -61,22 +61,25 @@ block vampire
 
 block unholy
 {
-		es wcs_setfx speed event_var(userid) = server_var(wcs_speed) 0
-		es_set wcs_speed_var server_var(wcs_speed)
-		es_xmath wcs_speed_var * 100
-		es_xmath wcs_speed_var - 100
-		es wcs_decimal wcs_speed_var server_var(wcs_speed_var)
-		es_tell event_var(userid) #multi #green[WCS]#lightgreen Unholy Aura - Increased your speed by server_var(wcs_speed_var)%
+	es wcs_setfx speed event_var(userid) = server_var(wcs_speed) 0
+	es_set wcs_speed_var server_var(wcs_speed)
+	es_xmath wcs_speed_var * 100
+	es_xmath wcs_speed_var - 100
+	es wcs_decimal wcs_speed_var server_var(wcs_speed_var)
+	es_tell event_var(userid) #multi #green[WCS]#lightgreen Unholy Aura - Increased your speed by server_var(wcs_speed_var)%
 }
 
 block levitation
 {
-		es wcs_setfx gravity event_var(userid) = server_var(wcs_gravity) 0
-		es_xmath wcs_gravity * 100
-		es_tell event_var(userid) #multi #green[WCS]#lightgreen Levitation - Reduced your gravity to server_var(wcs_gravity)%
+	es wcs_setfx gravity event_var(userid) = server_var(wcs_gravity) 0
+	es_xmath wcs_gravity * 100
+	es_tell event_var(userid) #multi #green[WCS]#lightgreen Levitation - Reduced your gravity to server_var(wcs_gravity)%
 }
 
 block bomb
 {
-	es wcs_explosion event_var(userid) server_var(wcs_magnitude) server_var(wcs_radius)
+	if (server_var(wcs_dice4) <= server_var(wcs_chance)) do 
+	{
+		es wcs_explosion event_var(userid) server_var(wcs_magnitude) server_var(wcs_radius)
+	}
 }

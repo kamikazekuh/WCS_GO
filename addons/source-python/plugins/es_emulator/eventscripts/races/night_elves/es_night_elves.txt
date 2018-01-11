@@ -1,42 +1,60 @@
 block spawn
 {
-		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
-		es_xmath wcs_z1 + 20
-		es_delayed .3 es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 200 2 10 100 0 175 175 255 155 1
-		es_xmath wcs_z1 + 10
-		es_delayed .2 es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 200 2 10 100 0 175 175 255 155 1
+	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+	es_xmath wcs_z1 + 20
+	es_delayed .3 es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 200 2 10 100 0 175 175 255 155 1
+	es_xmath wcs_z1 + 10
+	es_delayed .2 es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 200 2 10 100 0 175 175 255 155 1
 }
 
 block evade
 {
-		es_delayed 0.1 wcs_evasion event_var(userid) 1 server_var(wcs_chance)
-		es_tell event_var(userid) #multi #green[WCS] #lightgreenEvasion - You will be able to dodge bullets.
+	es wcs_evasion event_var(userid) 1 server_var(wcs_chance)
+	es_tell event_var(userid) #multi #green[WCS] #lightgreenEvasion - You will be able to dodge bullets.
 }
 
 block thorns
 {
-		es wcs_dealdamage event_var(attacker) event_var(userid) server_var(wcs_dmg)
-		es_centertell event_var(attacker) Took server_var(wcs_dmg) mirror damage from event_var(es_username)'s thorns!
-		es_centertell event_var(userid) Thorns did server_var(wcs_dmg) damage to event_var(es_attackername)! 
-		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
-		es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
-		es_xmath wcs_z1 + 15
-		es_xmath wcs_z2 + 15
-		es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 8 8 175 175 255 155
-		es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 15 15 175 175 200 155
+	if (server_var(wcs_dice2) <= server_var(wcs_chance)) do
+	{
+		if (event_var(es_userdead) = 0) do 
+		{
+			if (event_var(es_attackerdead) = 0) do 
+			{
+				es wcs_dealdamage event_var(attacker) event_var(userid) server_var(wcs_dmg)
+				es_centertell event_var(attacker) Took server_var(wcs_dmg) mirror damage from event_var(es_username)'s thorns!
+				es_centertell event_var(userid) Thorns did server_var(wcs_dmg) damage to event_var(es_attackername)! 
+				es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+				es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
+				es_xmath wcs_z1 + 15
+				es_xmath wcs_z2 + 15
+				es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 8 8 175 175 255 155
+				es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 15 15 175 175 200 155
+			}
+		}
+	}
 }
 
 block trueshot
 {
-		es wcs_dealdamage event_var(userid) event_var(attacker) server_var(wcs_dmg)
-		es_centertell event_var(attacker) "Trueshot aura did + server_var(wcs_dmg) damage!"
-		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
-		es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 40 41 1 10 100 0 175 175 255 155 1
-		es_xmath wcs_z1 + 10
-		es_xmath wcs_z2 + 20
-		es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 15 15 175 175 255 155
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 40 41 1 10 100 0 175 175 255 155 1
+	if (server_var(wcs_dice3) <= server_var(wcs_chance)) do
+	{
+		if (event_var(es_userdead) = 0) do 
+		{
+			if (event_var(es_attackerdead) = 0) do 
+			{
+				es wcs_dealdamage event_var(userid) event_var(attacker) server_var(wcs_dmg)
+				es_centertell event_var(attacker) "Trueshot aura did + server_var(wcs_dmg) damage!"
+				es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+				es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
+				es_xmath wcs_z1 + 10
+				es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 40 41 1 10 100 0 175 175 255 155 1
+				es_xmath wcs_z1 + 10
+				es_xmath wcs_z2 + 20
+				es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 15 15 175 175 255 155
+				es_xmath wcs_z1 + 10
+				es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 40 41 1 10 100 0 175 175 255 155 1
+			}
+		}
+	}
 }

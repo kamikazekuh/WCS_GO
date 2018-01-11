@@ -14,11 +14,14 @@ block load
 	es_xset wcs_y3 0
 	es_xset wcs_z3 0
 	es_xset wcs_exists 0
-	es_xset wcs_roundcounter 0
 	es_xexists wcs_exists command wcs_warden
 	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_warden races/shadow_hunter/wcs_warden "Warden, deals damage on nearby enemies"
+	
+	es_xset wcs_flare 0
+	es_xset wcs_radius3 0
+	es_xset wcs_radius4 0
+	es_xset wcs_duration 0
 }
-
 
 block wcs_warden
 {
@@ -92,8 +95,6 @@ block wcs_warden
 	}
 }
 
-
-
 block spawn
 {
 	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
@@ -121,22 +122,31 @@ block heal
 
 block hex
 {
-	es wcsgroup get is_slowed wcs_tmp3 event_var(userid)
-	if (server_var(wcs_tmp3) == 0) do
+	if (server_var(wcs_dice2) <= 10) do
 	{
-		es wcsgroup set is_slowed event_var(userid) 1
-		es_delayed server_var(wcs_duration) wcsgroup set is_slowed event_var(userid) 0
-		es wcs_setfx speed event_var(userid) = server_var(wcs_speed) server_var(wcs_duration)
-		es_centertell event_var(userid) Slowed by event_var(es_attackername) for server_var(wcs_duration) seconds!
-		es_centertell event_var(attacker) You slowed event_var(es_username) for server_var(wcs_duration) seconds!
-		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
-		es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
-		es_xmath wcs_z1 + 25
-		es_xmath wcs_z2 + 25
-		es est_effect 3 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 8 8 255 255 255 255
-		es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 45 50 1 10 10 0 255 255 255 255 0
-		es_xmath wcs_z1 + 10
-		es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 45 50 1 10 10 0 255 255 255 255 0
+		if (event_var(es_userdead) = 0) do
+		{
+			if (event_var(es_attackerdead) = 0) do
+			{
+				es wcsgroup get is_slowed wcs_tmp3 event_var(userid)
+				if (server_var(wcs_tmp3) == 0) do
+				{
+					es wcsgroup set is_slowed event_var(userid) 1
+					es_delayed server_var(wcs_duration) wcsgroup set is_slowed event_var(userid) 0
+					es wcs_setfx speed event_var(userid) = server_var(wcs_speed) server_var(wcs_duration)
+					es_centertell event_var(userid) Slowed by event_var(es_attackername) for server_var(wcs_duration) seconds!
+					es_centertell event_var(attacker) You slowed event_var(es_username) for server_var(wcs_duration) seconds!
+					es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+					es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
+					es_xmath wcs_z1 + 25
+					es_xmath wcs_z2 + 25
+					es est_effect 3 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 8 8 255 255 255 255
+					es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 45 50 1 10 10 0 255 255 255 255 0
+					es_xmath wcs_z1 + 10
+					es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 45 50 1 10 10 0 255 255 255 255 0
+				}
+			}
+		}
 	}
 }
 
@@ -145,6 +155,7 @@ block ward
 	es wcsgroup set ability event_var(userid) warden
 	es wcsgroup set ability_count event_var(userid) server_var(wcs_count)
 	es wcsgroup set ability_parameter event_var(userid) server_var(wcs_params)
+	es wcsgroup set ability_cooldown event_var(userid) 3
 }
 
 block immortal
