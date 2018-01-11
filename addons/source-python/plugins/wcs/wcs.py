@@ -22,7 +22,7 @@ from translations.strings import LangStrings
 from commands.say import SayCommand
 from commands.client import ClientCommand
 from commands.server import ServerCommand
-from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index, edict_from_userid
+from players.helpers import index_from_userid, userid_from_index
 from players.entity import Player
 from events import Event
 from engines.server import execute_server_command, queue_command_string
@@ -149,299 +149,7 @@ def get_cooldown(userid):
 				return downtime
 			else:
 				return int(downtime[len(downtime)-1])
-				
-def format_variable_commands(command):
-	while 'server_var' in command:
-		var_inside = find_between(command, 'server_var(',')')
-		var_complete = 'server_var(%s)' % var_inside
-		buffer = ConVar(var_inside)
-		var_value = buffer.get_string()
-		command = command.replace(var_complete, var_value)
-	return command
-	
-	
-def format_command(command, userid, attacker=0):
-	if '{userid}' in command:
-		command = command.replace('{userid}', str(userid))
-	if 'event_var(userid)' in command:
-		command = command.replace('event_var(userid)', str(userid))			
-		
-	if attacker != 0:
-		if '{attacker}' in command:
-			command = command.replace('{attacker}', str(attacker))
-		if 'event_var(attacker)' in command:
-			command = command.replace('event_var(attacker)', str(attacker))
 
-		
-		
-	command = format_variable_commands(command)
-	#command = re.sub(r"\bes\b","",command)
-	return command
-	
-def format_command_spawn(command, userid=0):
-	index = index_from_userid(userid)
-	player = Player(index)
-	if '{userid}' in command:
-		command = command.replace('{userid}', str(userid))
-	if 'event_var(userid)' in command:
-		command = command.replace('event_var(userid)', str(userid))	
-
-		
-	if '{user_name}' in command:
-		command = command.replace('{user_name}', player.name)
-	if 'event_var(es_username)' in command:
-		command = command.replace('event_var(es_username)', player.name)
-		
-	command = format_variable_commands(command)
-	#command = re.sub(r"\bes\b","",command)
-	return command
-	
-def format_command_kill(command, userid=0, other_userid=0, assister=0, headshot=0, weapon=''):
-	user_player = Player(index_from_userid(userid))
-	if other_userid:
-		other_player = Player(index_from_userid(other_userid))
-	if assister:
-		assist_player = Player(index_from_userid(assister))
-		
-		
-	if '{assister_name}' in command:
-		command = command.replace('{assister_name}', assister_player.name)
-	if 'event_var(es_assistername)' in command:
-		command = command.replace('event_var(es_assistername)', assister_player.namee)		
-		
-		
-	if '{user_name}' in command:
-		command = command.replace('{user_name}', user_player.name)
-	if 'event_var(es_attackername)' in command:
-		command = command.replace('event_var(es_attackername)', user_player.name)
-		
-	if '{victim_name}' in command:
-		command = command.replace('{victim_name}', other_player.name)
-	if 'event_var(es_username)' in command:
-		command = command.replace('event_var(es_username)', str(other_player.name))	
-
-		
-	if '{userid}' in command:
-		command = command.replace('{userid}', str(userid))
-	if 'event_var(attacker)' in command:
-		command = command.replace('event_var(attacker)', str(userid))			
-		
-		
-	if '{victim}' in command:
-		command = command.replace('{victim}', str(other_userid))
-	if 'event_var(userid)' in command:
-		command = command.replace('event_var(userid)', str(other_userid))	
-		
-		
-	if '{assister}' in command:
-		command = command.replace('{assister}', str(assister))
-	if 'event_var(assister)' in command:
-		command = command.replace('event_var(assister)', str(assister))			
-		
-		
-	if '{headshot}' in command:
-		command = command.replace('{headshot}', str(headshot))
-	if 'event_var(headshot)' in command:
-		command = command.replace('event_var(headshot)', str(headshot))	
-		
-		
-	if '{weapon}' in command:
-		command = command.replace('{weapon}', str(weapon))
-	if 'event_var(weapon)' in command:
-		command = command.replace('event_var(weapon)', str(weapon))
-		
-		
-	command = format_variable_commands(command)
-	#command = re.sub(r"\bes\b","",command)
-	return command
-		
-def format_command_death(command, userid=0, other_userid=0, assister=0, headshot=0, weapon=0):
-	user_player = Player(index_from_userid(userid))
-	if other_userid:
-		other_player = Player(index_from_userid(other_userid))
-	if assister:
-		assist_player = Player(index_from_userid(assister))
-		
-	if '{assister_name}' in command:
-		command = command.replace('{assister_name}', assister_player.name)
-	if 'event_var(es_assistername)' in command:
-		command = command.replace('event_var(es_assistername)', assister_player.name)		
-		
-		
-	if '{user_name}' in command:
-		command = command.replace('{user_name}', user_player.name)
-	if 'event_var(es_username)' in command:
-		command = command.replace('event_var(es_username)', user_player.name)		
-		
-	if '{attacker_name}' in command:
-		command = command.replace('{attacker_name}', other_player.name)
-	if 'event_var(es_attackername)' in command:
-		command = command.replace('event_var(es_attackername)', other_player.name)
-
-		
-	if '{userid}' in command:
-		command = command.replace('{userid}', str(userid))
-	if 'event_var(userid)' in command:
-		command = command.replace('event_var(userid)', str(userid))
-		
-		
-	if '{attacker' in command:
-		command = command.replace('{attacker}', str(other_userid))
-	if 'event_var(attacker)' in command:
-		command = command.replace('event_var(attacker)', str(other_userid))	
-		
-		
-	if '{assister}' in command:
-		command = command.replace('{assister}', str(assister))
-	if 'event_var(assister)' in command:
-		command = command.replace('event_var(assister)', str(assister))			
-		
-		
-	if '{headshot}' in command:
-		command = command.replace('{headshot}', str(headshot))
-	if 'event_var(headshot)' in command:
-		command = command.replace('event_var(headshot)', str(headshot))			
-		
-		
-	if '{weapon}' in command:
-		command = command.replace('{weapon}', str(weapon))
-	if 'event_var(weapon)' in command:
-		command = command.replace('event_var(weapon)', str(weapon))			
-		
-	command = format_variable_commands(command)
-	#command = re.sub(r"\bes\b","",command)
-	return command
-		
-def format_command_attacker(command, userid=0, other_userid=0, health=0, armor=0, weapon='', dmg_health=0, dmg_armor=0, hitgroup=0):
-	user_player = Player(index_from_userid(userid))
-	other_player = Player(index_from_userid(other_userid))
-	if '{user_name}' in command:
-		command = command.replace('{user_name}', user_player.name)
-	if 'event_var(es_attackername)' in command:
-		command = command.replace('event_var(es_attackername)', user_player.name)
-		
-		
-	if '{victim_name}' in command:
-		command = command.replace('{victim_name}', other_player.name)
-	if 'event_var(es_username)' in command:
-		command = command.replace('event_var(es_username)', other_player.name)		
-		
-	if '{userid}' in command:
-		command = command.replace('{userid}', str(userid))
-	if 'event_var(attacker)' in command:
-		command = command.replace('event_var(attacker)', str(userid))
-		
-
-	if '{victim}' in command:
-		command = command.replace('{victim}', str(other_userid))
-	if 'event_var(userid)' in command:
-		command = command.replace('event_var(userid)', str(other_userid))		
-		
-		
-	if '{health}' in command:
-		command = command.replace('{health}', str(health))
-	if 'event_var(es_userhealth)' in command:
-		command = command.replace('event_var(es_userhealth)', str(health))	
-		
-		
-	if '{armor}' in command:
-		command = command.replace('{armor}', str(armor))
-	if 'event_var(es_userarmor)' in command:
-		command = command.replace('event_var(es_userarmor)', armor)		
-		
-		
-	if '{weapon}' in command:
-		command = command.replace('{weapon}', str(weapon))
-	if 'event_var(weapon)' in command:
-		command = command.replace('event_var(weapon)', weapon)
-		
-
-	if '{dmg_health}' in command:
-		command = command.replace('{dmg_health}', str(dmg_health))
-	if 'event_var(dmg_health)' in command:
-		command = command.replace('event_var(dmg_health)', str(dmg_health))
-
-					
-	if '{dmg_armor}' in command:
-		command = command.replace('{dmg_armor}', str(dmg_armor))
-	if 'event_var(dmg_armor)' in command:
-		command = command.replace('event_var(dmg_armor)', str(dmg_armor))		
-				
-		
-	if '{hitgroup}' in command:
-		command = command.replace('{hitgroup}', str(hitgroup))
-	if 'event_var(hitgroup)' in command:
-		command = command.replace('event_var(hitgroup)', str(hitgroup))
-	command = format_variable_commands(command)
-	#command = re.sub(r"\bes\b","",command)
-	return command
-	
-def format_command_victim(command, userid=0, other_userid=0, health=0, armor=0, weapon=0, dmg_health=0, dmg_armor=0, hitgroup=0):
-	user_player = Player(index_from_userid(userid))
-	other_player = Player(index_from_userid(other_userid))
-	if '{user_name}' in command:
-		command = command.replace('{user_name}', user_player.name)
-	if 'event_var(es_username)' in command:
-		command = command.replace('event_var(es_username)', user_player.name)
-		
-		
-	if '{attacker_name}' in command:
-		command = command.replace('{attacker_name}', other_player.name)
-	if 'event_var(es_attackername)' in command:
-		command = command.replace('event_var(es_attackername)', other_player.name)
-		
-		
-	if '{userid}' in command:
-		command = command.replace('{userid}', str(userid))
-	if 'event_var(userid)' in command:
-		command = command.replace('event_var(userid)', str(userid))
-		
-		
-	if '{attacker' in command:
-		command = command.replace('{attacker}', str(other_userid))
-	if 'event_var(attacker)' in command:
-		command = command.replace('event_var(attacker)', str(other_userid))		
-		
-		
-	if '{health}' in command:
-		command = command.replace('{health}', str(health))
-	if 'event_var(es_userhealth)' in command:
-		command = command.replace('event_var(es_userhealth)', str(health))		
-		
-	if '{armor}' in command:
-		command = command.replace('{armor}', str(armor))
-	if 'event_var(es_userarmor)' in command:
-		command = command.replace('event_var(es_userarmor)', armor)		
-		
-		
-	if '{weapon}' in command:
-		command = command.replace('{weapon}', str(weapon))
-	if 'event_var(weapon)' in command:
-		command = command.replace('event_var(weapon)', weapon)
-		
-
-	if '{dmg_health}' in command:
-		command = command.replace('{dmg_health}', str(dmg_health))
-	if 'event_var(dmg_health)' in command:
-		command = command.replace('event_var(dmg_health)', str(dmg_health))
-
-					
-	if '{dmg_armor}' in command:
-		command = command.replace('{dmg_armor}', str(dmg_armor))
-	if 'event_var(dmg_armor)' in command:
-		command = command.replace('event_var(dmg_armor)', str(dmg_armor))		
-				
-		
-	if '{hitgroup}' in command:
-		command = command.replace('{hitgroup}', str(hitgroup))
-	if 'event_var(hitgroup)' in command:
-		command = command.replace('event_var(hitgroup)', str(hitgroup))
-		
-
-	command = format_variable_commands(command)
-	#command = re.sub(r"\bes\b","",command)
-	return command
-		
 	
 def format_message(message):
 	for color in color_codes:
@@ -753,13 +461,10 @@ class PlayerObject(object):
         self.race.save()
 
         if self.race.racedb['onchange']:
-            #command = format_command(self.race.racedb['onchange'], self.userid)
-            #command = re.sub(r"\bes\b","",command)
             command = self.race.racedb['onchange']
             command = command.split(";")
             for com in command:
                 execute_server_command('es', com)
-            #queue_command_string(command)
 
         oldrace = self.player.currace
 
@@ -1423,7 +1128,6 @@ def _player_hurt(event):
 	hitgroup = event.get_int('hitgroup')
 	
 	
-	#player_hurt execution
 	if victim:
 		victim_entity = Player(index_from_userid(victim))
 	if attacker:
@@ -1534,7 +1238,6 @@ def load_races():
 				command = command.split(";")
 				for com in command:
 					execute_server_command('es', com)
-				#queue_command_string(races[race]['preloadcmd'])
 
 def load():
 	global database
@@ -1543,7 +1246,6 @@ def load():
 	global curmap
 	curmap = ConVar("host_map")
 	races = racedb.getAll()
-	#racealias
 	global aliass
 	for race in races:
 		for section in races[race]:
@@ -1569,7 +1271,6 @@ def load():
 				command = command.split(";")
 				for com in command:
 					execute_server_command('es', com)
-				#queue_command_string(races[race]['preloadcmd'])
 
 			if 'skill' in section:
 				for y in races[race][section]:
@@ -1748,6 +1449,7 @@ def _wcs_reload_races_command(command):
 		racedb.races = ini.getRaces
 		time['reload'] = time.time()
 	load_races()
+	
 	
 @ServerCommand('wcs_get_skill_level')
 def get_skill_level(command):
