@@ -101,7 +101,7 @@ def changerace_menu_build(menu, index):
 			if 'category' in races[race]:
 				if races[race]['category'] == "0" or races[race]['category'] == "":
 					races[race]['category'] = 'unassigned'
-			if str(races[race]['category']) == cat_to_change_to:
+			if cat_to_change_to in str(races[race]['category']):
 				player = wcs.wcs.getPlayer(userid)
 				level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				v = canUse(userid, race)
