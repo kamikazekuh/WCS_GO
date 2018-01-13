@@ -18,7 +18,8 @@ def doCommand(userid):
 		filter_thingy = list(filter(lambda x: int(x) < nol, skills))
 		if len(filter_thingy):
 			spendskills = SimpleMenu()
-			spendskills.append(Text('You can spend points for the following '+race+' skills'))
+			spendskills.append(Text('Available '+race+' skills:'))
+			spendskills.append(Text('------------------------------'))
 			
 			skillnames = db['skillnames'].split('|')
 			skillneeded = db['skillneeded'].split('|')
@@ -34,11 +35,13 @@ def doCommand(userid):
 					else:
 						spendskills.append(SimpleOption(number+1, ''+str(skillnames[number])+': '+str(skills[number])+' > '+str(int(skills[number])+1), number+1, highlight=True))
 			
-			while added < 8:
-				spendskills.append(Text(' '))
-				added += 1
+			#while added < 8:
+				#spendskills.append(Text(' '))
+				#added += 1
+			spendskills.append(Text('------------------------------'))
 			spendskills.append(Text('Unused Points: '+str(player.race.unused)))
-			
+			spendskills.append(Text('------------------------------'))
+			spendskills.append(SimpleOption(8, 'Back', highlight=True,selectable=True))
 			spendskills.append(SimpleOption(9, 'Close', highlight=False))
 			spendskills.send(index)
 					
@@ -51,7 +54,10 @@ def doCommand(userid):
 			
 
 def popupHandler(menu, index, choice):
-	if choice.value < 9:
+	if choice.choice_index == 8:
+		player=Player(index)
+		player.client_command('wcs',server_side=True)		
+	if choice.choice_index < 8:
 		userid = userid_from_index(index)
 		player = wcs.wcs.getPlayer(userid)
 		race   = player.player.currace
