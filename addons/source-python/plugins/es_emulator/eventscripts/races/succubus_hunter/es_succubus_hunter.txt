@@ -1,8 +1,5 @@
 block spawn
 {
-	es wcs_cooldown_active event_var(userid) 0
-	es wcs_cooldown_active event_var(userid) 1
-	es wcs_setcooldown event_var(userid) 5
 	es_playsound event_var(userid) wcs/shadow.wav .8
 }
 
