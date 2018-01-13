@@ -102,6 +102,8 @@ def _wcs_admin_command(command, index, team=None):
 	userid = userid_from_index(index)
 	if is_admin(userid):
 		wcs_admin_menu.send(index)
+	else:
+		wcs.wcs.tell(userid, '\x04[WCS] \x05You are not a \x04WCS Admin!')
 	
 def is_admin(userid):
 	admins = ini.getAdmins
