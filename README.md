@@ -1,5 +1,6 @@
-# WCS_GO
-Warcraft Source mod for Source Python
+# Warcraft Source & Global Offensive
+
+Warcraft mod for Source Python
 
 Installation:
 
