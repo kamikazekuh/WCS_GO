@@ -45,6 +45,7 @@ from wcs import downloader
 from wcs import effects
 import wcs.events
 from wcs import firefix
+from wcs import ladderfix
 from wcs import levelbank
 from wcs import longjump
 from wcs import myinfo
