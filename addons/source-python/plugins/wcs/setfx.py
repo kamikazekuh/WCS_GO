@@ -209,6 +209,7 @@ def _setfx_command(command):
 			player.set_jetpack(int(amount))
 			if time:
 				Delay(time, removefx, ('jetpack',player,amount))
+		wcsgroup.setUser(player.userid,'jetpack',int(player.jetpack))
 				
 	if todo == 'gravity':
 		old_grav = player.gravity
@@ -216,9 +217,6 @@ def _setfx_command(command):
 			player.gravity = float(amount)
 			if time:
 				return_value = float(amount) - old_grav
-				#amount = 2
-				#old_grav = 1
-				#2-1 = 1
 				Delay(time, removefx, ('gravity', player, return_value))
 		if operator == "-":
 			player.gravity -= float(amount)
@@ -228,6 +226,7 @@ def _setfx_command(command):
 			player.gravity += float(amount)
 			if time:
 				Delay(time, removefx, ('gravity',player,amount)	)
+		wcsgroup.setUser(player.userid,'gravity',player.gravity)
 
 	if todo == 'health':
 		old_health = player.health
@@ -320,9 +319,12 @@ def removefx(todo,player,amount):
 		player.speed += float(amount)
 	if todo == 'jetpack':
 		player.set_jetpack(1-int(amount))
+		wcsgroup.setUser(player.userid,'jetpack',int(player.jetpack))
 	if todo == 'gravity':
 		player.gravity -= float(amount)
+		wcsgroup.setUser(player.userid,'gravity',player.gravity)
 	if todo == 'health':
 		player.health -= int(amount)
 	if todo == 'cash':
 		player.cash -= int(amount)
+
