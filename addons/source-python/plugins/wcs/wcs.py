@@ -1299,7 +1299,7 @@ def level_shutdown_listener():
 def level_init_listener(mapname):
 	allow_alpha = ConVar('sv_disable_immunity_alpha')
 	allow_alpha.set_int(1)
-
+	tmp.clear()
 	queue_command_string('sp reload wcs')
 	global curmap
 	curmap = mapname
