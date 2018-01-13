@@ -18,4 +18,4 @@ Installation:
       es_load races
 
 
-If you have any questions regarding Installation or Configuration of this mod please refer to warcraft-source.com
+If you have any questions regarding Installation or Configuration of this mod please refer to www.warcraft-source.com
