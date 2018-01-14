@@ -327,4 +327,3 @@ def removefx(todo,player,amount):
 		player.health -= int(amount)
 	if todo == 'cash':
 		player.cash -= int(amount)
-

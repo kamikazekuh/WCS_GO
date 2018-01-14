@@ -13,6 +13,7 @@ from configobj import ConfigObj
 import string
 import re
 from messages import HudMsg
+from menus import PagedMenu
 from listeners import OnTick
 import core
 
@@ -434,11 +435,13 @@ def getPlayer(userid):
 class PlayerObject(object):
     def __init__(self, userid):
         self.userid             = userid
-        self.index = index_from_userid(self.userid)
-        self.player_entity = Player(self.index)
+        self.index 				= index_from_userid(self.userid)
+        self.player_entity 		= Player(self.index)
         self.steamid            = self.player_entity.steamid
+        if self.steamid == 'BOT':
+            self.steamid = 'BOT_'+str(self.player_entity.name)
         self.UserID             = database.getUserIdFromSteamId(self.steamid)
-
+		
         if self.UserID is None:
             self.UserID         = database.addPlayer(self.steamid, self.player_entity.name)
 
@@ -466,7 +469,6 @@ class PlayerObject(object):
             command = command.split(";")
             for com in command:
                 execute_server_command('es', com)
-
         oldrace = self.player.currace
 
         self.player.currace = str(race)
@@ -608,6 +610,8 @@ class Race(object):
 		self.index = index_from_userid(self.userid)
 		self.player_entity = Player(self.index)
 		self.steamid    = self.player_entity.steamid
+		if self.steamid == 'BOT':
+			self.steamid == 'BOT_'+str(self.player_entity.name)
 		self.UserID     = UserID
 		self.player     = _getPlayer(self.userid, self.UserID)
 
@@ -1495,14 +1499,19 @@ def getInfoRegister(command):
 def on_tick():
 	if keymenu.get_int() == 1:
 		for player in PlayerIter('all'):
-			userid = player.userid
-			p = getPlayer(userid)
+			user_queue = PagedMenu.get_user_queue(player.index)
+			if user_queue.active_menu is None:
+				userid = player.userid
+				p = getPlayer(userid)
 
-			race = p.player.currace
-			totallevel = p.player.totallevel
-			level = p.race.level
-			xp = p.race.xp
-			needed = int(interval.get_int())*level if level else int(interval.get_int())
-			rank = database.getRank(es.getplayersteamid(userid))
-			text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
-			HudMsg(text, 0.025, 0.4,hold_time=0.5).send(player.index)
+				race = p.player.currace
+				totallevel = p.player.totallevel
+				level = p.race.level
+				xp = p.race.xp
+				needed = int(interval.get_int())*level if level else int(interval.get_int())
+				steamid = player.steamid
+				if steamid == 'BOT':
+					steamid == 'BOT_'+str(player.name)
+				rank = database.getRank(steamid)
+				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
+				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)

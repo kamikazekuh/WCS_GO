@@ -258,4 +258,4 @@ def _poison_repeat(userid,attacker,dmg):
 		SayText2("\x04[WCS] \x03Poison did \x04%s \x03damage to you!" % (dmg)).send(Player.from_userid(int(userid)).index)
 
 def changeTeam(userid, team):
-	Player.from_userid(userid).set_team(int(team))
+	Player.from_userid(int(userid)).set_team(int(team))

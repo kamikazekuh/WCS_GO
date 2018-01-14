@@ -11,9 +11,8 @@ from filters.players import PlayerIter
 def playerinfo_player_build(menu, index):
 	menu.clear()
 	for player in PlayerIter():
-		if player.steamid != 'BOT':
-			option = PagedOption('%s' % player.name, player)
-			menu.append(option)
+		option = PagedOption('%s' % player.name, player)
+		menu.append(option)
 
 def playerinfo_select(menu, index, choice):
 	if choice.choice_index == 8:

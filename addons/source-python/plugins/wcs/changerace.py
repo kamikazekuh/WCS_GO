@@ -164,7 +164,8 @@ def doCommand(userid,value=0):
 		allraces = races.keys()
 		if len(allraces):
 			changerace_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_menu_build, select_callback=changerace_menu_select)
-			changerace_menu.parent_menu = changerace_menu_cats
+			if categories_on.get_int() == 1:
+				changerace_menu.parent_menu = changerace_menu_cats
 			changerace_menu.send(index)
 	else:
 		cat_to_change_to = value

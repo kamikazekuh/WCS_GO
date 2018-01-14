@@ -27,7 +27,7 @@ def doCommand(userid):
 	showskills.append(Text('------------------------------'))
 	showskills.append(Text('Unused points: %s' % str(player.race.unused)))
 	showskills.append(Text('------------------------------'))
-	showskills.append(SimpleOption(8, 'Back',value='back',highlight=True,selectable=True))
+	showskills.append(SimpleOption(7, 'Back',value='back',highlight=True,selectable=True))
 	showskills.append(SimpleOption(9, 'Close', highlight=False))
 	showskills.send(index)
 

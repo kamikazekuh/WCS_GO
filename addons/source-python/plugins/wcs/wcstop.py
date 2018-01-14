@@ -23,9 +23,9 @@ def wcstop_menu_build(menu, index):
 
                     wcs.wcs.database.execute("SELECT level FROM Races WHERE UserID = ? AND name = ?", (UserID, currace))
                     level = wcs.wcs.database.fetchone()
-                    option = PagedOption('%s' % str(name), str(name), highlight=True, selectable=False)
+                    option = PagedOption('%s | Total level: %s | Playing %s | Level %s' % (str(name),totallevel, currace, level), str(name), highlight=True, selectable=False)
                     menu.append(option)
-                    menu.append(Text('  Total level: %s | Playing %s | Level %s' % (totallevel, currace, level)))
+                    #menu.append(Text('  Total level: %s | Playing %s | Level %s' % (totallevel, currace, level)))
                     
 def doCommand(userid):
     wcstop_menu = PagedMenu(title='WCS Top Menu',build_callback=wcstop_menu_build, select_callback=wcstop_menu_select)

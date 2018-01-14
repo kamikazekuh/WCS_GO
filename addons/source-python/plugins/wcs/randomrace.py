@@ -23,7 +23,6 @@ def doCommand(userid):
 		v = canUse(userid, race)
 		if v == 0:
 			allraces.remove(race)
-	print(allraces)
 	change_to = random.choice(allraces)
 	player = wcs.wcs.getPlayer(userid)
 	player.changeRace(change_to)
