@@ -193,16 +193,22 @@ def _setfx_command(command):
 				
 	if todo == "speed":
 		current_speed = player.speed
+		if time:
+			time = float(time)
 		if operator == "=":
+			oldspeed = player.speed
 			player.speed = float(amount)
+			dif = oldspeed - player.speed
+			if time:
+				Delay(time,removefx, ('speed',player,float(dif)))
 		if operator == "+":
 			player.speed += float(amount)
 			if time:
-				Delay(time, removefx, ('speed', player, -amount))
+				Delay(time, removefx, ('speed', player, -float(amount)))
 		if operator == "-":
 			player.speed -= float(amount)
 			if time:
-				Delay(time, removefx, ('speed', player, amount))		
+				Delay(time, removefx, ('speed', player, float(amount)))		
 
 	if todo == 'jetpack':
 		if operator == "=":
@@ -327,3 +333,4 @@ def removefx(todo,player,amount):
 		player.health -= int(amount)
 	if todo == 'cash':
 		player.cash -= int(amount)
+
