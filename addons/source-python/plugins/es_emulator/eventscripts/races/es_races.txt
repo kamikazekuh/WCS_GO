@@ -7,9 +7,7 @@ block load
 	es_load races/warden
 	es_load races/archmage_proudmoore
 	es_load races/blood_mage
-	es_load races/frost_demon
 	es_load races/human_alliance
-	es_load races/jack
 	es_load races/night_elves
 	es_load races/orcish_horde
 	es_load races/shadow_hunter
