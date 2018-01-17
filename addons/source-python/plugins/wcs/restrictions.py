@@ -122,6 +122,8 @@ def unrestrict(index, weapons):
     if weapons == 'all':
         restrictions[userid] = ""
     for x in buffer:
+		if "weapon_" not in x:
+			x = "weapon_"+x
         if x in restrictions[userid]:
             if x == "weapon_knife":
                 player.give_named_item('weapon_knife', 0, None, True)
