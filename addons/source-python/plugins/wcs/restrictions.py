@@ -95,6 +95,8 @@ def restrict(index, weapons, reverse=0):
             weapon = Entity(index)
             player.drop_weapon(weapon.pointer, NULL_VECTOR, NULL_VECTOR)
     for x in buffer:
+		if "weapon_" not in x:
+			x = "weapon_"+x
         if reverse == 0:
             if x not in restrictions[userid]:
                 restrictions[userid] = ''+restrictions[userid]+''+x
