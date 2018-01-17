@@ -29,7 +29,10 @@ def tick_listener():
 					else:
 						gravity = 1.0
 					player.gravity = float(gravity)
-					jetpack = int(wcsgroup.getUser(player.userid, 'jetpack'))
+					if wcsgroup.getUser(player.userid,'jetpack') != None:
+						jetpack = int(wcsgroup.getUser(player.userid, 'jetpack'))
+					else:
+						jetpack = 0
 					if jetpack == 1:
 						player.set_jetpack(1)
 		ladder[player.userid] = newval
