@@ -1019,16 +1019,25 @@ def round_start(event):
 				#queue_command_string(command)
 saved = 0
 
-@Event('round_end')
-def round_end(event):
-	global gamestarted
-	gamestarted = 0
+
+def remove_effects():
 	for player in PlayerIter():
 		userid = player.userid
 		queue_command_string('wcs_color %s 255 255 255 255' % userid)
 		queue_command_string('wcs_setgravity %s 1.0' % userid)
 		queue_command_string('es playerset speed %s 1.0' % userid)
 		queue_command_string('es wcsgroup set regeneration_active %s 0' % userid)
+
+		
+
+@Event('round_end')
+def round_end(event):
+	global gamestarted
+	gamestarted = 0
+	delay = ConVar('mp_round_restart_delay').get_int()
+	Delay(float(delay)-0.2,remove_effects)
+	for player in PlayerIter():
+		userid = player.userid
 		if player.team >= 2:
 			race = getPlayer(userid).player.currace
 			raceinfo = racedb.getRace(race)
@@ -1524,3 +1533,4 @@ def on_tick():
 				rank = database.getRank(steamid)
 				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
 				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)
+
