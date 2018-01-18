@@ -4,6 +4,7 @@ from filters.players import PlayerIter
 import wcs
 from players.helpers import userid_from_index
 import core
+from cvars import ConVar
 from commands import CommandReturn
 from events import Event
 race_counter = {}
@@ -14,6 +15,7 @@ race_counter['t'] = {}
 
 @ClientCommand('jointeam')
 def join_test(command,index):
+	#restrictteam
 	if len(command) == 1:
 		team_to_join = 5 - Player(index).team
 	else:
@@ -31,6 +33,8 @@ def join_test(command,index):
 			tell_team == "Counter-Terrorists"
 		wcs.wcs.tell(userid_from_index(index),"\x04[WCS] \x05This race is restricted to \x04%s!" % tell_team)
 		return CommandReturn.BLOCK
+		
+	###teamlimit
 	teamlimit = raceinfo['teamlimit']
 	if teamlimit != None:
 		teamlimit = int(teamlimit)
@@ -57,7 +61,22 @@ def join_test(command,index):
 				race_counter[team_name][race] += 1
 			else:
 				race_counter[team_name][race] += 1
+		if player_race not in race_counter[team_name]:
+			race_counter[team_name][player_race] = 0
 		if teamlimit <= int(race_counter[team_name][player_race]):
+			core.console_message("TESTTESTEST")
 			wcs.wcs.centertell(userid_from_index(index),"%s is taken, there can only be %s on %s" % (player_race,teamlimit,tell_team))
-			return CommandReturn.BLOCK			
+			return CommandReturn.BLOCK	
+
+	###restrictmap
+	restrictmap = raceinfo['restrictmap']
+	if restrictmap != None:
+		current_map = ConVar('host_map').get_string()
+		if ".bsp" in current_map:
+			current_map = current_map.strip(".bsp")
+		if current_map == restrictmap:
+			wcs.wcs.centertell(userid_from_index(index),"%s is restricted on %s" % (player_race,restrictmap))
+			return CommandReturn.BLOCK
+		
+		
 		
