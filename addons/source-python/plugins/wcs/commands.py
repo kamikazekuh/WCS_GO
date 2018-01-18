@@ -817,14 +817,22 @@ def _changeteam_command(command):
 def _centermessage_command(command):
 	message = command.arg_string
 	for player in PlayerIter():
-		TextMsg(message).send(player.index)
+		if SOURCE_ENGINE_BRANCH == "css":
+			queue_command_string("es_centertell %s %s" %(player.userid,message))
+		else:
+			HudMsg(message, -1, 0.35,hold_time=5.0).send(player.index)
 		
 @ServerCommand('wcs_centertell')
 def _centertell(command):
 	userid = int(command[1])
 	command_string = command.arg_string
 	command_string = command_string.replace(str(userid)+" ", '')
-	TextMsg(command_string).send(Player.from_userid(userid).index)
+	index = index_from_userid(userid)
+	if SOURCE_ENGINE_BRANCH == "css":
+		queue_command_string("es_centertell %s %s" %(userid,command_string))
+	else:
+		HudMsg(command_string, -1, 0.35,hold_time=5.0).send(index)
+
 		
 @ServerCommand('wcs_delayed')
 def _delayed_command(command):
@@ -837,3 +845,4 @@ def _delayed_command(command):
 		command_parts_text = ''+command_parts_text+' '+arg
 	command_parts_text = command_parts_text.replace(' ', '', 1)
 	Delay(delay, queue_command_string, (('%s' % command_parts_text),))	
+
