@@ -978,6 +978,13 @@ def _player_activate(event):
 		Delay(10.0, tell, (userid, '\x04[WCS] \x05Welcome to this \x04WCS server\x05. Try \x04"wcshelp" \x05and bind mouse3 ultimate'))
 
 	wcsgroup.addUser(userid)
+	delay = ConVar('mp_force_pick_time').get_int()
+	Delay(float(delay),set_team,(event['userid'],))
+	
+def set_team(userid):
+	player = Player.from_userid(userid)
+	if player.team == 0:
+		Player.from_userid(userid).team = 1
 
 @Event('player_disconnect')	
 def player_disconnect(event):
@@ -1267,7 +1274,7 @@ def load():
 	database = DATABASE_STORAGE_METHOD(databasePath)
 	database.updateRank()
 	global curmap
-	curmap = ConVar("host_map")
+	curmap = ConVar("host_map").get_string().strip('.bsp')
 	races = racedb.getAll()
 	global aliass
 	for race in races:
@@ -1321,11 +1328,16 @@ def level_shutdown_listener():
 @OnLevelInit
 def level_init_listener(mapname):
 	allow_alpha = ConVar('sv_disable_immunity_alpha')
+	autoassign = ConVar('mp_force_pick_time')
+	autoassing.set_int(0)
 	allow_alpha.set_int(1)
 	tmp.clear()
 	queue_command_string('sp reload wcs')
 	global curmap
+	if ".bsp" in mapname:
+		mapname = mapname.strip('.bsp')
 	curmap = mapname
+	
     
 def execute_command(command,event, userid, other_userid=0, health=0, armor=0, weapon=0, dmg_health=0, dmg_armor=0, hitgroup=0,headshot = 0,assister=0):
 	command = command.split(";")
