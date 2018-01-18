@@ -64,6 +64,7 @@ from wcs import showitems
 from wcs import showskills
 from wcs import spendskills
 from wcs import svar
+from wcs import teamrestrictions
 from wcs import wcs_commands
 from wcs import wcsgroup
 from wcs import wcshelp
@@ -169,6 +170,13 @@ def tell(userid, message):
 	if text_message == 2:
 		message = format_message(message)
 		HintText(message).send(index)
+		
+def centertell(userid,message):
+	index = index_from_userid(userid)
+	if SOURCE_ENGINE_BRANCH == "css":
+		queue_command_string("es_centertell %s %s" %(userid,message))
+	else:
+		HudMsg(message, -1, 0.35,hold_time=5.0).send(index)
 		
 '''def format_tell_message(message):
 	if '#white' in message:
@@ -1177,21 +1185,22 @@ def _player_spawn(event):
 		if int(raceinfo['restrictteam']) and not player_entity.steamid == 'BOT':
 			if player_entity.team == int(raceinfo['restrictteam']) and player_entity.team >= 2 and not player_entity.steamid == 'BOT':
 				player_entity.team = 1
-				changerace.doCommand(userid, 'changerace')
-				wcsgroup.setUser(userid, 'restrictteam', team)
+				changerace.HowChange(userid)
 
 		elif 'teamlimit' in raceinfo and not player_entity.steamid == 'BOT':
 			q = int(raceinfo['teamlimit'])
 			if q:
 				v = wcsgroup.getUser({2:'T',3:'CT'}[player_entity.team], 'restricted')
+				if v == None:
+					v = 0
 				if v > q:
 					player_entity.team = 1
-					changerace.doCommand(userid, 'changerace')
+					changerace.HowChange(userid)
 
 		elif curmap in raceinfo['restrictmap'].split('|'):
 			if not player_entity.steamid == 'BOT':
 					player_entity.team = 1
-					changerace.doCommand(userid, 'changerace')
+					changerace.HowChange(userid)
 
 		if raceinfo['spawncmd']:
 			command = raceinfo['spawncmd']
