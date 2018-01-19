@@ -17,6 +17,8 @@ popups = []
 
 global cats
 global cat_to_change_to
+global race_arg
+race_arg = ""
 cats = 0
 categories_on = ConVar('wcs_activate_categories')
 if categories_on.get_string() == "1":
@@ -31,13 +33,22 @@ def on_convar_changed(convar, old_value):
 		global cats
 		cats = os.path.join(PLUGIN_PATH+'/wcs', 'categories', 'categories.ini')
 		cats = ConfigObj(cats)
-
+		
 	
-def HowChange(userid):
-	if categories_on.get_int() == 1:
-		doCommand_cats(userid)
-	if categories_on.get_int() == 0:
-		doCommand(userid)
+def HowChange(userid,args=0):
+	if args:
+		if wcs.wcs.changerace_racename.get_int() == 1:
+			doRacename(userid,args)
+		else:
+			if categories_on.get_int() == 1:
+				doCommand_cats(userid)
+			if categories_on.get_int() == 0:
+				doCommand(userid)			
+	else:
+		if categories_on.get_int() == 1:
+			doCommand_cats(userid)
+		if categories_on.get_int() == 0:
+			doCommand(userid)
 		
 def changerace_menu_build(menu, index):
 	global cat_to_change_to
@@ -208,6 +219,95 @@ def doCommand_cats(userid):
 	if len(allcats):
 		changerace_menu_cats.send(index)
 		
+def changerace_racename_select(menu, index, choice):
+	userid = userid_from_index(index)
+	player = wcs.wcs.getPlayer(userid)
+	player.changeRace(choice.value)		
+		
+def changerace_racename_build(menu, index):
+	races = wcs.wcs.racedb.getAll()
+	menu.clear()
+	userid = userid_from_index(index)
+	player_entity = Player(index)
+	allraces = races.keys()
+	for number, race in enumerate(allraces):
+		if race_arg.lower() in race.lower():
+			player = wcs.wcs.getPlayer(userid)
+			level = wcs.wcs._getRace(player.player.UserID, race, userid).level
+			v = canUse(userid, race)
+			raceinfo = wcs.wcs.racedb.getRace(race)
+			nol = int(raceinfo['numberoflevels'])
+			nos = int(raceinfo['numberofskills'])
+			max_level = nol * nos
+			level_buffer = level
+			if level_buffer > max_level:
+				level_buffer = max_level
+			team = player_entity.team
+			if not v:
+				if wcs.wcs.showracelevel:
+					level = wcs.wcs._getRace(player.player.UserID, race, userid).level
+				if level > 0:
+					option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
+					menu.append(option)
+				else:
+					option = PagedOption('%s' % str(race), race)
+					menu.append(option)				
+			elif v == 2:
+				option = PagedOption('%s - Maximum level: %s' % (str(race), str(max_level)), race, highlight=False, selectable=False)
+				menu.append(option)
+			elif v == 3:
+				option = PagedOption('%s - Minimum level: %s' % (str(race), str(raceinfo['required'])), race, highlight=False, selectable=False)
+				menu.append(option)
+			elif v == 4:
+				if team in (2,3):
+					option = PagedOption('%s - Restricted team %s' % (str(race), {2:'T',3:'CT'}[team]), race, highlight=False, selectable=False)
+					menu.append(option)
+				else:
+					if wcs.wcs.showracelevel:
+						level = wcs.wcs._getRace(player.player.UserID, race, userid).level
+					if level > 0:
+						option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
+						menu.append(option)
+					else:
+						option = PagedOption('%s' % str(race), race)
+						menu.append(option)	
+			elif v == 5:
+				option = PagedOption('%s - Private race' % str(race), race, highlight=False, selectable=False)
+				menu.append(option)
+			elif v == 6:
+				option = PagedOption('%s - Restricted map: %s' % (str(race), wcs.wcs.curmap), race, highlight=False, selectable=False)
+				menu.append(option)
+			else:
+				break
+
+		
+		
+changerace_racename_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_racename_build,select_callback=changerace_racename_select)
+
+def find_races(args):
+	found_list = []
+	races = wcs.wcs.racedb.getAll()
+	allraces = races.keys()	
+	for number, race in enumerate(allraces):
+		if args.lower() in race.lower():
+			found_list.append(race)
+	if len(found_list) != 0:
+		return found_list
+	else:
+		return -1
+		
+		
+		
+def doRacename(userid,args):
+	index = index_from_userid(userid)
+	races_found = find_races(args)
+	if races_found != -1:
+		global race_arg
+		race_arg = args
+		changerace_racename_menu.send(index)
+	
+	
+		
 def canUse(userid, race):
 	raceinfo = wcs.wcs.racedb.getRace(race)
 	player_entity = Player(index_from_userid(userid))
@@ -226,3 +326,4 @@ def canUse(userid, race):
 		return 5
 	return 6
 		
+
