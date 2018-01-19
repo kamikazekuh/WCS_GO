@@ -16,7 +16,7 @@ from menus import PagedMenu
 import wcs
 from wcs import givexp
 from wcs import givelevel
-from wcs import givecash
+from wcs import changerace_admin
 from wcs import resetrace
 from wcs import resetplayer
 from wcs import settings
@@ -46,8 +46,8 @@ def _wcs_admin_menu_select(menu, index, choice):
             wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
             wcs_admin_menu.send(index)
     if choice.choice_index == 4:
-        if has_flag(userid, 'wcsadmin_givecash'):
-            givecash.doCommand(userid)
+        if has_flag(userid, 'wcsadmin_changerace'):
+            changerace_admin.doCommand(userid)
         else:
             wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04access \x05this menu!')
             wcs_admin_menu.send(index)
@@ -79,7 +79,7 @@ wcs_admin_menu = SimpleMenu(
         SimpleOption(1, 'Settings', value_1),
         SimpleOption(2, 'Give XP', value_2),
         SimpleOption(3, 'Give Levels', value_1),
-        SimpleOption(4, 'Give Cash', value_2),
+        SimpleOption(4, 'Change Race', value_2),
         SimpleOption(5, 'Reset Race', value_2),
         SimpleOption(6, 'Reset Player', value_1),
         SimpleOption(7, 'Level Bank', value_2),
