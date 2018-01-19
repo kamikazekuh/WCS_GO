@@ -39,6 +39,7 @@ def playerinfo_player_select(menu, index, choice):
 	playerinfo_menu.append(Text('Health : %s HP' % player_entity.health))
 	playerinfo_menu.append(Text('Speed : %s%%' % str(round(player_entity.speed*100))))
 	playerinfo_menu.append(Text('Gravity : %s%%' % str(round(player_entity.gravity*100))))
+	playerinfo_menu.append(Text('Invisiblity: %s%%' % (100-round(player_entity.color[3]/2.55))))
 	playerinfo_menu.append(SimpleOption(8, 'Back',value=8))
 	playerinfo_menu.append(Text(' '))
 	playerinfo_menu.append(SimpleOption(9, 'Close', highlight=False))
