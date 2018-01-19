@@ -98,6 +98,7 @@ showracelevel = addon_config.cvar('wcs_cfg_showracelevel', '1')
 keymenu = addon_config.cvar('wcs_activate_keymenu', '0')
 categories = addon_config.cvar('wcs_activate_categories', '0')
 unassigned_cat = addon_config.cvar('wcs_unassigned_category', '1')
+changerace_racename	= addon_config.cvar('wcs_changerace_racename','1')
 addon_config.write()
 
 cfgdata = {'interval':				interval.cvar.get_int(),
@@ -923,7 +924,10 @@ def _spendskills_command(command, index, team= None):
 @ClientCommand('changerace')
 def _changerace_command(command, index, team=None):
 	userid = userid_from_index(index)
-	changerace.HowChange(userid)
+	if not command.arg_string:
+		changerace.HowChange(userid)
+	else:
+		changerace.HowChange(userid,command.arg_string)
 	
 @SayCommand('resetskills')
 @ClientCommand('resetskills')
@@ -1545,4 +1549,5 @@ def on_tick():
 				rank = database.getRank(steamid)
 				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
 				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)
+
 
