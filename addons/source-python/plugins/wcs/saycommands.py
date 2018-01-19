@@ -7,5 +7,5 @@ command_list = ['wcsadmin', 'wcsbankadmin', 'wcsbank', 'wcsmenu', 'wcs', 'change
 def _say_command_hook(command, index, team=None):
 	player = Player(index)
 	if command[0] in command_list:
-		player.client_command(command[0])
+		player.client_command(command.command_string)
 		return False
