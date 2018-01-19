@@ -16,7 +16,6 @@ Installation:
       sp plugin load es_emulator
       sp plugin load wcs
       es_load wcs/tools
-      es_load wcs/addons/effect
       es_load races
 
 
