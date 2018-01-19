@@ -1332,8 +1332,6 @@ def level_shutdown_listener():
 @OnLevelInit
 def level_init_listener(mapname):
 	allow_alpha = ConVar('sv_disable_immunity_alpha')
-	autoassign = ConVar('mp_force_pick_time')
-	autoassing.set_int(0)
 	allow_alpha.set_int(1)
 	tmp.clear()
 	queue_command_string('sp reload wcs')
