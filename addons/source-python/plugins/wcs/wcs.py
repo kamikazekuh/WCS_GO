@@ -99,6 +99,7 @@ keymenu = addon_config.cvar('wcs_activate_keymenu', '0')
 categories = addon_config.cvar('wcs_activate_categories', '0')
 unassigned_cat = addon_config.cvar('wcs_unassigned_category', '1')
 changerace_racename	= addon_config.cvar('wcs_changerace_racename','1')
+maximum_level = addon_config.cvar('wcs_maximum_level_per_race','1000')
 addon_config.write()
 
 cfgdata = {'interval':				interval.cvar.get_int(),
@@ -702,7 +703,7 @@ class Race(object):
 		if not amount:
 			return
 
-		maximumlevel = 1000 #Tha Pwned
+		maximumlevel = maximum_level.get_int() #Tha Pwned
 
 		if 'maximumlevel' in self.racedb: #Tha Pwned
 			maximumlevel = int(self.racedb['maximumlevel']) #Tha Pwned
@@ -742,7 +743,7 @@ class Race(object):
 		if not amount:
 			return
 			
-		maximumlevel = 1000 #Tha Pwned
+		maximumlevel = maximum_level.get_int()
 
 		if 'maximumlevel' in self.racedb: #Tha Pwned
 			maximumlevel = int(self.racedb['maximumlevel']) #Tha Pwned
