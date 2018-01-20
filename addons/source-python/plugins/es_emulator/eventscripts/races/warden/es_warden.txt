@@ -59,7 +59,7 @@ block damage
 		{
 			if (event_var(es_attackerdead) = 0) do
 			{
-				es wcs_timedamage event_var(userid) event_var(attacker) 4 1 4
+				es wcs timed_damage event_var(userid) event_var(attacker) 4 1 4
 				es_tell event_var(attacker) #multi #green [WCS]: #lightgreen Shadow strike - You poisoned your target for 4 seconds
 				es_tell event_var(userid) #multi #green [WCS]: #lightgreen Shadow strike - You've been poisoned for 4 seconds
 				es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(attacker)
