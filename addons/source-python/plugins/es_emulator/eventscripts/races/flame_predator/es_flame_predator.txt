@@ -1,7 +1,15 @@
 block spawn
 {
-	es wcs_restrict event_var(userid) "glock;usp;p228;deagle;elite;fiveseven;m3;xm1014;mac10;tmp;mp5navy;ump45;p90;galil;famas;ak47;m4a1;scout;aug;sg550;awp;sg552;g3sg1;m249"
-	es wcs_give event_var(userid) weapon_knife
+	es_getgame wcs_gamecheck
+	if ("Counter-Strike: Source" in server_var(wcs_gamecheck)) do
+	{
+		es wcs_restrict event_var(userid) "glock;usp;p228;deagle;elite;fiveseven;m3;xm1014;mac10;tmp;mp5navy;ump45;p90;galil;famas;ak47;m4a1;scout;aug;sg550;awp;sg552;g3sg1;m249"
+	}
+	if ("Counter-Strike: Global Offensive" in server_var(wcs_gamecheck)) do
+	{
+		es wcs_restrict event_var(userid) "glock;usp_silencer;p250;hkp2000;elite;fiveseven;deagle;revolver;tec9;taser;sawedoff;nova;xm1014;mag7;p90;mp9;mp7;bizon;mac10;ump45;weapon_m4a1_silencer;m4a1_silencer;galilar;ak47;aug;famas;g3sg1;scar20;sg556;ssg08;m249;negev"
+	}
+	es_give event_var(userid) weapon_knife
 	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
 	es_xmath wcs_z1 + 15
 	es est_effect 10 #a 0 sprites/laser.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 80 70 2 5 15 0 255 255 255 255 255
