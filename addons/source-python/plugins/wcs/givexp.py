@@ -37,6 +37,7 @@ amount_menu = PagedMenu(title='Amount Menu', select_callback=wcs_amount_select)
 
 def wcsadmin_givexp_menu_select(menu, index, choice):
 	player_entity = choice.value
+	amount_menu.clear()
 	amount_menu.parent_menu = menu
 	amount_menu.append(PagedOption('1', player_entity))
 	amount_menu.append(PagedOption('10', player_entity))
