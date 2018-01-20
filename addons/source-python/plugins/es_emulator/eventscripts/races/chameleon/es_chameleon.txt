@@ -139,7 +139,7 @@ block empower
 
 block amplifier
 {
-	if (server_var(wcs_dice2) <= server_var(wcs_chance) do
+	if (server_var(wcs_dice2) <= server_var(wcs_chance)) do
 	{
 		if (event_var(es_userdead) = 0) do 
 		{
@@ -242,7 +242,7 @@ block amplifier
 
 block surprise
 {
-	if (server_var(wcs_dice3) <= server_var(wcs_chance) do
+	if (server_var(wcs_dice3) <= server_var(wcs_chance)) do
 	{
 		if (event_var(es_userdead) = 0) do 
 		{
@@ -321,7 +321,7 @@ block surprise
 
 block lastwish
 {
-	if (server_var(wcs_dice4) <= server_var(wcs_chance) do
+	if (server_var(wcs_dice4) <= server_var(wcs_chance)) do
 	{
 		if (event_var(es_attackerdead) = 0) do 
 		{
@@ -390,26 +390,10 @@ block unlimited
 	{
 		es wcs_set_cooldown server_var(wcs_userid) 3
 		es wcs_get_skill_level server_var(wcs_userid) wcs_tmp5 5
-		es_math server_var(wcs_tmp5) * 50
-		es_math server_var(wcs_tmp5) + 450
-		es wcs_getviewcoords server_var(wcs_userid) wcs_x2 wcs_y2 wcs_z2
-		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 server_var(wcs_userid)
-		es wcs_getdistance wcs_distance server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2)
-		if (server_var(wcs_distance) <= server_var(wcs_range)) do
-		{
-			es_tell server_var(wcs_userid) #multi #green[WCS] You teleported
-			es wcs_pushto server_var(wcs_userid) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2)
-			es_xmath wcs_z1 + 25
-			es_createvectorstring vector1 server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1)
-			es est_effect 7 #a 0 sprites/smoke.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 25 10
-			es est_effect_14 #a 0 effects/strider_muzzle.vmt server_var(vector1) server_var(vector1) 50 50 47
-			es est_effect 11 #a 0 effects/strider_muzzle.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) .4 1 160
-			es est_effect_08 #a 0 effects/strider_muzzle.vmt server_var(vector1) 80 85 .5 .5 60 10 0 255 255 255 255 8 5
-		}
-		else do
-		{
-			es_tell server_var(wcs_userid) #multi #green[WCS] #lightgreenYou cannot teleport this far.
-		}
+		es_math wcs_tmp5 * 50
+		es_math wcs_tmp5 + 450
+		es_xset wcs_range server_var(wcs_tmp5)
+		es_xdoblock races/human_alliance/teleport
 	}
 	if (server_var(wcs_tmp6) == 3) do
 	{
@@ -449,7 +433,7 @@ block unlimited
 			es wcsgroup set chameleon_fly server_var(wcs_userid) 2
 			es wcs_setfx jetpack server_var(wcs_userid) = 1 0
 			es_centertell server_var(wcs_userid) You are now flying
-			es wcs_setcooldown server_var(wcs_userid) 0
+			es wcs_set_cooldown server_var(wcs_userid) 0
 			es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 server_var(wcs_userid)
 			es est_effect 7 #a 0 sprites/smoke.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 25 10
 			es_xmath wcs_z1 + 3
@@ -458,7 +442,6 @@ block unlimited
 		if (server_var(wcs_tmp) == 2) do
 		{
 			es wcsgroup set chameleon_fly server_var(wcs_userid) 1
-			es wcs_setcooldown server_var(wcs_userid) 1
 			es wcs_setfx jetpack server_var(wcs_userid) = 0 0
 			es_centertell server_var(wcs_userid) You are no longer flying
 			es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 server_var(wcs_userid)
