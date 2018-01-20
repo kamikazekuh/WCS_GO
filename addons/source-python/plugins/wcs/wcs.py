@@ -14,6 +14,7 @@ import string
 import re
 from messages import HudMsg
 from menus import PagedMenu
+from menus import PagedOption
 from listeners import OnTick
 import core
 
@@ -75,9 +76,9 @@ from wcs import xtell
 
 
 
-#   Config
+#	Config
 from config.manager import ConfigManager
-#   Cvars
+#	Cvars
 from cvars.flags import ConVarFlags
 from cvars import ConVar
 
@@ -118,19 +119,19 @@ gamestarted = 0
 	
 #Helper Functions
 def get_addon_path():
-    path = os.path.dirname(os.path.abspath(__file__))
-    return path
+	path = os.path.dirname(os.path.abspath(__file__))
+	return path
 
 if os.path.isfile(os.path.join(get_addon_path(), 'strings', 'strings.ini')):
 	strings = LangStrings(os.path.join(get_addon_path(), 'strings', 'strings'))	
 	
 def find_between(s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
+	try:
+		start = s.index( first ) + len( first )
+		end = s.index( last, start )
+		return s[start:end]
+	except ValueError:
+		return ""
 		
 def get_cooldown(userid):
 	player = getPlayer(userid)
@@ -295,7 +296,7 @@ class raceDatabase(object):
 		return aliass
 
 	def index(self, race):
-		return self.races.keys().index(race)     
+		return self.races.keys().index(race)	 
 racedb = raceDatabase()
 
 
@@ -310,8 +311,8 @@ class SQLiteManager(object):
 		else:
 			self.pathFile = Path(pathFile)
 
-		self.connection   = sqlite.connect(self.pathFile.joinpath('players.sqlite'))
-		self.cursor       = self.connection.cursor()
+		self.connection	  = sqlite.connect(self.pathFile.joinpath('players.sqlite'))
+		self.cursor		  = self.connection.cursor()
 
 		self.connection.text_factory = str
 		#self.execute("PRAGMA synchronous=NORMAL")
@@ -321,25 +322,25 @@ class SQLiteManager(object):
 
 		self.execute("""\
 			CREATE TABLE IF NOT EXISTS Players (
-				UserID        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				steamid       VARCHAR(30) NOT NULL,
-				currace       VARCHAR(30) NOT NULL,
-				name          VARCHAR(30) NOT NULL,
-				totallevel    INTEGER DEFAULT 0,
-				lastconnect   INTEGER
+				UserID		  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				steamid		  VARCHAR(30) NOT NULL,
+				currace		  VARCHAR(30) NOT NULL,
+				name		  VARCHAR(30) NOT NULL,
+				totallevel	  INTEGER DEFAULT 0,
+				lastconnect	  INTEGER
 			)""")
 
 		self.execute("CREATE INDEX IF NOT EXISTS playersIndex ON Players(steamid)")
 
 		self.execute("""\
 			CREATE TABLE IF NOT EXISTS Races (
-				RaceID        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				UserID        INTEGER NOT NULL,
-				name          VARCHAR(50) NOT NULL,
-				skills        VARCHAR(50) NOT NULL,
-				level         INTEGER DEFAULT 0,
-				xp            INTEGER DEFAULT 0,
-				unused        INTEGER DEFAULT 0
+				RaceID		  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				UserID		  INTEGER NOT NULL,
+				name		  VARCHAR(50) NOT NULL,
+				skills		  VARCHAR(50) NOT NULL,
+				level		  INTEGER DEFAULT 0,
+				xp			  INTEGER DEFAULT 0,
+				unused		  INTEGER DEFAULT 0
 			)""")
 
 		self.execute("CREATE INDEX IF NOT EXISTS racesIndex ON Races(UserID)")
@@ -367,7 +368,7 @@ class SQLiteManager(object):
 		if hasattr(result, '__iter__'):
 			if len(result) == 1:
 				return result[0]
-		return result   
+		return result	
 
 	def fetchall(self):
 		trueValues = []
@@ -443,110 +444,113 @@ def getPlayer(userid):
 	return tmp[userid]
 	
 class PlayerObject(object):
-    def __init__(self, userid):
-        self.userid             = userid
-        self.index 				= index_from_userid(self.userid)
-        self.player_entity 		= Player(self.index)
-        self.steamid            = self.player_entity.steamid
-        if self.steamid == 'BOT':
-            self.steamid = 'BOT_'+str(self.player_entity.name)
-        self.UserID             = database.getUserIdFromSteamId(self.steamid)
+	def __init__(self, userid):
+		self.userid				= userid
+		self.index				= index_from_userid(self.userid)
+		self.player_entity		= Player(self.index)
+		self.steamid			= self.player_entity.steamid
+		if self.steamid == 'BOT':
+			self.steamid = 'BOT_'+str(self.player_entity.name)
+		self.UserID				= database.getUserIdFromSteamId(self.steamid)
 		
-        if self.UserID is None:
-            self.UserID         = database.addPlayer(self.steamid, self.player_entity.name)
+		if self.UserID is None:
+			self.UserID			= database.addPlayer(self.steamid, self.player_entity.name)
 
-        self.player             = _getPlayer(self.userid, self.UserID)
-        self.race               = _getRace(self.UserID, self.player.currace, self.userid)
+		self.player				= _getPlayer(self.userid, self.UserID)
+		self.race				= _getRace(self.UserID, self.player.currace, self.userid)
 
-    def __del__(self):
-        self.save()
+	def __del__(self):
+		self.save()
 
-    def __str__(self):
-        return str(self.userid)
+	def __str__(self):
+		return str(self.userid)
 
-    def __int__(self):
-        return self.userid
+	def __int__(self):
+		return self.userid
 
-    def save(self):
-        self.player.save()
-        self.race.save()
+	def save(self):
+		self.player.save()
+		self.race.save()
 
-    def changeRace(self, race, kill=True):
-        self.race.save()
+	def changeRace(self, race, kill=True,who=None):
+		self.race.save()
 
-        if self.race.racedb['onchange']:
-            command = self.race.racedb['onchange']
-            command = command.split(";")
-            for com in command:
-                execute_server_command('es', com)
-        oldrace = self.player.currace
+		if self.race.racedb['onchange']:
+			command = self.race.racedb['onchange']
+			command = command.split(";")
+			for com in command:
+				execute_server_command('es', com)
+		oldrace = self.player.currace
 
-        self.player.currace = str(race)
+		self.player.currace = str(race)
 
-        self.race = _getRace(self.UserID, race, self.userid)
-        self.race.update()
-        self.race.refresh()
-        self.race.save()
-        if kill:
-            self.player_entity.client_command("kill", True)
-        tell(self.player_entity.userid, '\x04[WCS] \x05You changed your race to \x04%s.' % race)
-        event_instance = wcs.events.wcs_changerace(userid=self.userid, oldrace=oldrace, newrace=race)
-        event_instance.fire()
+		self.race = _getRace(self.UserID, race, self.userid)
+		self.race.update()
+		self.race.refresh()
+		self.race.save()
+		if kill:
+			self.player_entity.client_command("kill", True)
+		if who == None:
+			tell(self.player_entity.userid, '\x04[WCS] \x05You changed your race to \x04%s.' % race)
+		if who == 'admin':
+			tell(self.player_entity.userid,'\x04[WCS] \x05An admin set your race to \x04%s.' % race)
+		event_instance = wcs.events.wcs_changerace(userid=self.userid, oldrace=oldrace, newrace=race)
+		event_instance.fire()
 
-    def giveXp(self, amount, reason=''):
-        return self.race.addXp(amount, reason)
+	def giveXp(self, amount, reason=''):
+		return self.race.addXp(amount, reason)
 
-    def giveLevel(self, amount):
-        return self.race.addLevel(amount)
+	def giveLevel(self, amount):
+		return self.race.addLevel(amount)
 
-    def giveUnused(self, amount):
-        return self.race.addUnused(amount)
+	def giveUnused(self, amount):
+		return self.race.addUnused(amount)
 
-    def givePoint(self, skill):
-        return self.race.addPoint(skill)
+	def givePoint(self, skill):
+		return self.race.addPoint(skill)
 
-    def showXp(self):
-        xp         = self.race.xp
-        level      = self.race.level
-        needed     = int(cfgdata['interval'])*level if level else int(cfgdata['interval'])
-        race       = self.player.currace
+	def showXp(self):
+		xp		   = self.race.xp
+		level	   = self.race.level
+		needed	   = int(cfgdata['interval'])*level if level else int(cfgdata['interval'])
+		race	   = self.player.currace
 
-        tell(self.userid, '\x04[WCS] \x04%s \x05 - Level: \x04%s \x05 - XP: \x04%s/%s' % (race, level, xp, needed))
+		tell(self.userid, '\x04[WCS] \x04%s \x05 - Level: \x04%s \x05 - XP: \x04%s/%s' % (race, level, xp, needed))
 
-    def showRank(self):
-        name       = self.player.name
-        race       = self.player.currace
-        level      = self.race.level
-        place      = database.getRank(self.steamid)
-        total      = str(len(database))
-        xp         = self.race.xp
-        needed     = int(cfgdata['interval'])*level if level else int(cfgdata['interval'])
-        unused     = self.race.unused
+	def showRank(self):
+		name	   = self.player.name
+		race	   = self.player.currace
+		level	   = self.race.level
+		place	   = database.getRank(self.steamid)
+		total	   = str(len(database))
+		xp		   = self.race.xp
+		needed	   = int(cfgdata['interval'])*level if level else int(cfgdata['interval'])
+		unused	   = self.race.unused
 
-        for player in PlayerIter():
-            tell(player.userid, "\x05[WCS] \x05%s \x04is on race \x05%s \x04level\x05 %s\x04, ranked \x05%s/%s \x04with\x05 %s/%s \x04XP and \x05%s \x04Unused." % (name, race, level, place, total, xp, needed, unused))
+		for player in PlayerIter():
+			tell(player.userid, "\x05[WCS] \x05%s \x04is on race \x05%s \x04level\x05 %s\x04, ranked \x05%s/%s \x04with\x05 %s/%s \x04XP and \x05%s \x04Unused." % (name, race, level, place, total, xp, needed, unused))
 
-    def delRace(self):
-        self.player.totallevel -= int(self.race.level)
-        database.execute("DELETE FROM Races WHERE UserID = ? AND name = ?", (self.UserID, self.player.currace))
-        self.race.level = 0
-        self.race.xp = 0
-        self.race.skills = ''
-        self.race.unused = 0
-        self.race.refresh()
-        self.race.save()
+	def delRace(self):
+		self.player.totallevel -= int(self.race.level)
+		database.execute("DELETE FROM Races WHERE UserID = ? AND name = ?", (self.UserID, self.player.currace))
+		self.race.level = 0
+		self.race.xp = 0
+		self.race.skills = ''
+		self.race.unused = 0
+		self.race.refresh()
+		self.race.save()
 
-    def delPlayer(self):
-        database.execute('DELETE FROM Players WHERE UserID = ?', (self.player.UserID, ))
-        database.execute('DELETE FROM Races WHERE UserID = ?', (self.player.UserID, ))
+	def delPlayer(self):
+		database.execute('DELETE FROM Players WHERE UserID = ?', (self.player.UserID, ))
+		database.execute('DELETE FROM Races WHERE UserID = ?', (self.player.UserID, ))
 
-        del tmp1[self.userid]
-        del tmp2[self.userid]
+		del tmp1[self.userid]
+		del tmp2[self.userid]
 
-        self.player = _getPlayer(self.userid, self.UserID)
-        self.race = _getRace(self.UserID, self.player.currace, self.userid)
+		self.player = _getPlayer(self.userid, self.UserID)
+		self.race = _getRace(self.UserID, self.player.currace, self.userid)
 
-        self.race.refresh()
+		self.race.refresh()
 
 #Player Functions
 tmp1 = {}
@@ -581,7 +585,7 @@ class Player_WCS(object):
 						   'lastconnect':self.lastconnect})
 		except:
 			return
-            
+			
 	def _getInfo(self, what):
 		if not hasattr(what, '__iter__'):
 			what = (what, )
@@ -616,23 +620,23 @@ def _getRace(userid, race, user):
 
 class Race(object):
 	def __init__(self, UserID, race, user):
-		self.userid     = user
+		self.userid		= user
 		self.index = index_from_userid(self.userid)
 		self.player_entity = Player(self.index)
-		self.steamid    = self.player_entity.steamid
+		self.steamid	= self.player_entity.steamid
 		if self.steamid == 'BOT':
 			self.steamid == 'BOT_'+str(self.player_entity.name)
-		self.UserID     = UserID
-		self.player     = _getPlayer(self.userid, self.UserID)
+		self.UserID		= UserID
+		self.player		= _getPlayer(self.userid, self.UserID)
 
 		if not race in racedb:
-            #tell(self.userid, 'main: race no found', {'race':race})
+			#tell(self.userid, 'main: race no found', {'race':race})
 			#es.tell(self.userid, '#multi', '\x04It seems like your current race ('+race+') is \x05not \x04in the database.')
 			#logging.log('wcs: Information: Unknown race ('+race+') found on UserID '+str(self.UserID))
 			race = standardrace
 			self.player.currace = standardrace
 
-		self.RaceID     = database.getRaceIdFromUserIdAndRace(self.UserID, race)
+		self.RaceID		= database.getRaceIdFromUserIdAndRace(self.UserID, race)
 		if self.RaceID is None:
 			self.RaceID = database.addRaceIntoPlayer(self.UserID, race)
 
@@ -830,7 +834,7 @@ def _event_freeze(ev):
 	global gamestarted
 	gamestarted = 1
 	
-                
+				
 @SayCommand('ability')
 @ClientCommand('ability')
 def _ultimate_command(command, index, team=None):
@@ -852,27 +856,47 @@ def _ultimate_command(command, index, team=None):
 				es.doblock('wcs/tools/abilities/'+str(value)+'/'+str(value))
 			else:
 				tell(userid, '\x04[WCS] \x05You cannot activate your ability now.')
-                
+				
 @SayCommand('wcsrank')
 @ClientCommand('wcsrank')
 def _wcs_rank_command(command, index, team=None):
-    userid = userid_from_index(index)
-    wcstop.wcsRank(userid)
-    
+	userid = userid_from_index(index)
+	wcstop.wcsRank(userid)
+	
 @SayCommand('wcstop')
 @ClientCommand('wcstop')
 def _wcs_top_command(command, index, team=None):
-    userid = userid_from_index(index)
-    wcstop.doCommand(userid)
+	userid = userid_from_index(index)
+	wcstop.doCommand(userid)
 
 @ServerCommand('wcs_test')
 def _wcs_test(command):
 	races = racedb.getAll()
 	print(len(races))
 	
+def is_number(s):
+	try:
+		float(s)
+		return True
+	except ValueError:
+		return False
+	
+@ServerCommand('wcs_changerace')
+def _wcs_changerace(command):
+	userid = int(command[1])
+	if len(command) > 3:
+		race = command[2]
+		for x in command:
+			if x != "wcs_changerace" and not is_number(x) and x != command[2]:
+				race = race+" "+x
+	else:
+		race = str(command[2])
+	player = getPlayer(userid)
+	player.changeRace(race)
+	
 @ServerCommand('wcs_reload')
 def _wcs_reload_command(command):
-    load_races()
+	load_races()
 	
 @ServerCommand('wcs_givexp')
 def _wcs_givexp_command(command):
@@ -965,8 +989,60 @@ def _shopmenu_command(command, index, team=None):
 def _playerinfo_command(command, index, team=None):
 	userid = userid_from_index(index)
 	playerinfo.doCommand(userid)
+	
+	
+def buyitem_menu_select(menu, index, choice):
+	userid = userid_from_index(index)
+	shopmenu.addItem(userid, choice.value, pay=True, tell=True,close_menu=True)
+	
+	
+@SayCommand('wcsbuyitem')
+@ClientCommand('wcsbuyitem')
+def wcs_buy_item(command,index,team=None):
+	userid = userid_from_index(index)
+	if len(command) < 2:
+		return
+	if len(command) > 2:
+		item = command[1]
+		for x in command:
+			if x != "wcsbuyitem" and x != command[1]:
+				item = item+" "+x
+	else:
+		item = str(command[1])
+	items = find_items(item)
+	if items != -1:
+		if len(items) == 1:
+			shopmenu.addItem(userid, items[0], pay=True, tell=True,close_menu=True)
+		if len(items) > 1:
+			buyitem_menu = PagedMenu(title='Choose item',select_callback=buyitem_menu_select,fill=False)
+			buyitem_menu.clear()
+			for i in items:
+				iteminfo = itemdb.getItem(i)
+				option = PagedOption('%s - %s$' % (str(iteminfo['name']), str(iteminfo['cost'])), i)
+				buyitem_menu.append(option)
+			buyitem_menu.send(index)
+	
+item_names = []	
 
-
+def find_items(name):
+	item_list = []
+	items_all = wcs.wcs.ini.getItems
+	items_all.walk(gather_subsection)
+	for item in item_names:
+		item_sec = itemdb.getSectionFromItem(item)
+		iteminfo = itemdb.getItem(item)
+		if name.lower() in iteminfo['name'].lower():
+			item_list.append(item)
+	if len(item_list):
+		return item_list
+	else:
+		return -1
+	
+def gather_subsection(section, key):
+	if section.depth > 1:
+		if section.name not in item_names:
+			item_names.append(section.name)
+	
 #Events
 @Event('player_changename')
 def _player_changename(event):
@@ -1080,12 +1156,12 @@ def round_end(event):
 			saved += 1
 			
 #player_death vars			
-#short 	userid 	user ID who died
-#short 	attacker 	user ID who killed
-#short 	assister 	user ID who assisted in the kill
-#string 	weapon 	weapon name killer used
-#bool 	headshot 	singals a headshot
-#short 	penetrated 	number of objects shot penetrated before killing target 
+#short	userid	user ID who died
+#short	attacker	user ID who killed
+#short	assister	user ID who assisted in the kill
+#string		weapon	weapon name killer used
+#bool	headshot	singals a headshot
+#short	penetrated	number of objects shot penetrated before killing target 
 			
 			
 			
@@ -1125,7 +1201,7 @@ def player_death(event):
 				elif weapon == 'knife':
 					Delay(1, player1.giveXp, (int(cfgdata['knifexp']), 'for making a knife kill'))
 
-			checkEvent(victim,  'player_death',other_userid=attacker, assister=assister, headshot=headshot,weapon=weapon)
+			checkEvent(victim,	'player_death',other_userid=attacker, assister=assister, headshot=headshot,weapon=weapon)
 			checkEvent(attacker, 'player_kill', other_userid=victim, assister=assister, headshot=headshot,weapon=weapon)
 
 		if player.race.racedb['deathcmd']:
@@ -1136,18 +1212,18 @@ def player_death(event):
 			#queue_command_string(command)
 
 	if victim and not attacker:
-		checkEvent(victim,  'player_death')
+		checkEvent(victim,	'player_death')
 
 		
 #player_hurt
-#short 	userid 	user ID who was hurt
-#short 	attacker 	user ID who attacked
-#byte 	health 	remaining health points
-#byte 	armor 	remaining armor points
-#string 	weapon 	weapon name attacker used, if not the world
-#short 	dmg_health 	damage done to health
-#byte 	dmg_armor 	damage done to armor
-#byte 	hitgroup 	hitgroup that was damaged ; 1=hs 2=upper torso 3=lower torso 4=left arm 5=right arm 6=left leg 7=right leg 
+#short	userid	user ID who was hurt
+#short	attacker	user ID who attacked
+#byte	health	remaining health points
+#byte	armor	remaining armor points
+#string		weapon	weapon name attacker used, if not the world
+#short	dmg_health	damage done to health
+#byte	dmg_armor	damage done to armor
+#byte	hitgroup	hitgroup that was damaged ; 1=hs 2=upper torso 3=lower torso 4=left arm 5=right arm 6=left leg 7=right leg 
 
 @Event('player_hurt')
 def _player_hurt(event):
@@ -1329,7 +1405,7 @@ def level_shutdown_listener():
 	
 	database.save()
 	database.updateRank()
-    
+	
 @OnLevelInit
 def level_init_listener(mapname):
 	allow_alpha = ConVar('sv_disable_immunity_alpha')
@@ -1341,7 +1417,7 @@ def level_init_listener(mapname):
 		mapname = mapname.strip('.bsp')
 	curmap = mapname
 	
-    
+	
 def execute_command(command,event, userid, other_userid=0, health=0, armor=0, weapon=0, dmg_health=0, dmg_armor=0, hitgroup=0,headshot = 0,assister=0):
 	command = command.split(";")
 	for com in command:
@@ -1548,5 +1624,4 @@ def on_tick():
 				rank = database.getRank(steamid)
 				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
 				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)
-
 
