@@ -10,6 +10,16 @@ from entities.entity import Entity
 from mathlib import Vector
 from messages import Fade, FadeFlags
 from core import SOURCE_ENGINE_BRANCH
+import wcs
+from filters.players import PlayerIter
+import core
+
+poison_dict = {}
+timed_dict = {}
+
+for player in PlayerIter('all'):
+	poison_dict[player.userid] = 0
+	timed_dict[player.userid] = 0
 
 @ServerCommand('wcs')
 def register(command):
@@ -82,14 +92,25 @@ def register(command):
 				drunk(userid, float(command[3]) if len(command) >= 4 else 0, int(command[4]) if len(command) == 5 else 155)
 
 		elif todo == 'poison':
-			if len(command) == 6:
-				dealPoison(userid, int(float(command[3])), int(command[4]), float(command[5]))
+			if len(command) == 7:
+				dealPoison(userid, int(command[3]), int(command[4]), float(command[5]))
+				Delay(float(command[6]),remove_poison,(userid,))
+		elif todo == 'timed_damage':
+			if len(command) == 7:
+				dealTimed(userid, int(command[3]),int(command[4]),float(command[5]))
+				Delay(float(command[6]),remove_timed,(userid,))
 
 		elif todo == 'changeteam':
 			if len(command) == 4:
 				changeTeam(userid, str(command[3]))
-
-		
+				
+def remove_poison(userid):
+	if poison_dict[int(userid)] != 0:
+		poison_dict[userid].stop()		
+	
+def remove_timed(userid):
+	if timed_dict[int(userid)] != 0:
+		timed_dict[userid].stop()
 
 def spawn(userid, force=False):
 	Player.from_userid(int(userid)).spawn(force)
@@ -244,18 +265,40 @@ def player_spawn(ev):
 	player.set_property_uchar('m_iFOV', 90)
 	player.gravity = 1.0
 	player.client_command('r_screenoverlay 0')
-
+	
+@Event('round_end')
+def round_end(ev):
+	for player in PlayerIter('all'):
+		if int(player.userid) in poison_dict:
+			if poison_dict[int(player.userid)] != 0:
+				poison_dict[int(player.userid)].stop()
+				poison_dict[int(player.userid)] = 0
+		if int(player.userid) in timed_dict:
+			if timed_dict[int(player.userid)] != 0:
+				timed_dict[int(player.userid)].stop()
+				timed_dict[int(player.userid)] = 0
+	
+def dealTimed(userid, attacker, dmg, time):
+	if userid not in timed_dict:
+		timed_dict[userid] = 0
+	timed_repeat = Repeat(_timed_repeat,(userid,attacker,dmg))
+	timed_dict[int(userid)] = timed_repeat
+	timed_repeat.start(time,execute_on_start=True)
+	
+def _timed_repeat(userid,attacker,dmg):
+	damage(userid,dmg,attacker)
+	#wcs.wcs.tell(int(userid),"\x04[WCS] \x05Poison did \x04%s \x05damage to you!" % (dmg))
 
 def dealPoison(userid, attacker, dmg, time):
+	if userid not in poison_dict:
+		poison_dict[userid] = 0
 	poison_repeat = Repeat(_poison_repeat,(userid,attacker,dmg))
-	poison_repeat.start(time)
+	poison_dict[int(userid)] = poison_repeat
+	poison_repeat.start(time,execute_on_start=True)
 	
 def _poison_repeat(userid,attacker,dmg):
-	damage(userid,attacker,dmg)
-	if SOURCE_ENGINE_BRANCH == 'css':
-		SayText2("\x04[WCS] \x03Poison did \x04%s \x03damage to you!" % (dmg)).send(Player.from_userid(int(userid)).index)
-	else:
-		SayText2("\x04[WCS] \x03Poison did \x04%s \x03damage to you!" % (dmg)).send(Player.from_userid(int(userid)).index)
+	damage(userid,dmg,attacker)
+	wcs.wcs.tell(int(userid),"\x04[WCS] \x05Poison did \x04%s \x05damage to you!" % (dmg))
 
 def changeTeam(userid, team):
 	Player.from_userid(int(userid)).set_team(int(team))
