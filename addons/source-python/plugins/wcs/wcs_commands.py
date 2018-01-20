@@ -168,8 +168,9 @@ def damage(victim, dmg, attacker=None, armor=False, weapon=None):
 		if atk_player.get_weapon(is_filters='primary'):
 			if weapon == atk_player.get_weapon(is_filters='primary').classname:
 				wpn_index = atk_player.get_weapon(is_filters='primary').index
-		
-	vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)
+				
+	if vic_player.health >= int(dmg):		
+		vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)
 
 def gravity(userid, value):
 	Player.from_userid(int(userid)).gravity = float(value)
