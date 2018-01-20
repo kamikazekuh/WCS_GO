@@ -24,7 +24,8 @@ from translations.strings import LangStrings
 from commands.say import SayCommand
 from commands.client import ClientCommand
 from commands.server import ServerCommand
-from players.helpers import index_from_userid, userid_from_index
+from players.helpers import index_from_userid, userid_from_index,userid_from_edict
+from entities.helpers import index_from_edict
 from players.entity import Player
 from events import Event
 from engines.server import execute_server_command, queue_command_string
@@ -35,7 +36,7 @@ from menus import SimpleOption
 from menus import Text
 
 from messages import SayText2, HintText
-from listeners import OnLevelInit, OnLevelShutdown
+from listeners import OnLevelInit, OnLevelShutdown, OnClientConnect
 from listeners.tick import Delay
 import es
 from colors import Color
@@ -1048,19 +1049,46 @@ def gather_subsection(section, key):
 def _player_changename(event):
 	userid = event.get_int('userid')
 	getPlayer(userid).player.name = database.removeWarnings(ev['newname'])
+	
+@SayCommand('wcs_get_rand')
+def get_rand(command,index,team_only=False):
+	rand_race = get_random_race(userid_from_index(index))
+	tell(userid_from_index(index),"Race name: %s" % rand_race)
 
 @Event('player_activate')	
 def _player_activate(event):
-	userid = event.get_int('userid')
+	userid = int(event['userid'])
 	player = getPlayer(userid)
 	player_entity = Player(index_from_userid(userid))
 	player.player.name = database.removeWarnings(player_entity.name)
+
 	if not player_entity.steamid == 'BOT':
 		Delay(10.0, tell, (userid, '\x04[WCS] \x05Welcome to this \x04WCS server\x05. Try \x04"wcshelp" \x05and bind mouse3 ultimate'))
-
+	race = player.player.currace
+	raceinfo = racedb.getRace(race)
+	if raceinfo['allowonly'] != "":
+		if not player_entity.steamid in raceinfo['allowonly']:
+			rand_race = get_random_race(int(userid))
+			player.changeRace(rand_race)	
 	wcsgroup.addUser(userid)
 	delay = ConVar('mp_force_pick_time').get_int()
 	Delay(float(delay),set_team,(event['userid'],))
+
+
+	
+def get_random_race(userid):
+	race_list = []
+	races = racedb.getAll()
+	allraces = races.keys()
+	for number, race in enumerate(allraces):
+		v = changerace.canUse(userid,race)
+		if not v:
+			race_list.append(race)
+	if len(race_list):
+		chosen = str(choice(race_list))
+		return chosen
+	else:
+		return -1
 	
 def set_team(userid):
 	player = Player.from_userid(userid)
@@ -1256,7 +1284,6 @@ def _player_hurt(event):
 @Event('player_spawn')			
 def _player_spawn(event):
 	userid = event.get_int('userid')
-	
 	index = index_from_userid(userid)
 	player_entity = Player(index)
 
