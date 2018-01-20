@@ -28,6 +28,8 @@ import time
 from random import choice
 from core import SOURCE_ENGINE_BRANCH
 
+from wcs import changerace
+
 beam_blood = Model('decals/bloodstain_003.vmt')
 beam_glow = Model('sprites/light_glow02.vmt')
 beam_chain = Model('sprites/cbbl_smoke.vmt')
@@ -844,5 +846,21 @@ def _delayed_command(command):
 	for arg in command_parts:
 		command_parts_text = ''+command_parts_text+' '+arg
 	command_parts_text = command_parts_text.replace(' ', '', 1)
-	Delay(delay, queue_command_string, (('%s' % command_parts_text),))	
+	Delay(delay, queue_command_string, (('%s' % command_parts_text),))
+	
+	
+@ServerCommand('wcs_getrandomrace')
+def random_race(command):
+	userid = int(command[1])
+	var = str(command[2])
+	race_list = []
+	races = wcs.wcs.racedb.getAll()
+	allraces = races.keys()
+	for number, race in enumerate(allraces):
+		v = changerace.canUse(userid,race)
+		if not v:
+			race_list.append(race)
+	if len(race_list):
+		chosen = str(choice(race_list))
+		ConVar(var).set_string(chosen)
 
