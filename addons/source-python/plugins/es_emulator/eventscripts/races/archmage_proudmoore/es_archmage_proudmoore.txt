@@ -1,9 +1,3 @@
-block load
-{
-	es_xset ss_name 0
-	es_xset wcs_addhealth 0
-}
-
 block spawn
 {
 	es wcs_setfx jetpack event_var(userid) = 0 0

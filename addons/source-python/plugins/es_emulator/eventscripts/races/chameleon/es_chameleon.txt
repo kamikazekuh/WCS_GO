@@ -75,6 +75,10 @@ block death
 
 block onchange
 {
+	es wcsgroup set chameleon_skill2 event_var(userid) 0
+	es wcsgroup set chameleon_skill3 event_var(userid) 0
+	es wcsgroup set chameleon_skill5 event_var(userid) 0
+	es wcsgroup set chameleon_fly event_var(userid) 0
 	es wcsgroup set chameleon_fly event_var(userid) 0
 }
 
@@ -384,7 +388,7 @@ block unlimited
 		es wcs_set_cooldown server_var(wcs_userid) server_var(wcs_tmp5)
 		es_xset wcs_radius 475
 		es_xset wcs_duration 2.5
-		es_xdoblock wcs/tools/ultimates/wcs_ulti_roots
+		es_xdoblock wcs/tools/ultimates/default2/wcs_ulti_roots
 	}
 	if (server_var(wcs_tmp6) == 2) do
 	{
@@ -393,7 +397,7 @@ block unlimited
 		es_math wcs_tmp5 * 50
 		es_math wcs_tmp5 + 450
 		es_xset wcs_range server_var(wcs_tmp5)
-		es_xdoblock races/human_alliance/teleport
+		es_xdoblock wcs/tools/ultimates/default2/wcs_ulti_teleport
 	}
 	if (server_var(wcs_tmp6) == 3) do
 	{
@@ -402,7 +406,7 @@ block unlimited
 		es_math 32 - server_var(wcs_tmp5)
 		es wcs_set_cooldown server_var(wcs_userid) server_var(wcs_tmp5)
 		es_xset wcs_radius 575
-		es_doblock wcs/tools/ultimates/wcs_ulti_chain
+		es_xdoblock wcs/tools/ultimates/default2/wcs_ulti_chain
 	}
 	if (server_var(wcs_tmp6) == 4) do
 	{
