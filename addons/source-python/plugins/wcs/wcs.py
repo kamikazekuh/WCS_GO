@@ -102,6 +102,7 @@ categories = addon_config.cvar('wcs_activate_categories', '0')
 unassigned_cat = addon_config.cvar('wcs_unassigned_category', '1')
 changerace_racename	= addon_config.cvar('wcs_changerace_racename','1')
 maximum_level = addon_config.cvar('wcs_maximum_level_per_race','1000')
+race_in_tag = addon_config.cvar('wcs_activate_clantag_races', '1')
 addon_config.write()
 
 cfgdata = {'interval':				interval.cvar.get_int(),
@@ -495,6 +496,8 @@ class PlayerObject(object):
 			tell(self.player_entity.userid, '\x04[WCS] \x05You changed your race to \x04%s.' % race)
 		if who == 'admin':
 			tell(self.player_entity.userid,'\x04[WCS] \x05An admin set your race to \x04%s.' % race)
+		if race_in_tag.get_int() == 1:
+			self.player_entity.clan_tag = race
 		event_instance = wcs.events.wcs_changerace(userid=self.userid, oldrace=oldrace, newrace=race)
 		event_instance.fire()
 
@@ -1069,7 +1072,8 @@ def _player_activate(event):
 	if raceinfo['allowonly'] != "":
 		if not player_entity.steamid in raceinfo['allowonly']:
 			rand_race = get_random_race(int(userid))
-			player.changeRace(rand_race)	
+			player.changeRace(rand_race)
+	player_entity.clan_tag = player.player.currace
 	wcsgroup.addUser(userid)
 	delay = ConVar('mp_force_pick_time').get_int()
 	Delay(float(delay),set_team,(event['userid'],))
@@ -1331,6 +1335,7 @@ def _player_spawn(event):
 			command = command.split(";")
 			for com in command:
 				execute_server_command('es', com)
+		player_entity.clan_tag = player.player.currace
 
 
 @Event('player_say')			
