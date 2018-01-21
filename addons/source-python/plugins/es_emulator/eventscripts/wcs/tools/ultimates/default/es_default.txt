@@ -32,12 +32,6 @@ block wcs_ulti_teleport
 		{
 			es_tell server_var(wcs_userid) #multi #green[WCS] You teleported
 			es wcs_pushto server_var(wcs_userid) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2)
-			es_xmath wcs_z1 + 25
-			es_createvectorstring vector1 server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1)
-			es est_effect 7 #a 0 sprites/smoke.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 25 10
-			es est_effect_14 #a 0 effects/strider_muzzle.vmt server_var(vector1) server_var(vector1) 50 50 47
-			es est_effect 11 #a 0 effects/strider_muzzle.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) .4 1 160
-			es est_effect_08 #a 0 effects/strider_muzzle.vmt server_var(vector1) 80 85 .5 .5 60 10 0 255 255 255 255 8 5
 		}
 		else do
 		{
