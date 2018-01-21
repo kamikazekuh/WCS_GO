@@ -1,0 +1,5 @@
+block load
+{
+	es_load wcs/tools/ultimates/default
+	es_load wcs/tools/ultimates/default2
+}
