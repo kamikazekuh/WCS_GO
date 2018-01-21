@@ -6,7 +6,7 @@ from engines.precache import Model
 
 downloads = Downloadables()
 
-paths_to_add = [GAME_PATH+'/materials/sprites', GAME_PATH+'/materials/particle', GAME_PATH+'/materials/effects']
+paths_to_add = [GAME_PATH+'/materials/sprites', GAME_PATH+'/materials/particle', GAME_PATH+'/materials/effects',GAME_PATH+'/sound/wcs']
 
 for mypath in paths_to_add:
 	if isdir(mypath):
