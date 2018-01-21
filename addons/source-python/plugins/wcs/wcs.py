@@ -999,7 +999,8 @@ def buyitem_menu_select(menu, index, choice):
 	userid = userid_from_index(index)
 	shopmenu.addItem(userid, choice.value, pay=True, tell=True,close_menu=True)
 	
-	
+@SayCommand('shopitem')
+@ClientCommand('shopitem')	
 @SayCommand('wcsbuyitem')
 @ClientCommand('wcsbuyitem')
 def wcs_buy_item(command,index,team=None):
