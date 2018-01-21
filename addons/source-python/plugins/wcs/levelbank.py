@@ -20,6 +20,9 @@ from listeners import OnLevelInit
 from sqlite3 import dbapi2 as sqlite
 import wcs
 from listeners.tick import Delay
+from cvars import ConVar
+
+maxlevel = ConVar('wcs_maximum_level_per_race')
 
 @Event('player_activate')
 def _player_activate(event):
@@ -175,7 +178,11 @@ def wcs_amount_select(menu, index, choice):
 	if choice.value == 'spendlevels':
 		player = getPlayer(userid_from_index(index))
 		amount = int(choice.text)
+		mxlvl = maxlevel.get_int()
+		wcs_player = wcs.wcs.getPlayer(userid_from_index(index))
 		if player.levels >= amount:
+			if int(wcs_player.race.level+amount) > int(mxlvl):
+				amount = int(mxlvl) - int(wcs_player.race.level)
 			wcs.wcs.getPlayer(userid_from_index(index)).race.addLevel(amount)
 			player.levels -= amount
 			wcs.wcs.tell(userid_from_index(index), '\x04[WCS] \x05You got \x04%s Levels \x05left in your \x04Bank!' % player.levels)
