@@ -104,6 +104,7 @@ changerace_racename	= addon_config.cvar('wcs_changerace_racename','1')
 maximum_level = addon_config.cvar('wcs_maximum_level_per_race','1000')
 race_in_tag = addon_config.cvar('wcs_activate_clantag_races', '1')
 addon_config.write()
+addon_config.execute()
 
 cfgdata = {'interval':				interval.cvar.get_int(),
 		   'bonusxp':				bonusxp.cvar.get_int(),
