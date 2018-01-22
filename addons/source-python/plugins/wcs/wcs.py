@@ -36,6 +36,8 @@ from menus import SimpleMenu
 from menus import SimpleOption
 from menus import Text
 
+from commands import CommandReturn
+
 from messages import SayText2, HintText
 from listeners import OnLevelInit, OnLevelShutdown, OnClientActive
 from listeners.tick import Delay
@@ -60,7 +62,7 @@ from wcs import randomrace
 from wcs import resetskills
 from wcs import restrictions
 from wcs import savexp
-from wcs import saycommands
+#from wcs import saycommands
 from wcs import setfx
 from wcs import shopinfo
 from wcs import shopmenu
@@ -569,13 +571,6 @@ def _getPlayer(userid, UserID):
 
 	return tmp1[userid]
 	
-@SayCommand('test2')
-def test(command,index,team_only=False):
-	for player in PlayerIter():
-		if player.steamid == 'BOT':
-			race = get_random_race(player.userid)
-			play = getPlayer(player.userid)
-			play.player.changeRace(race)
 
 class Player_WCS(object):
 	def __init__(self, userid, UserID):
@@ -841,6 +836,7 @@ def _ultimate_command(command, index, team=None):
 				tell(userid, 'You cannot activate your ultimate now.')
 			elif len(returned) == 3 and not returned[0]:
 				tell(userid, '\x04[WCS] \x05You cannot use your \x04ultimate! \x05Cooldown time is \x04'+str(returned[1])+' \x05seconds, \x04'+str(returned[1]-returned[2])+' \x05left!')
+	return CommandReturn.BLOCK
 
 @Event('round_freeze_end')
 def _event_freeze(ev):
@@ -869,18 +865,21 @@ def _ultimate_command(command, index, team=None):
 				es.doblock('wcs/tools/abilities/'+str(value)+'/'+str(value))
 			else:
 				tell(userid, '\x04[WCS] \x05You cannot activate your ability now.')
-				
+	return CommandReturn.BLOCK
+	
 @SayCommand('wcsrank')
 @ClientCommand('wcsrank')
 def _wcs_rank_command(command, index, team=None):
 	userid = userid_from_index(index)
 	wcstop.wcsRank(userid)
+	return CommandReturn.BLOCK
 	
 @SayCommand('wcstop')
 @ClientCommand('wcstop')
 def _wcs_top_command(command, index, team=None):
 	userid = userid_from_index(index)
 	wcstop.doCommand(userid)
+	return CommandReturn.BLOCK
 
 @ServerCommand('wcs_test')
 def _wcs_test(command):
@@ -939,24 +938,28 @@ def _showxp_command(command, index, team=None):
 def _wcsmenu_command(command, index, team=None):
 	userid = userid_from_index(index)
 	wcsmenu.doCommand(userid)
+	return CommandReturn.BLOCK
 		
 @SayCommand('raceinfo')
 @ClientCommand('raceinfo')
 def _raceinfo_command(command, index, team= None):
 	userid = userid_from_index(index)
 	raceinfo.doCommand(userid)
+	return CommandReturn.BLOCK
 	
 @SayCommand('shopinfo')
 @ClientCommand('shopinfo')
 def _shopinfo_command(command, index, team= None):
 	userid = userid_from_index(index)
 	shopinfo.doCommand(userid)
+	return CommandReturn.BLOCK
 		
 @SayCommand('spendskills')
 @ClientCommand('spendskills')
 def _spendskills_command(command, index, team= None):
 	userid = userid_from_index(index)
 	spendskills.doCommand(userid)
+	return CommandReturn.BLOCK
 
 @SayCommand('changerace')
 @ClientCommand('changerace')
@@ -966,42 +969,49 @@ def _changerace_command(command, index, team=None):
 		changerace.HowChange(userid)
 	else:
 		changerace.HowChange(userid,command.arg_string)
+	return CommandReturn.BLOCK
 	
 @SayCommand('resetskills')
 @ClientCommand('resetskills')
 def _resetskills_command(command, index, team=None):
 	userid = userid_from_index(index)
 	resetskills.doCommand(userid)
+	return CommandReturn.BLOCK
 
 @SayCommand('savexp')
 @ClientCommand('savexp')
 def _savexp_command(command, index, team=None):
 	userid = userid_from_index(index)
 	savexp.doCommand(userid)
+	return CommandReturn.BLOCK
 	
 @SayCommand('showskills')
 @ClientCommand('showskills')
 def _showskills_command(command, index, team=None):
 	userid = userid_from_index(index)
 	showskills.doCommand(userid)
+	return CommandReturn.BLOCK
 
 @SayCommand('wcshelp')
 @ClientCommand('wcshelp')
 def _wcshlep_command(command, index, team=None):
 	userid = userid_from_index(index)
 	wcshelp.doCommand(userid)
+	return CommandReturn.BLOCK
 	
 @SayCommand('shopmenu')
 @ClientCommand('shopmenu')
 def _shopmenu_command(command, index, team=None):
 	userid = userid_from_index(index)
 	shopmenu.doCommand(userid)
+	return CommandReturn.BLOCK
 	
 @SayCommand('playerinfo')
 @ClientCommand('playerinfo')
 def _playerinfo_command(command, index, team=None):
 	userid = userid_from_index(index)
 	playerinfo.doCommand(userid)
+	return CommandReturn.BLOCK
 	
 	
 def buyitem_menu_select(menu, index, choice):
@@ -1010,6 +1020,8 @@ def buyitem_menu_select(menu, index, choice):
 	
 	
 @SayCommand('wcsbuyitem')
+@SayCommand('shopitem')
+@ClientCommand('shopitem')
 @ClientCommand('wcsbuyitem')
 def wcs_buy_item(command,index,team=None):
 	userid = userid_from_index(index)
@@ -1034,6 +1046,7 @@ def wcs_buy_item(command,index,team=None):
 				option = PagedOption('%s - %s$' % (str(iteminfo['name']), str(iteminfo['cost'])), i)
 				buyitem_menu.append(option)
 			buyitem_menu.send(index)
+	return CommandReturn.BLOCK
 	
 item_names = []	
 
@@ -1066,6 +1079,7 @@ def _player_changename(event):
 def get_rand(command,index,team_only=False):
 	rand_race = get_random_race(userid_from_index(index))
 	tell(userid_from_index(index),"Race name: %s" % rand_race)
+	return CommandReturn.BLOCK
 
 @Event('player_activate')	
 def _player_activate(event):
@@ -1683,4 +1697,5 @@ def on_tick():
 				rank = database.getRank(steamid)
 				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
 				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)
+
 
