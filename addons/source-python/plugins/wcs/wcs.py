@@ -27,6 +27,7 @@ from commands.server import ServerCommand
 from players.helpers import index_from_userid, userid_from_index,userid_from_edict
 from entities.helpers import index_from_edict
 from players.entity import Player
+from players.dictionary import PlayerDictionary
 from events import Event
 from engines.server import execute_server_command, queue_command_string
 from filters.players import PlayerIter
@@ -36,7 +37,7 @@ from menus import SimpleOption
 from menus import Text
 
 from messages import SayText2, HintText
-from listeners import OnLevelInit, OnLevelShutdown, OnClientConnect
+from listeners import OnLevelInit, OnLevelShutdown, OnClientActive
 from listeners.tick import Delay
 import es
 from colors import Color
@@ -50,6 +51,7 @@ import wcs.events
 from wcs import firefix
 from wcs import ladderfix
 from wcs import levelbank
+from wcs import logging
 from wcs import longjump
 from wcs import myinfo
 from wcs import playerinfo
@@ -103,6 +105,7 @@ unassigned_cat = addon_config.cvar('wcs_unassigned_category', '1')
 changerace_racename	= addon_config.cvar('wcs_changerace_racename','1')
 maximum_level = addon_config.cvar('wcs_maximum_level_per_race','1000')
 race_in_tag = addon_config.cvar('wcs_activate_clantag_races', '1')
+loggin = addon_config.cvar('wcs_logging','1')
 addon_config.write()
 addon_config.execute()
 
@@ -565,6 +568,14 @@ def _getPlayer(userid, UserID):
 		tmp1[userid] = Player_WCS(userid, UserID)
 
 	return tmp1[userid]
+	
+@SayCommand('test2')
+def test(command,index,team_only=False):
+	for player in PlayerIter():
+		if player.steamid == 'BOT':
+			race = get_random_race(player.userid)
+			play = getPlayer(player.userid)
+			play.player.changeRace(race)
 
 class Player_WCS(object):
 	def __init__(self, userid, UserID):
@@ -635,9 +646,6 @@ class Race(object):
 		self.player		= _getPlayer(self.userid, self.UserID)
 
 		if not race in racedb:
-			#tell(self.userid, 'main: race no found', {'race':race})
-			#es.tell(self.userid, '#multi', '\x04It seems like your current race ('+race+') is \x05not \x04in the database.')
-			#logging.log('wcs: Information: Unknown race ('+race+') found on UserID '+str(self.UserID))
 			race = standardrace
 			self.player.currace = standardrace
 
@@ -1000,8 +1008,7 @@ def buyitem_menu_select(menu, index, choice):
 	userid = userid_from_index(index)
 	shopmenu.addItem(userid, choice.value, pay=True, tell=True,close_menu=True)
 	
-@SayCommand('shopitem')
-@ClientCommand('shopitem')	
+	
 @SayCommand('wcsbuyitem')
 @ClientCommand('wcsbuyitem')
 def wcs_buy_item(command,index,team=None):
@@ -1095,11 +1102,18 @@ def get_random_race(userid):
 		return chosen
 	else:
 		return -1
+		
+def exists(userid):
+	try:
+		index_from_userid(userid)
+	except ValueError:
+		return 0
 	
 def set_team(userid):
-	player = Player.from_userid(userid)
-	if player.team == 0:
-		Player.from_userid(userid).team = 1
+	if exists(userid):
+		player = Player.from_userid(userid)
+		if player.team == 0:
+			Player.from_userid(userid).team = 1
 
 @Event('player_disconnect')	
 def player_disconnect(event):
@@ -1287,18 +1301,26 @@ def _player_hurt(event):
 			if health > 0:
 				checkEvent(attacker, 'player_hurt', other_userid=victim, health=health, armor=armor, weapon=weapon, dmg_health=dmg_health, dmg_armor=dmg_armor, hitgroup=hitgroup)
 
+@OnClientActive
+def on_client_active(index):
+	player = getPlayer(userid_from_index(index))
+	race = player.player.currace
+	Player(index).clan_tag = race				
+				
 @Event('player_spawn')			
 def _player_spawn(event):
 	userid = event.get_int('userid')
 	index = index_from_userid(userid)
-	player_entity = Player(index)
-
-	if userid and player_entity.team >= 2:
+	players = PlayerDictionary()
+	player = getPlayer(userid)
+	race = player.player.currace
+	players[index].clan_tag = race
+	if userid and players[index].team >= 2:
 		for i, v in {'gravity':1.0,'speed':1.0,'longjump':1.0}.items():
 			wcsgroup.setUser(userid, i, v)
 
-		player_entity.gravity = 1.0
-		player_entity.color = Color(255,255,255,255)
+		players[index].gravity = 1.0
+		players[index].color = Color(255,255,255,255)
 
 
 		player = getPlayer(userid)
@@ -1312,32 +1334,31 @@ def _player_spawn(event):
 
 		race = player.player.currace
 		raceinfo = racedb.getRace(race)
-		if int(raceinfo['restrictteam']) and not player_entity.steamid == 'BOT':
-			if player_entity.team == int(raceinfo['restrictteam']) and player_entity.team >= 2 and not player_entity.steamid == 'BOT':
-				player_entity.team = 1
+		if int(raceinfo['restrictteam']) and not players[index].steamid == 'BOT':
+			if players[index].team == int(raceinfo['restrictteam']) and players[index].team >= 2 and not players[index].steamid == 'BOT':
+				players[index].team = 1
 				changerace.HowChange(userid)
 
-		elif 'teamlimit' in raceinfo and not player_entity.steamid == 'BOT':
+		elif 'teamlimit' in raceinfo and not players[index].steamid == 'BOT':
 			q = int(raceinfo['teamlimit'])
 			if q:
-				v = wcsgroup.getUser({2:'T',3:'CT'}[player_entity.team], 'restricted')
+				v = wcsgroup.getUser({2:'T',3:'CT'}[players[index].team], 'restricted')
 				if v == None:
 					v = 0
 				if v > q:
-					player_entity.team = 1
+					players[index].team = 1
 					changerace.HowChange(userid)
 
 		elif curmap in raceinfo['restrictmap'].split('|'):
-			if not player_entity.steamid == 'BOT':
-					player_entity.team = 1
+			if not players[index].steamid == 'BOT':
+					players[index].team = 1
 					changerace.HowChange(userid)
 
-		if raceinfo['spawncmd']:
+		if raceinfo['spawncmd'] == "":
 			command = raceinfo['spawncmd']
 			command = command.split(";")
 			for com in command:
 				execute_server_command('es', com)
-		player_entity.clan_tag = player.player.currace
 
 
 @Event('player_say')			
@@ -1379,10 +1400,11 @@ def load_races():
 					raceevents[race][cfg].append(str(index))
 
 			elif section == 'preloadcmd':
-				command = races[race]['preloadcmd']
-				command = command.split(";")
-				for com in command:
-					execute_server_command('es', com)
+				if races[race]['preloadcmd'] != "":
+					command = races[race]['preloadcmd']
+					command = command.split(";")
+					for com in command:
+						execute_server_command('es', com)
 
 def load():
 	global database
@@ -1412,10 +1434,11 @@ def load():
 					raceevents[race][cfg].append(str(index))
 
 			elif section == 'preloadcmd':
-				command = races[race]['preloadcmd']
-				command = command.split(";")
-				for com in command:
-					execute_server_command('es', com)
+				if races[race]['preloadcmd'] != "":
+					command = races[race]['preloadcmd']
+					command = command.split(";")
+					for com in command:
+						execute_server_command('es', com)
 
 			if 'skill' in section:
 				for y in races[race][section]:
@@ -1444,6 +1467,8 @@ def level_shutdown_listener():
 def level_init_listener(mapname):
 	allow_alpha = ConVar('sv_disable_immunity_alpha')
 	allow_alpha.set_int(1)
+	autokick = ConVar('mp_autokick')
+	autokick.set_int(0)
 	tmp.clear()
 	queue_command_string('sp reload wcs')
 	global curmap
