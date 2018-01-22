@@ -62,7 +62,6 @@ from wcs import randomrace
 from wcs import resetskills
 from wcs import restrictions
 from wcs import savexp
-#from wcs import saycommands
 from wcs import setfx
 from wcs import shopinfo
 from wcs import shopmenu
