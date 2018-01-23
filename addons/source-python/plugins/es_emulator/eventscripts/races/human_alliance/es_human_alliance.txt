@@ -30,8 +30,8 @@ block bash
 			if (event_var(es_attackerdead) = 0) do
 			{
 				es wcs_setfx freeze event_var(userid) = 1 1
-				es_centertell event_var(attacker) Bash immobalized event_var(es_username) for 1 second!
-				es_centertell event_var(userid) Bash immobalized you for event_var(es_attackername) 1 second!
+				es_centertell event_var(attacker) Bash immobilized event_var(es_username) for 1 second!
+				es_centertell event_var(userid) Bash immobilized you for event_var(es_attackername) 1 second!
 				es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(attacker)
 				es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(userid)
 				es_xmath wcs_z1 + 20
