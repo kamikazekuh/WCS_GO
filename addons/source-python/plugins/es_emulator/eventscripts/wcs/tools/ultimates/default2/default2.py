@@ -17,7 +17,7 @@ def wcs_ulti_teleport():
 			vector2 = vecmath.Vector(player.getViewCoord())
 
 			if vecmath.distance(vector1, vector2) <= float(es.ServerVar('wcs_range')):
-				es.server.queuecmd("wcs_pushto %s %s 1.5" % (userid, vector2))
+				es.server.queuecmd("wcs_pushto %s %s %s %s 1.5" % (userid, vector2[0],vector[1],vector[2]))
 				es.tell(userid, '#multi', '#lightgreenYou Teleported!')
 				es.playsound(userid, 'wcs/teleport.wav', 0.5)
 			else:
