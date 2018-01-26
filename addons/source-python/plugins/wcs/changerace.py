@@ -5,6 +5,7 @@ from menus import SimpleOption
 from menus import PagedOption
 from menus import Text
 import wcs
+from wcs import config
 from menus import PagedMenu
 from cvars import ConVar
 from configobj import ConfigObj
@@ -20,8 +21,7 @@ global cat_to_change_to
 global race_arg
 race_arg = ""
 cats = 0
-categories_on = ConVar('wcs_activate_categories')
-if categories_on.get_string() == "1":
+if config.coredata['categories'] == "1":
 	cats = os.path.join(PLUGIN_PATH+'/wcs', 'categories', 'categories.ini')
 	cats = ConfigObj(cats)
 
@@ -29,7 +29,7 @@ unassigned_cat = ConVar('wcs_unassigned_category')
 	
 @OnConVarChanged
 def on_convar_changed(convar, old_value):
-	if categories_on.get_int() == 1:
+	if config.coredata['categories'] == 1:
 		global cats
 		cats = os.path.join(PLUGIN_PATH+'/wcs', 'categories', 'categories.ini')
 		cats = ConfigObj(cats)
@@ -37,17 +37,17 @@ def on_convar_changed(convar, old_value):
 	
 def HowChange(userid,args=0):
 	if args:
-		if wcs.wcs.changerace_racename.get_int() == 1:
+		if config.coredata['changerace_racename'] == 1:
 			doRacename(userid,args)
 		else:
-			if categories_on.get_int() == 1:
+			if config.coredata['categories'] == 1:
 				doCommand_cats(userid)
-			if categories_on.get_int() == 0:
+			elif config.coredata['categories'] == 0:
 				doCommand(userid)			
 	else:
-		if categories_on.get_int() == 1:
+		if config.coredata['categories'] == 1:
 			doCommand_cats(userid)
-		if categories_on.get_int() == 0:
+		elif config.coredata['categories'] == 0:
 			doCommand(userid)
 		
 def changerace_menu_build(menu, index):
@@ -71,7 +71,7 @@ def changerace_menu_build(menu, index):
 				level_buffer = max_level
 			team = player_entity.team
 			if not v:
-				if wcs.wcs.showracelevel:
+				if config.coredata['showracelevel']:
 					level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				if level > 0:
 					option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
@@ -125,7 +125,7 @@ def changerace_menu_build(menu, index):
 					level_buffer = max_level
 				team = player_entity.team
 				if not v:
-					if wcs.wcs.showracelevel:
+					if config.coredata['showracelevel']:
 						level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 					if level > 0:
 						option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
@@ -144,7 +144,7 @@ def changerace_menu_build(menu, index):
 						option = PagedOption('%s - Restricted team %s' % (str(race), {2:'T',3:'CT'}[team]), race, highlight=False, selectable=False)
 						menu.append(option)
 					else:
-						if wcs.wcs.showracelevel:
+						if config.coredata['showracelevel']:
 							level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 						if level > 0:
 							option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
@@ -175,7 +175,7 @@ def doCommand(userid,value=0):
 		allraces = races.keys()
 		if len(allraces):
 			changerace_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_menu_build, select_callback=changerace_menu_select)
-			if categories_on.get_int() == 1:
+			if config.coredata['categories'] == 1:
 				changerace_menu.parent_menu = changerace_menu_cats
 			changerace_menu.send(index)
 	else:
@@ -244,7 +244,7 @@ def changerace_racename_build(menu, index):
 				level_buffer = max_level
 			team = player_entity.team
 			if not v:
-				if wcs.wcs.showracelevel:
+				if config.coredata['showracelevel']:
 					level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				if level > 0:
 					option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
@@ -263,7 +263,7 @@ def changerace_racename_build(menu, index):
 					option = PagedOption('%s - Restricted team %s' % (str(race), {2:'T',3:'CT'}[team]), race, highlight=False, selectable=False)
 					menu.append(option)
 				else:
-					if wcs.wcs.showracelevel:
+					if config.coredata['showracelevel']:
 						level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 					if level > 0:
 						option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)

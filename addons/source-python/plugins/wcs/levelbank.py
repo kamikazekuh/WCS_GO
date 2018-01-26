@@ -1,5 +1,5 @@
 import os
-from path import path as Path
+from path import Path
 from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index, edict_from_userid
 from players.entity import Player
 from configobj import ConfigObj

@@ -4,7 +4,7 @@ from events.variable import ShortVariable
 from events.variable import StringVariable
 
 from events.resource import ResourceFile
-from path import path as Path
+from path import Path
 import os
 import sys
 
