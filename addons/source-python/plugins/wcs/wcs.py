@@ -4,11 +4,6 @@ from random import choice
 import time
 import sys
 
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-
 
 from core import SOURCE_ENGINE_BRANCH
 
@@ -54,6 +49,7 @@ from wcs import admin
 from wcs import changerace
 from wcs import commands
 from wcs import config
+from wcs.database import database
 from wcs import downloader
 from wcs import effects
 import wcs.events
@@ -85,8 +81,6 @@ from wcs import wcstop
 from wcs import xtell
 
 
-
-
 #	Config
 from config.manager import ConfigManager
 #	Cvars
@@ -100,6 +94,9 @@ color_codes = ['\x03', '\x04', '\x05', '\x06', '\x07']
 tmp = {}
 
 gamestarted = 0
+
+
+
 
 	
 #Helper Functions
@@ -272,137 +269,8 @@ racedb = raceDatabase()
 
 if len(racedb.getAll()):
 	standardrace = racedb.getAll().keys()[0]
+	ConVar('wcs_default_race').set_string(standardrace)
 	
-#SQL Database
-class SQLiteManager(object):
-	def __init__(self, pathFile):
-		if isinstance(pathFile, Path):
-			self.pathFile = pathFile
-		else:
-			self.pathFile = Path(pathFile)
-
-		self.connection	  = sqlite.connect(self.pathFile.joinpath('players.sqlite'))
-		self.cursor		  = self.connection.cursor()
-
-		self.connection.text_factory = str
-		self.execute("PRAGMA auto_vacuum=FULL")
-
-		self.execute("""\
-			CREATE TABLE IF NOT EXISTS Players (
-				UserID		  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				steamid		  VARCHAR(30) NOT NULL,
-				currace		  VARCHAR(30) NOT NULL,
-				name		  VARCHAR(30) NOT NULL,
-				totallevel	  INTEGER DEFAULT 0,
-				lastconnect	  INTEGER
-			)""")
-
-		self.execute("CREATE INDEX IF NOT EXISTS playersIndex ON Players(steamid)")
-
-		self.execute("""\
-			CREATE TABLE IF NOT EXISTS Races (
-				RaceID		  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				UserID		  INTEGER NOT NULL,
-				name		  VARCHAR(50) NOT NULL,
-				skills		  VARCHAR(50) NOT NULL,
-				level		  INTEGER DEFAULT 0,
-				xp			  INTEGER DEFAULT 0,
-				unused		  INTEGER DEFAULT 0
-			)""")
-
-		self.execute("CREATE INDEX IF NOT EXISTS racesIndex ON Races(UserID)")
-
-	def __len__(self):
-		self.execute("SELECT COUNT(*) FROM Players")
-		return int(self.cursor.fetchone()[0])
-
-	def __contains__(self, user):
-		if not isinstance(user, str): #Tha Pwned
-			self.execute("SELECT steamid FROM Players WHERE UserID = ?", (user, ))
-		else:
-			self.execute("SELECT steamid FROM Players WHERE steamid = ?", (user, ))
-		return bool(self.cursor.fetchone())
-
-
-	def execute(self, statement, args=None):
-		if args is None:
-			self.cursor.execute(statement)
-		else:
-			self.cursor.execute(statement, args)
-
-	def fetchone(self):
-		result = self.cursor.fetchone()
-		if hasattr(result, '__iter__'):
-			if len(result) == 1:
-				return result[0]
-		return result	
-
-	def fetchall(self):
-		trueValues = []
-		for value in self.cursor.fetchall():
-			if isinstance(value, tuple):
-				if len(value) > 1:
-					trueValues.append(value)
-				else:
-					trueValues.append(value[0])
-			else:
-				trueValues.append(value)
-		return trueValues
-
-	def save(self):
-		self.connection.commit()
-
-	def close(self):
-		self.cursor.close()
-		self.connection.close()
-
-	def getUserIdFromSteamId(self, steamid):
-		self.execute("SELECT UserID FROM Players WHERE steamid = ?", (steamid, ))
-		value = self.cursor.fetchone()
-		if value is None:
-			return None
-
-		return value[0]
-
-	def addPlayer(self, steamid, name):
-		self.execute("INSERT INTO Players (steamid, currace, name, totallevel, lastconnect) VALUES (?,?,?,0,?)", (steamid, standardrace, self.removeWarnings(name), time.time())) #Tha Pwned
-		return self.cursor.lastrowid
-
-	def getRaceIdFromUserIdAndRace(self, userid, race):
-		if isinstance(userid, str):
-			userid = self.getUserIdFromSteamId(userid)
-
-		self.execute("SELECT RaceID FROM Races WHERE UserID = ? AND name = ?", (userid, race))
-		value = self.cursor.fetchone()
-		if value is None:
-			return None
-
-		return value[0]
-
-	def addRaceIntoPlayer(self, userid, name):
-		if isinstance(userid, str): #Tha Pwned
-			userid = self.getUserIdFromSteamId(userid)
-
-		self.execute("INSERT INTO Races (UserID, name, skills) VALUES (?,?,'')", (userid, name)) #Tha Pwned
-		return self.cursor.lastrowid
-
-	def updateRank(self):
-		self.execute("SELECT steamid FROM Players ORDER BY totallevel DESC")
-		results = self.cursor.fetchall()
-		self.ranks = []
-
-		for steamid in results:
-			self.ranks.append(steamid[0])
-
-	def getRank(self, steamid):
-		if steamid in self.ranks:
-			return self.ranks.index(steamid) + 1
-		return self.__len__()
-
-	def removeWarnings(self, value):
-		return str(value).replace("'", "").replace('"', '')
-database = SQLiteManager(Path(ini.path).joinpath('data'))
-
 #PlayerObject Functions
 def getPlayer(userid):
 	userid = int(userid)
@@ -515,7 +383,7 @@ class PlayerObject(object):
 
 	def delRace(self):
 		self.player.totallevel -= int(self.race.level)
-		database.execute("DELETE FROM Races WHERE UserID = ? AND name = ?", (self.UserID, self.player.currace))
+		database.delRace(self.UserID,self.player.currace)
 		self.race.level = 0
 		self.race.xp = 0
 		self.race.skills = ''
@@ -524,8 +392,7 @@ class PlayerObject(object):
 		self.race.save()
 
 	def delPlayer(self):
-		database.execute('DELETE FROM Players WHERE UserID = ?', (self.player.UserID, ))
-		database.execute('DELETE FROM Races WHERE UserID = ?', (self.player.UserID, ))
+		database.delPlayer(self.UserID)
 
 		del tmp1[self.userid]
 		del tmp2[self.userid]
@@ -562,11 +429,7 @@ class Player_WCS(object):
 
 	def save(self):
 		try:
-			self._setInfo({'steamid':self.steamid,
-						   'currace':self.currace,
-						   'name':self.name,
-						   'totallevel':self.totallevel,
-						   'lastconnect':self.lastconnect})
+			self._setInfo((self.steamid,self.currace,self.name,self.totallevel,self.lastconnect))
 		except:
 			return
 			
@@ -574,9 +437,7 @@ class Player_WCS(object):
 		if not hasattr(what, '__iter__'):
 			what = (what, )
 
-		database.execute("SELECT "+','.join(map(str, what))+" FROM Players WHERE UserID = ?", (self.UserID, ))
-
-		v = database.fetchone()
+		v = database.getInfoPlayer(what,self.UserID)
 		if v is None:
 			player_entity = Player(index_from_userid(self.userid))
 			return (player_entity.steamid, standardrace, player_entity.name, 0, time.time())
@@ -584,11 +445,7 @@ class Player_WCS(object):
 		return v
 
 	def _setInfo(self, options):
-		keys = []
-		for option, value in options.items():
-			keys.append((option+"='"+str(value)+"'"))
-
-		database.execute("UPDATE Players SET " + ','.join(keys) + " WHERE UserID = ?", (self.UserID, ))
+		database.setInfoPlayer(options,self.UserID)
 
 #Race functions
 tmp2 = {}
@@ -626,13 +483,6 @@ class Race(object):
 		self.update()
 		self.refresh()
 
-	def __contains__(self, race):
-		if isinstance(race, int):
-			database.execute("SELECT RaceID FROM Races WHERE UserID = ? AND RaceID = ?", (self.UserID, race))
-		else:
-			database.execute("SELECT RaceID FROM Races WHERE UserID = ? AND name = ?", (self.UserID, race))
-		return database.fetchone()
-
 	def update(self):
 		self.name, self.skills, self.level, self.xp, self.unused = self._getInfo(('name',
 																				  'skills',
@@ -642,16 +492,9 @@ class Race(object):
 
 	def save(self):
 		try:
-			self._setInfo({'name':self.name,
-						  'skills':self.skills,
-						  'level':self.level,
-						  'xp':self.xp,
-						  'unused':self.unused})
+			self._setInfo((self.name,self.skills,self.level,self.xp,self.unused))
 		except:
 			return
-			#logging.log('wcs: Information: Unable to set information for UserID '+str(self.UserID))
-			#logging.log('wcs: Information: Error message: '+str(sys.exc_info()[1]))
-			#logging.log('wcs: Information: Possible errors: '+str(self.name)+' '+str(self.skills)+' '+str(self.level)+' '+str(self.xp)+' '+str(self.unused))
 
 	def refresh(self):
 		if not self.skills or self.skills is None or self.skills == 'None':
@@ -666,21 +509,15 @@ class Race(object):
 	def _getInfo(self, what):
 		if not hasattr(what, '__iter__'):
 			what = (what, )
-
-		database.execute("SELECT "+','.join(map(str, what))+" FROM Races WHERE UserID = ? AND RaceID = ?", (self.UserID, self.RaceID))
-
-		v = database.fetchone()
+			
+		v = database.getInfoRace(what,self.UserID,self.RaceID)			
 		if v is None:
 			return (self.player.currace, '', 0, 0, 0)
 
 		return v
 
 	def _setInfo(self, options):
-		keys = []
-		for option, value in options.items():
-			keys.append((option+"='"+str(value)+"'"))
-
-		database.execute("UPDATE Races SET " + ','.join(keys) + " WHERE UserID = ? AND RaceID = ?", (self.UserID, self.RaceID))
+		database.setInfoRace(options,self.UserID,self.RaceID)
 
 
 	def addXp(self, amount, reason=''):
@@ -1467,12 +1304,9 @@ def player_say(event):
 	userid = event.get_int('userid')
 	checkEvent(userid, 'player_say')
 
-DATABASE_STORAGE_METHOD = SQLiteManager
 
 raceevents = {}
 aliass = {}
-database = None
-databasePath = Path(ini.path).joinpath('data')
 
 def unload():
 	tmp.clear()
@@ -1508,8 +1342,6 @@ def load_races():
 						execute_server_command('es', com)
 
 def load():
-	global database
-	database = DATABASE_STORAGE_METHOD(databasePath)
 	database.updateRank()
 	global curmap
 	curmap = ConVar("host_map").get_string().strip('.bsp')
@@ -1805,4 +1637,6 @@ def on_tick():
 				rank = database.getRank(steamid)
 				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
 				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)
+				
+
 

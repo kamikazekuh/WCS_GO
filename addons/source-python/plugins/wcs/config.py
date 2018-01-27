@@ -2,20 +2,33 @@ from config.manager import ConfigManager
 from core import SOURCE_ENGINE_BRANCH
 
 
-
 core_config = ConfigManager('wcs/wcs_core')
 saving = core_config.cvar('wcs_save_mode', 0)
+
 save_time = core_config.cvar('wcs_save_delay', 5)
+
 xpsaver = core_config.cvar('wcs_cfg_savexponround', 5)
+
+db_method = core_config.cvar('wcs_database_method','sqlite')
+
 racecategories = core_config.cvar('wcs_racecats', 0)
+
 defaultcategory	= core_config.cvar('wcs_racecats_defaultcategory',	'Default category')
+
 showracelevel = core_config.cvar('wcs_cfg_showracelevel', 1)
+
 keyinfo = core_config.cvar('wcs_activate_keymenu', 0)
+
 categories = core_config.cvar('wcs_activate_categories', 0)
+
 unassigned_cat = core_config.cvar('wcs_unassigned_category', 1)
+
 changerace_racename	= core_config.cvar('wcs_changerace_racename',1)
+
 race_in_tag = core_config.cvar('wcs_activate_clantag_races', 1)
+
 logging = core_config.cvar('wcs_logging',1)
+
 core_config.write()
 core_config.execute()
 
