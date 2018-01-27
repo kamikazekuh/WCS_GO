@@ -1,0 +1,173 @@
+block load
+{
+	es_xset wcs_uid 0
+	es_xset wcs_dmg 0
+	es_xset wcs_radius2 0
+	es_xset wcs_team_target 0
+	es_xset wcs_team_targetn 0
+	es_xset wcs_wardenround 0
+	es_xset wcs_exists 0
+	es_xexists wcs_exists command wcs_warden
+	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_warden races/shadow_hunter/wcs_warden "Warden, deals damage to nearby enemies"
+}
+
+block wcs_warden
+{
+	es_xgetargv wcs_uid 1
+	es_xgetargv wcs_duration 2
+	es_xgetargv wcs_dmg 3
+	es_xgetargv wcs_radius2 4
+	es_xgetargv wcs_team_target 5
+	es_xgetargv wcs_team_targetn 6
+	es_xgetargv wcs_x1 7
+	es_xgetargv wcs_y1 8
+	es_xgetargv wcs_z1 9
+	es_xgetargv wcs_wardenround 10
+	es_exists wcs_exists userid server_var(wcs_uid)
+	es_getlivingplayercount wcs_tmp12 server_var(wcs_team_target)
+	if (server_var(wcs_tmp12) < 1) then es_xset wcs_exists 0
+	if (server_var(wcs_wardenround) != server_var(wcs_roundcounter)) then es_xset wcs_duration 0
+	if (server_var(wcs_exists) = 1) do
+	{
+		es_getplayerteam wcs_team server_var(wcs_uid)
+		es_set wcs_math 5
+		es_math wcs_math - server_var(wcs_team)
+		if (server_var(wcs_math) == server_var(wcs_team_target)) do
+		{
+			if (server_var(wcs_duration) > 0) do
+			{
+				if (server_var(wcs_radius2) != "0") do
+				{
+					if (server_var(wcs_team_targetn) != "0") do
+					{
+						es_getplayerteam wcs_team server_var(wcs_uid)
+						if (server_var(wcs_team) = 2) do
+						{
+							es_xset wcs_red 120
+							es_xset wcs_green 20
+							es_xset wcs_blue 20
+							es_xset wcs_flare sprites/combineball_glow_red_1.vmt
+						}
+						if (server_var(wcs_team) = 3) do
+						{
+							es_xset wcs_red 20
+							es_xset wcs_green 20
+							es_xset wcs_blue 120
+							es_xset wcs_flare sprites/combineball_glow_blue_1.vmt
+						}
+						es_set wcs_x3 server_var(wcs_x1)
+						es_set wcs_y3 server_var(wcs_y1)
+						es_set wcs_z3 server_var(wcs_z1)
+						es_set wcs_radius4 server_var(wcs_radius2)
+						es_xmath wcs_radius4 * 2
+						es_set wcs_radius3 server_var(wcs_radius4)
+						es_xmath wcs_radius3 + 1
+						es_xmath wcs_z3 + 95
+						es est_effect 11 #a 0 server_var(wcs_flare) server_var(wcs_x3) server_var(wcs_y3) server_var(wcs_z3) 1 .45 175
+						es est_effect 10 #a 0 server_var(wcs_flare) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_radius4) server_var(wcs_radius3) 1 20 10 .3 255 255 255 130 10
+						es est_effect 10 #a 0 server_var(wcs_flare) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 server_var(wcs_radius4) 1 20 10 .3 255 255 255 130 10
+						es_createvectorstring vector3 server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1)
+						es_createvectorstring vector5 server_var(wcs_x3) server_var(wcs_y3) server_var(wcs_z3)
+						es est_effect_06 #a 0 server_var(wcs_flare) server_var(vector3) server_var(vector5) 1 1 18 1 0 0 255 150 70 125 10
+						es est_effect_06 #a 0 sprites/lgtning.vmt server_var(vector3) server_var(vector5) 1 1 14 1 0 0 server_var(wcs_red) server_var(wcs_green) server_var(wcs_blue) 115 10
+						alias wcs_run_warden "es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 server_var(wcs_targetid);es_math wcs_z2 + 25;es_createvectorstring vector4 server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2);es est_effect_06 #a 0 server_var(wcs_flare) server_var(vector4) server_var(vector3) 1 1 8 4 0 0 255 150 70 125 15;es est_effect_06 #a 0 sprites/lgtning.vmt server_var(vector4) server_var(vector3) 1 1 8 4 0 0 server_var(wcs_red) server_var(wcs_green) server_var(wcs_blue) 115 15;wcs_run_warden2"
+						alias wcs_run_warden2 "es wcsgroup get swardinvul wcs_shopvar server_var(wcs_targetid);if (server_var(wcs_shopvar) = 0) then wcs_run_warden3"
+						alias wcs_run_warden3 "es wcs_dealdamage server_var(wcs_targetid) server_var(wcs_uid) server_var(wcs_dmg);es_tell server_var(wcs_uid) #multi #green [WCS]: #lightgreen Serpent ward - Dealt server_var(wcs_dmg) damage;es_tell server_var(wcs_targetid) #multi #green [WCS]: #lightgreen Serpent ward - Took server_var(wcs_dmg) damage"
+						es wcs_nearcoord wcs_targetid server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_radius2) "es_getplayerprop wcs_dead server_var(wcs_targetid) CCSPlayer.baseclass.pl.deadflag;if (server_var(wcs_dead) = 0) then wcs_run_warden"
+						es_xmath wcs_duration - 1
+						es_delayed 1 wcs_warden server_var(wcs_uid) server_var(wcs_duration) server_var(wcs_dmg) server_var(wcs_radius2) server_var(wcs_team_target) server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_wardenround)
+					}
+				}
+			}
+		}
+	}
+}
+
+block spawn
+{
+	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+	es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(userid)
+	es_xmath wcs_z2 + 23
+	es est_effect 11 #a 0 effects/bluemuzzle.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 2 0.3 200
+	es_xmath wcs_z2 + 127
+	es est_effect 3 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 2 20 15 255 255 255 150
+	es_xmath wcs_z1 + 10
+	es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 101 100 2 10 10 0 255 255 255 255 0
+	es_xmath wcs_z1 + 20
+	es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 60 61 2 8 10 0 255 255 255 255 1
+	es_xmath wcs_z1 + 5
+	es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 61 60 2 8 10 0 255 255 255 255 1
+	es_xmath wcs_z1 + 20
+	es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 100 101 2 10 10 0 255 255 255 255 0
+}
+
+block heal
+{
+	es_xrand wcs_rand 3 15
+	es_xrand wcs_duration 3 8
+	es_delayed 1 wcs_regeneration event_var(userid) server_var(wcs_rand) server_var(wcs_duration) server_var(wcs_maxhealth) 1000 250
+}
+
+block hex
+{
+	if (server_var(wcs_dice2) <= 10) do
+	{
+		if (event_var(es_userdead) = 0) do
+		{
+			if (event_var(es_attackerdead) = 0) do
+			{
+				es wcsgroup get is_slowed wcs_tmp3 event_var(userid)
+				if (server_var(wcs_tmp3) == 0) do
+				{
+					es wcsgroup set is_slowed event_var(userid) 1
+					es_delayed server_var(wcs_duration) wcsgroup set is_slowed event_var(userid) 0
+					es wcs_setfx speed event_var(userid) = server_var(wcs_speed) server_var(wcs_duration)
+					es wcs_centertell event_var(userid) Slowed by event_var(es_attackername) for server_var(wcs_duration) seconds!
+					es wcs_centertell event_var(attacker) You slowed event_var(es_username) for server_var(wcs_duration) seconds!
+					es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+					es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
+					es_xmath wcs_z1 + 25
+					es_xmath wcs_z2 + 25
+					es est_effect 3 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 8 8 255 255 255 255
+					es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 45 50 1 10 10 0 255 255 255 255 0
+					es_xmath wcs_z1 + 10
+					es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 45 50 1 10 10 0 255 255 255 255 0
+				}
+			}
+		}
+	}
+}
+
+block ward
+{
+	es wcsgroup set ability event_var(userid) warden
+	es wcsgroup set ability_count event_var(userid) server_var(wcs_count)
+	es wcsgroup set ability_parameter event_var(userid) server_var(wcs_params)
+	es wcsgroup set ability_cooldown event_var(userid) 3
+}
+
+block immortal
+{
+	es_getgame wcs_gamecheck
+	if ("Counter-Strike: Source" in server_var(wcs_gamecheck)) do
+	{
+		es_playsound server_var(wcs_userid) ambient/atmosphere/city_skypass1.wav 1.0
+		es_delayed 1.4 es_stopsound ambient/atmosphere/city_skypass1.wav
+		es_delayed 1.5 es_playsound server_var(wcs_userid) ambient/atmosphere/city_skypass1.wav .7
+		es_delayed server_var(wcs_duration) es_stopsound ambient/atmosphere/city_skypass1.wav
+	}
+	if ("Counter-Strike: Global Offensive" in server_var(wcs_gamecheck)) do
+	{
+		es_playsound server_var(wcs_userid) ambient\energy\force_field_loop1.wav 1.0
+		es_delayed server_var(wcs_duration) es_stopsound ambient\energy\force_field_loop1.wav
+	}
+	es wcs_evasion server_var(wcs_userid) 1 75
+	es_delayed server_var(wcs_duration) wcs_evasion server_var(wcs_userid) 0 0
+	es_tell server_var(wcs_userid) #multi #green [WCS]: #lightgreen Bid bad voodoo - 75% chance to evade for server_var(wcs_duration) seconds
+	es wcs_centertell server_var(wcs_userid) Increased your chance to evade for server_var(wcs_duration) seconds!
+	es_xmath wcs_duration - 1
+	es_delayed server_var(wcs_duration) es_tell server_var(wcs_userid) #multi #green [WCS]: #lightgreen  Bid bad voodoo - Your evasion is fading...
+	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 server_var(wcs_userid)
+	es est_effect 10 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 150 0.5 40 50 8 255 255 255 255 5
+	es est_effect 4 #a 0 sprites/strider_bluebeam.vmt server_var(wcs_userid) server_var(wcs_duration) 10 1 1 255 255 255 180
+}
