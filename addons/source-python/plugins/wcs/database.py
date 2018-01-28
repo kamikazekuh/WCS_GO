@@ -22,7 +22,7 @@ standardrace = ConVar('wcs_default_race').get_string()
 db_method = ConVar('wcs_database_method').get_string()
 
 if db_method == 'sqlite':
-	engine = create_engine('sqlite:///'+get_addon_path()+'\data\players.db')
+	engine = create_engine('sqlite:///'+get_addon_path()+'/data/players.db')
 elif db_method == 'mysql':
 	db = db_settings['mysql']
 	engine = create_engine('mysql+pymysql://%s:%s@%s/%s' % (db['user'],db['password'],db['host'],db['database']))
@@ -56,7 +56,7 @@ if not engine.dialect.has_table(engine, 'Players'):
 class SQLManager(object):
 	def __init__(self):
 
-		self.engine = create_engine('sqlite:///'+get_addon_path()+'\data\players.db')
+		self.engine = engine
 		self.DBSession = sessionmaker()
 		self.DBSession.configure(bind=self.engine)
 		self.session = self.DBSession()
