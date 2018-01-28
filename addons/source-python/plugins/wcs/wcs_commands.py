@@ -9,7 +9,6 @@ from events import Event
 from entities.entity import Entity
 from mathlib import Vector
 from messages import Fade, FadeFlags
-from core import SOURCE_ENGINE_BRANCH
 import wcs
 from filters.players import PlayerIter
 import core
