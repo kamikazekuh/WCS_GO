@@ -62,11 +62,7 @@ class SQLManager(object):
 		self.session = self.DBSession()
 
 	def __len__(self):
-		all = self.session.query(Players).all()
-		y = 0
-		for x in all:
-			y+=1
-		return y
+		return len(self.session.query(Players).all())
 		
 	def __contains__(self, user):
 		if not isinstance(user, str): #Tha Pwned
