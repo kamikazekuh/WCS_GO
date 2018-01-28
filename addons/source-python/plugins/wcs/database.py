@@ -17,15 +17,10 @@ def get_addon_path():
 	path = os.path.dirname(os.path.abspath(__file__))
 	return path
 
-db_settings = ConfigObj(os.path.join(get_addon_path(), 'data', 'database.ini'))
 standardrace = ConVar('wcs_default_race').get_string()
-db_method = ConVar('wcs_database_method').get_string()
+db_method = ConVar('wcs_database_connectstring').get_string()
 
-if db_method == 'sqlite':
-	engine = create_engine('sqlite:///'+get_addon_path()+'/data/players.db')
-elif db_method == 'mysql':
-	db = db_settings['mysql']
-	engine = create_engine('mysql+pymysql://%s:%s@%s/%s' % (db['user'],db['password'],db['host'],db['database']))
+engine = create_engine(db_method)
 
 
 class Races(Base):
