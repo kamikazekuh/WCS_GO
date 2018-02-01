@@ -22,7 +22,32 @@ import wcs
 from listeners.tick import Delay
 from cvars import ConVar
 
-maxlevel = ConVar('wcs_maximum_level_per_race')
+import sys
+from sqlalchemy import Column, ForeignKey, Integer, String, Index
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.expression import insert
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, desc
+Base = declarative_base()
+
+import time
+
+lb_db_method = ConVar('wcs_levelbank_connectstring').get_string()
+
+engine = create_engine(lb_db_method)
+
+maxlevel = ConVar('race_maximum_level')
+
+
+class Players(Base):
+	__tablename__ = 'Players'
+	UserID = Column(Integer,nullable=False,primary_key=True)
+	steamid = Column(String(30),nullable=False)
+	levels = Column(Integer,default=0)
+	Index('playersIndex', steamid)
+	
+if not engine.dialect.has_table(engine, 'Players'):
+	Base.metadata.create_all(engine)
 
 @Event('player_activate')
 def _player_activate(event):
@@ -42,79 +67,73 @@ def get_addon_path():
 
 
 #SQL Database
-class SQLiteManager(object):
-	def __init__(self, pathFile):
-		if isinstance(pathFile, Path):
-			self.pathFile = pathFile
-		else:
-			self.pathFile = Path(pathFile)
+class SQLManager(object):
+	def __init__(self):
 
-		self.connection   = sqlite.connect(self.pathFile.joinpath('levelbank.sqlite'))
-		self.cursor       = self.connection.cursor()
-
-		self.connection.text_factory = str
-		#self.execute("PRAGMA synchronous=NORMAL")
-		#self.execute("PRAGMA journal_mode=OFF")
-		#self.execute("PRAGMA locking_mode=EXCLUSIVE")
-		self.execute("PRAGMA auto_vacuum=FULL")
-
-		self.execute("""\
-			CREATE TABLE IF NOT EXISTS Players (
-				UserID        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				steamid       VARCHAR(30) NOT NULL,
-				levels        INTEGER DEFAULT 0
-			)""")
-
-		self.execute("CREATE INDEX IF NOT EXISTS playersIndex ON Players(steamid)")
+		self.engine = engine
+		self.DBSession = sessionmaker()
+		self.DBSession.configure(bind=self.engine)
+		self.session = self.DBSession()
 
 	def __len__(self):
-		self.execute("SELECT COUNT(*) FROM Players")
-		return int(self.cursor.fetchone()[0])
+		return self.session.query(Players).count()
 
 	def __contains__(self, user):
 		if not isinstance(user, str): #Tha Pwned
-			self.execute("SELECT steamid FROM Players WHERE UserID = ?", (user, ))
+			player = self.session.query(Players).filter(Players.UserID==user).all()
+			if player.steamid:
+				return 1
+			else:
+				return 0
 		else:
-			self.execute("SELECT steamid FROM Players WHERE steamid = ?", (user, ))
+			player = self.session.query(Players).filter(Players.steamid==user).all()
+			if player.steamid:
+				return 1
+			else:
+				return 0
 		return bool(self.cursor.fetchone())
 
 
-	def execute(self, statement, args=None):
-		if args is None:
-			self.cursor.execute(statement)
-		else:
-			self.cursor.execute(statement, args)
-			
-	def fetchone(self):
-		result = self.cursor.fetchone()
-		if hasattr(result, '__iter__'):
-			if len(result) == 1:
-				return result[0]
-		return result   
-
 	def save(self):
-		self.connection.commit()
-
+		self.session.commit()
+		
 	def close(self):
-		self.cursor.close()
-		self.connection.close()
+		self.session.commit()
+		self.session.close()
 
 	def getUserIdFromSteamId(self, steamid):
-		self.execute("SELECT UserID FROM Players WHERE steamid = ?", (steamid, ))
-		v = self.fetchone()
-		if v is None:
+		try:
+			player = self.session.query(Players).filter(Players.steamid==steamid).one()
+		except:
+			return None
+		
+		if player.UserID == None:
 			return None
 
-		return v
+		return player.UserID
+
+	def getInfoPlayer(self,what,UserID):
+		all = self.session.query(Players).filter(Players.UserID==UserID).one()
+		if all != None:
+			return (all.levels)
+		else:
+			return None
+
+	def setInfoPlayer(self,options,UserID):
+		user = self.session.query(Players).filter(Players.UserID==UserID).one()
+		user.levels = options
+		self.session.commit()
 		
 	def addPlayer(self, steamid):
-		self.execute("INSERT OR IGNORE INTO Players (steamid, levels) VALUES (?, 0)", (steamid, ))
-		return self.cursor.lastrowid
+		new_player = Players(steamid=steamid)
+		self.session.add(new_player)
+		self.session.commit()
+		return self.session.query(Players).filter(Players.steamid==steamid).one().UserID
 
 	def removeWarnings(self, value):
 		return str(value).replace("'", "").replace('"', '')
-ini_path = get_addon_path()
-database = SQLiteManager(Path(ini_path).joinpath('data'))
+		
+database = SQLManager()
 
 
 tmp = {}
@@ -148,15 +167,13 @@ class PlayerObject(object):
 		database.save()
 
 	def _getInfo(self, what):
-		database.execute("SELECT "+what+" FROM Players WHERE UserID = ?", (self.UserID, ))
-
-		v = database.fetchone()
+		v = database.getInfoPlayer(what,self.UserID)
 		if v is None:
 			return 0
 		return v
 
 	def _setInfo(self, options):
-		database.execute("UPDATE Players SET levels=%s WHERE UserID = ?" % options, (self.UserID, ))
+		database.setInfoPlayer(options,self.UserID)
 
 	def addLevel(self, amount):
 		amount = int(amount)
@@ -252,12 +269,6 @@ def wcs_bank_admin_command(command, index, team=None):
 	else:
 		wcs.wcs.tell(userid, '\x04[WCS] \x05You\'re \x04not \x05an WCS-Bank admin')
 		
-DATABASE_STORAGE_METHOD = SQLiteManager
-databasePath = Path(ini_path).joinpath('data')
-
-def load():
-	global database
-	database = DATABASE_STORAGE_METHOD(databasePath)
 
 def unload():
 	tmp.clear()
@@ -267,8 +278,6 @@ def unload():
 
 @OnLevelInit
 def level_init_listener(mapname):
-	global database
-	database = DATABASE_STORAGE_METHOD(databasePath)
 	database.save()
 
 

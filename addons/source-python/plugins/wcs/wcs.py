@@ -1036,6 +1036,7 @@ def round_end(event):
 					tmp2[x][q].save()
 
 			database.save()
+			levelbank.database.save()
 			saved = 0
 
 		else:
@@ -1314,7 +1315,9 @@ def unload():
 	tmp2.clear()
 	aliass.clear()
 	database.save()
+	levelbank.database.save()
 	database.close()
+	levelbank.database.close()
 
 def load_races():
 	races = racedb.getAll()	
@@ -1398,6 +1401,7 @@ def level_shutdown_listener():
 		savexp.doCommand(userid)
 	
 	database.save()
+	levelbank.database.save()
 	database.updateRank()
 	
 def do_save():
@@ -1411,6 +1415,7 @@ def do_save():
 		for q in tmp2[x]:
 			tmp2[x][q].save()
 	database.save()
+	levelbank.database.save()
 	
 @OnLevelInit
 def level_init_listener(mapname):
