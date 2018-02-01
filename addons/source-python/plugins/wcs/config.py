@@ -11,6 +11,8 @@ xpsaver = core_config.cvar('wcs_cfg_savexponround', 5)
 
 db_string = core_config.cvar('wcs_database_connectstring','sqlite:///csgo/addons/source-python/plugins/wcs/data/players.db')
 
+lvl_string = core_config.cvar('wcs_levelbank_connectstring','sqlite:///csgo/addons/source-python/plugins/wcs/data/levelbank.db')
+
 racecategories = core_config.cvar('wcs_racecats', 0)
 
 defaultcategory	= core_config.cvar('wcs_racecats_defaultcategory',	'Default category')
