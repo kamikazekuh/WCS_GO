@@ -16,7 +16,7 @@ Installation:
       sp plugin load es_emulator
       sp plugin load wcs
       es_load wcs/tools
-      es_load races
+      es_load wcs/races
 
 
 If you have any questions regarding Installation or Configuration of this mod please refer to www.warcraft-source.com
