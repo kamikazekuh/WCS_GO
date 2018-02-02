@@ -39,14 +39,14 @@ engine = create_engine(lb_db_method)
 maxlevel = ConVar('race_maximum_level')
 
 
-class Players(Base):
-	__tablename__ = 'Players'
+class BankPlayers(Base):
+	__tablename__ = 'BankPlayers'
 	UserID = Column(Integer,nullable=False,primary_key=True)
 	steamid = Column(String(30),nullable=False)
 	levels = Column(Integer,default=0)
 	Index('playersIndex', steamid)
 	
-if not engine.dialect.has_table(engine, 'Players'):
+if not engine.dialect.has_table(engine, 'BankPlayers'):
 	Base.metadata.create_all(engine)
 
 @Event('player_activate')
@@ -76,17 +76,17 @@ class SQLManager(object):
 		self.session = self.DBSession()
 
 	def __len__(self):
-		return self.session.query(Players).count()
+		return self.session.query(BankPlayers).count()
 
 	def __contains__(self, user):
 		if not isinstance(user, str): #Tha Pwned
-			player = self.session.query(Players).filter(Players.UserID==user).all()
+			player = self.session.query(BankPlayers).filter(BankPlayers.UserID==user).all()
 			if player.steamid:
 				return 1
 			else:
 				return 0
 		else:
-			player = self.session.query(Players).filter(Players.steamid==user).all()
+			player = self.session.query(BankPlayers).filter(BankPlayers.steamid==user).all()
 			if player.steamid:
 				return 1
 			else:
@@ -103,7 +103,7 @@ class SQLManager(object):
 
 	def getUserIdFromSteamId(self, steamid):
 		try:
-			player = self.session.query(Players).filter(Players.steamid==steamid).one()
+			player = self.session.query(BankPlayers).filter(BankPlayers.steamid==steamid).one()
 		except:
 			return None
 		
@@ -113,22 +113,22 @@ class SQLManager(object):
 		return player.UserID
 
 	def getInfoPlayer(self,what,UserID):
-		all = self.session.query(Players).filter(Players.UserID==UserID).one()
+		all = self.session.query(BankPlayers).filter(BankPlayers.UserID==UserID).one()
 		if all != None:
 			return (all.levels)
 		else:
 			return None
 
 	def setInfoPlayer(self,options,UserID):
-		user = self.session.query(Players).filter(Players.UserID==UserID).one()
+		user = self.session.query(BankPlayers).filter(BankPlayers.UserID==UserID).one()
 		user.levels = options
 		self.session.commit()
 		
 	def addPlayer(self, steamid):
-		new_player = Players(steamid=steamid)
+		new_player = BankPlayers(steamid=steamid)
 		self.session.add(new_player)
 		self.session.commit()
-		return self.session.query(Players).filter(Players.steamid==steamid).one().UserID
+		return self.session.query(BankPlayers).filter(BankPlayers.steamid==steamid).one().UserID
 
 	def removeWarnings(self, value):
 		return str(value).replace("'", "").replace('"', '')
