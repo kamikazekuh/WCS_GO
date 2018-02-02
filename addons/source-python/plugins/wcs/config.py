@@ -1,17 +1,27 @@
 from config.manager import ConfigManager
 from core import SOURCE_ENGINE_BRANCH
+from paths import PLUGIN_DATA_PATH, GAME_PATH
+import os
 
+WCS_DATA_PATH = PLUGIN_DATA_PATH / 'wcs'
+if not os.path.exists(WCS_DATA_PATH):
+    os.makedirs(WCS_DATA_PATH)
+LEVELBANK_DB_PATH = WCS_DATA_PATH / 'levelbank.db'
+CORE_DB_PATH = WCS_DATA_PATH / 'players.db'
+CORE_DB_REL_PATH = CORE_DB_PATH.relpath(GAME_PATH.parent)
+LEVELBANK_DB_REL_PATH = LEVELBANK_DB_PATH.relpath(GAME_PATH.parent)
 
 core_config = ConfigManager('wcs/wcs_core')
+
 saving = core_config.cvar('wcs_save_mode', 0)
 
 save_time = core_config.cvar('wcs_save_delay', 5)
 
 xpsaver = core_config.cvar('wcs_cfg_savexponround', 5)
 
-db_string = core_config.cvar('wcs_database_connectstring','sqlite:///csgo/addons/source-python/plugins/wcs/data/players.db')
+db_string = core_config.cvar('wcs_database_connectstring',f'sqlite:///{CORE_DB_REL_PATH}')
 
-lvl_string = core_config.cvar('wcs_levelbank_connectstring','sqlite:///csgo/addons/source-python/plugins/wcs/data/levelbank.db')
+lvl_string = core_config.cvar('wcs_levelbank_connectstring',f'sqlite:///{LEVELBANK_DB_REL_PATH}')
 
 racecategories = core_config.cvar('wcs_racecats', 0)
 
