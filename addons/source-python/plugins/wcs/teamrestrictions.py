@@ -29,10 +29,13 @@ def join_test(command,index):
 	if restrictteam == team_to_join:
 		if team_to_join == 2:
 			tell_team = "Terrorists"
-		if team_to_join == 3:
+		elif team_to_join == 3:
 			tell_team == "Counter-Terrorists"
-		wcs.wcs.tell(userid_from_index(index),"\x04[WCS] \x05This race is restricted to \x04%s!" % tell_team)
-		return CommandReturn.BLOCK
+		else:
+			tell_team = None
+		if tell_team != None:
+			wcs.wcs.tell(userid_from_index(index),"\x04[WCS] \x05This race is restricted to \x04%s!" % tell_team)
+			return CommandReturn.BLOCK
 		
 	###teamlimit
 	teamlimit = raceinfo['teamlimit']
