@@ -1293,7 +1293,7 @@ def _player_spawn(event):
 					players[index].team = 1
 					changerace.HowChange(userid)
 
-		if raceinfo['spawncmd'] == "":
+		if raceinfo['spawncmd'] != "":
 			command = raceinfo['spawncmd']
 			command = command.split(";")
 			for com in command:
