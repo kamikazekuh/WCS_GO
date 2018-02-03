@@ -44,7 +44,7 @@ class BankPlayers(Base):
 	UserID = Column(Integer,nullable=False,primary_key=True)
 	steamid = Column(String(30),nullable=False)
 	levels = Column(Integer,default=0)
-	Index('playersIndex', steamid)
+	Index('BankPlayersIndex', steamid)
 	
 if not engine.dialect.has_table(engine, 'BankPlayers'):
 	Base.metadata.create_all(engine)
