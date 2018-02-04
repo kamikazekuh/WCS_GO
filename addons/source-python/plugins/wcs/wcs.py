@@ -1138,7 +1138,7 @@ def player_death(event):
 def _player_hurt(event):
 	victim = event.get_int('userid')
 	attacker = event.get_int('attacker')
-	
+	weapon = event.get_string('weapon')
 	if victim:
 		victim_entity = Player(index_from_userid(victim))
 	if attacker:
