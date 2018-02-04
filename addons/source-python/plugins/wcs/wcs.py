@@ -537,9 +537,9 @@ class Race(object):
 				amountOfLevels += 1
 				currentXp -= nextLevelXp
 				if self.level+x < len(level_string):
-					nextLevelXp += int(level_string[self.level+x])
+					nextLevelXp = int(level_string[self.level+x])
 				else:
-					nextLevelXp += int(level_string[len(level_string)-1])
+					nextLevelXp = int(level_string[len(level_string)-1])
 				x += 1
 
 		self.xp = currentXp
