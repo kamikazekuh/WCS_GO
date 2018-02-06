@@ -42,7 +42,7 @@ def register(args):
 				return
 
 		for user in userid:
-			if exists('userid', user):
+			if exists('userid', int(user)):
 				tell(user, text, tokens)
 				
 def register_center(args):
@@ -71,7 +71,7 @@ def register_center(args):
 				return
 
 		for user in userid:
-			if exists('userid', user):
+			if exists('userid', int(user)):
 				player = Player.from_userid(int(userid))
 				if not player.is_bot():
 					centertell(user, strings(text, tokens, langlib.getLangAbbreviation(player.language)))
