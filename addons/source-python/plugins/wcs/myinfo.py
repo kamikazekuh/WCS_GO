@@ -33,7 +33,7 @@ def doCommand2(userid):
 	myinfo2_menu.append(Text('-'*25))
 	myinfo2_menu.append(Text('Total level: %s' % str(wcs.wcs.wcsplayers[userid].totallevel)))
 	myinfo2_menu.append(Text('-'*25))
-	myinfo2_menu.append(Text('- WCS rank: %s' % rank))
+	myinfo2_menu.append(Text('- WCS rank: %s' % rank[0]))
 	myinfo2_menu.append(Text('- Levels to next race: %s' % left))
 	myinfo2_menu.append(Text('- Races available: %s of %s' % (available, all_count)))
 	myinfo2_menu.append(Text('- Percentage of races: %s' % perc))
