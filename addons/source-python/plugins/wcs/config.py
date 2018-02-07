@@ -4,8 +4,8 @@ from paths import PLUGIN_DATA_PATH, GAME_PATH
 import os
 
 WCS_DATA_PATH = PLUGIN_DATA_PATH / 'wcs'
-if not os.path.exists(WCS_DATA_PATH):
-    os.makedirs(WCS_DATA_PATH)
+if not WCS_DATA_PATH.exists():
+    WCS_DATA_PATH.makedirs()
 LEVELBANK_DB_PATH = WCS_DATA_PATH / 'levelbank.db'
 CORE_DB_PATH = WCS_DATA_PATH / 'players.db'
 CORE_DB_REL_PATH = CORE_DB_PATH.relpath(GAME_PATH.parent)
