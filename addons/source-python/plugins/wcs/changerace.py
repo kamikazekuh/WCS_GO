@@ -314,7 +314,6 @@ def canUse(userid, race):
 						return 2
 					return 0
 				return 3
-			print('test')
 			return 4
 		return 5
 	return 6		
