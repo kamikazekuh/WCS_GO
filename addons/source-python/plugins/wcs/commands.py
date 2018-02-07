@@ -62,8 +62,6 @@ def fade(command):
 	color = Color(r,g,b,a)
 	Fade(int(time), int(time),color,FadeFlags.PURGE).send(Player.from_userid(userid).index)
 	
-
-	
 @ServerCommand('wcs_randplayer')
 def randplayer(command):
 	var = str(command[1])
@@ -271,7 +269,6 @@ def _drug(command):
 def remove_drug(userid):
 	Player.from_userid(userid).client_command('r_screenoverlay 0')
 	
-	
 @ServerCommand('wcs_getweapon')
 def getweapon(command):
 	userid = int(command[1])
@@ -310,7 +307,6 @@ def get_cooldown(command):
 		ConVar(var).set_int(downtime)
 		return
 	ConVar(var).set_int(downtime-(timed-cooldown))
-	
 	
 @ServerCommand('wcs_getviewcoords')
 def viewcoord(command):
@@ -365,9 +361,7 @@ def remove_weapon(command):
 			if weapon.classname == slot_weapon:
 				player.drop_weapon(weapon)
 				weapon.remove()
-	
-
-  			
+				
 @ServerCommand('wcs_teleport_push')
 def _push_teleport(command):
     userid = int(command[1])
@@ -378,16 +372,7 @@ def _push_teleport(command):
     coords = player.view_coordinates
     coords -= origin
     player.set_property_vector('localdata.m_vecBaseVelocity', coords*force)
-
-@ServerCommand('hawk_attack')
-def _hawk_attack_effect(command):
-    userid = int(command[1])
-    player = Player(index_from_userid(userid))
-    origin = player.origin
-    queue_command_string('est_effect_18 #a 0 "%s, %s, %s" 255 2 2 50 100 3 10' % (origin[0], origin[1], origin[2]))
-    queue_command_string('est_effect_14 #a 0 models\seagull.mdl "%s, %s, %s" "%s, %s, %s" 1000 6 500' % (origin[0], origin[1], origin[2], origin[0], origin[1], origin[2]+200)) 
-
-    
+  
 @ServerCommand('wcs_speed_ulti')
 def _speed_ulti(command):
     userid = int(command[1])
@@ -398,10 +383,6 @@ def _speed_ulti(command):
     queue_command_string('es_delayed %s playerset speed %s %s' % (delay, userid, player.speed-speed))
     wcs.wcs.tell(player.userid,'\x04[WCS] \x05You got \x04%s%% Extra Speed \x05for \x04%s Seconds!' % (speed*100.0, delay))
     
-    
-	
-
-	
 @ServerCommand('wcs_explode')
 def _wcs_explode_command(command):
 	userid = int(command[1])
@@ -418,8 +399,6 @@ def _wcs_explode_command(command):
 					wcs.wcs.tell(player.userid,"\x04[WCS] \x05You were hit by \x04%s's Suicide Explosion!" % player_ent.name)
 					wcs.wcs.tell(player_ent.userid,'\x04[WCS] \x05You hit \x04%s \x05with your \x04Suicide Explosion' % player.name)
 					
-                 
-	
 @ServerCommand('wcs_doteleport')
 def _doteleport_command(command):
 	userid = int(command[1])
@@ -427,7 +406,6 @@ def _doteleport_command(command):
 	player = Player(index)
 	view_vector = player.view_coordinates
 	queue_command_string('wcs_teleport %s %s %s %s' % (userid, view_vector[0], view_vector[1], view_vector[2]))
-	
 	
 @ServerCommand('wcs_changeteam')
 def _changeteam_command(command):
@@ -456,7 +434,6 @@ def _centertell(command):
 		queue_command_string("es_centertell %s %s" %(userid,command_string))
 	else:
 		HudMsg(command_string, -1, 0.35,hold_time=5.0).send(index)
-
 		
 @ServerCommand('wcs_delayed')
 def _delayed_command(command):
@@ -469,7 +446,6 @@ def _delayed_command(command):
 		command_parts_text = ''+command_parts_text+' '+arg
 	command_parts_text = command_parts_text.replace(' ', '', 1)
 	Delay(delay, queue_command_string, (('%s' % command_parts_text),))
-	
 	
 @ServerCommand('wcs_getrandomrace')
 def random_race(command):
@@ -485,4 +461,3 @@ def random_race(command):
 	if len(race_list):
 		chosen = str(choice(race_list))
 		ConVar(var).set_string(chosen)
-
