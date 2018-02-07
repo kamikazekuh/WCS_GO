@@ -10,6 +10,7 @@ from wcs import spendskills
 from wcs import changerace
 from wcs import raceinfo
 from wcs import playerinfo
+from wcs import config
 
 
 def doCommand(userid):
@@ -21,6 +22,7 @@ def _main_menu_select(menu, index, choice):
 	menu.clear()
 	userid = int(userid_from_index(index))
 	if choice.choice_index == 1:
+		shopmenu.shopmenu_menu_cats.parent_menu=menu
 		shopmenu.doCommand(userid)
 		menu.close(index)
 	elif choice.choice_index == 2:
@@ -36,12 +38,18 @@ def _main_menu_select(menu, index, choice):
 		spendskills.doCommand(userid)
 		menu.close(index)
 	elif choice.choice_index == 6:
-		changerace.doCommand(userid)
+		if config.coredata['categories'] == "1":
+			changerace.changerace_menu_cats.parent_menu=menu
+		else:
+			changerace.changerace_menu.parent_menu=menu
+		changerace.HowChange(userid)
 		menu.close(index)
 	elif choice.choice_index == 7:
+		raceinfo.raceinfo_menu.parent_menu = menu
 		raceinfo.doCommand(userid)
 		menu.close(index)
 	elif choice.choice_index == 8:
+		playerinfo.playerinfo_player_menu.parent_menu=menu
 		playerinfo.doCommand(userid)
 		menu.close(index)
 	elif choice.choice_index == 9:
