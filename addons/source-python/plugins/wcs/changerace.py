@@ -315,7 +315,7 @@ def canUse(userid, race):
 		admins = raceinfo['allowonly'].split('|')
 		if (len(admins) and not admins[0]) or (player_entity.steamid in admins) or ('ADMINS' in admins):
 			team = int(player_entity.team)
-			if not raceinfo['restrictteam'] or not raceinfo['restrictteam'] == 0 or not int(raceinfo['restrictteam']) == team:
+			if not raceinfo['restrictteam'] or int(raceinfo['restrictteam']) == 0 or not int(raceinfo['restrictteam']) == team:
 				totallevel = wcs.wcs.getPlayer(userid).player.totallevel
 				if totallevel >= int(raceinfo['required']):
 					if int(raceinfo['maximum']) and totallevel > int(raceinfo['maximum']):
