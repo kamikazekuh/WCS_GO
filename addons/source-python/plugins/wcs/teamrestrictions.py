@@ -20,10 +20,11 @@ def join_test(command,index):
 		team_to_join = 5 - Player(index).team
 	else:
 		team_to_join = int(command[1])
-	player = wcs.wcs.getPlayer(userid_from_index(index))
-	player_race = player.player.currace
+	player_race = wcs.wcs.wcsplayers[Player(index).userid].currace
 	raceinfo = wcs.wcs.racedb.getRace(player_race)
 	restrictteam = raceinfo['restrictteam']
+	if wcs.wcs.player_loaded[Player(index).userid] == False:
+		return CommandReturn.BLOCK
 	if restrictteam != None:
 		restrictteam = int(restrictteam)
 	if restrictteam == team_to_join:
@@ -57,8 +58,7 @@ def join_test(command,index):
 		for race in race_counter['t']:
 			race_counter['t'][race] = 0
 		for player_ent in PlayerIter(team_name):
-			wcs_player = wcs.wcs.getPlayer(player_ent.userid)
-			race = wcs_player.player.currace
+			race =  wcs.wcs.wcsplayers[Player(index).userid].currace
 			if race not in race_counter[team_name]:
 				race_counter[team_name][race] = 0
 				race_counter[team_name][race] += 1

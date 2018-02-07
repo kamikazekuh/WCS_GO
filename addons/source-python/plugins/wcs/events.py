@@ -36,12 +36,15 @@ class wcs_itembought(CustomEvent):
 	item = StringVariable('Item that was bought')
 	cost = ShortVariable('Cost of the item')
 	
+class wcs_player_spawn(CustomEvent):
+	userid = ShortVariable('The userid of the player involved in the event.')
+	
 def get_addon_path():
     path = os.path.dirname(os.path.abspath(__file__))
     return path
 	
 path = get_addon_path()
 res_path = os.path.join(path, 'resources', 'events')
-resource_file = ResourceFile(res_path, wcs_changerace, wcs_gainxp, wcs_levelup, wcs_itembought)
+resource_file = ResourceFile(res_path, wcs_changerace, wcs_gainxp, wcs_levelup, wcs_itembought,wcs_player_spawn)
 resource_file.write()
 resource_file.load_events()

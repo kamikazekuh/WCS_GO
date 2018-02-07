@@ -2,7 +2,7 @@ from commands.server import ServerCommand
 from players.entity import Player
 from cvars import ConVar
 from colors import Color
-from engines.server import execute_server_command
+from engines.server import execute_server_command,queue_command_string
 from listeners.tick import Repeat, Delay
 from messages import SayText2
 from events import Event
@@ -155,8 +155,9 @@ def pushto(userid, coord, force):
 	player = Player(index_from_userid(userid))
 	player.teleport(None, None, vec - player.origin)
 
-def damage(victim, dmg, attacker=None, armor=False, weapon=None):
-	vic_player = Player.from_userid(int(victim))
+def damage(victim, dmg, attacker=None, armor=False, weapon=None, solo=None):
+	queue_command_string("wcs_dealdamage %s %s %s" % (victim,attacker,dmg))
+	'''vic_player = Player.from_userid(int(victim))
 	if attacker:
 		atk_player = Player.from_userid(int(attacker))
 		if atk_player.get_weapon(is_filters='secondary'):
@@ -167,9 +168,11 @@ def damage(victim, dmg, attacker=None, armor=False, weapon=None):
 		if atk_player.get_weapon(is_filters='primary'):
 			if weapon == atk_player.get_weapon(is_filters='primary').classname:
 				wpn_index = atk_player.get_weapon(is_filters='primary').index
-				
-	if vic_player.health >= int(dmg):		
-		vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)
+	if solo == None:
+		if vic_player.health >= int(dmg):		
+			vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)
+	else:
+		vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)'''
 
 def gravity(userid, value):
 	Player.from_userid(int(userid)).gravity = float(value)

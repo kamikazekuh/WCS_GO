@@ -15,6 +15,7 @@ from listeners import OnLevelInit
 from filters.players import PlayerIter
 import random
 from cvars import ConVar
+from wcs import wcsmenu
 
 
 
@@ -31,8 +32,7 @@ for player in PlayerIter('all'):
 
 def canBuy(userid, item, pay=True):
 	userid = int(userid)
-	player = wcs.wcs.getPlayer(userid)
-	level = player.race.level
+	level = wcs.wcs.wcsplayers[userid].totallevel
 	iteminfo = wcs.wcs.itemdb.getItem(item)
 	player_entity = Player(index_from_userid(userid))
 	if player_entity.dead:
@@ -54,7 +54,8 @@ def canBuy(userid, item, pay=True):
 		if int(iteminfo['level']) and level < int(iteminfo['level']):
 			return 6
 
-		v = wcs.wcs.getPlayer(userid).race.racedb['restrictitem'].split('|')
+		race = wcs.wcs.wcsplayers[userid].currace
+		v = wcs.wcs.racedb.races[race]['restrictitem'].split('|')
 		if (item in v) or ('ITEMS' in v):
 			return 3
 
@@ -189,8 +190,7 @@ def addItem(userid, item, pay=True, tell=True):
 	elif c == 6:
 		doCommand1(userid, section)
 		iteminfo = wcs.wcs.itemdb.getItem(item)
-		player = wcs.wcs.getPlayer(userid)
-		diffience = int(iteminfo['level']) - int(player.race.level)
+		diffience = int(iteminfo['level']) - int(wcs.wcs.wcsplayers[userid].level)
 		if tell:
 			wcs.wcs.tell(userid, "\x04[WCS] \x05Sorry, you have not the required level, difference is \x04%s." % diffience)
 			
@@ -223,7 +223,6 @@ def checkEvent(userid, event):
 						elif iteminfo['cmdactivate']:
 							settings = str(iteminfo['cmdactivate'])
 							if ';' in settings:
-								core.console_message('testtesttest')
 								sub_settings = settings.split(';')
 								for com in sub_settings:
 									execute_server_command('es', com)

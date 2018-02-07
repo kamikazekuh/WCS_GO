@@ -6,11 +6,13 @@ from base64 import encodestring as estr, decodestring as dstr
 from configobj import ConfigObj
 import os
 from path import Path
+from queue import Empty, Queue
 import random
 from random import choice
 from sqlite3 import dbapi2 as sqlite
 import string
 import sys
+from threading import Thread
 import time
 
 #SourcePython
@@ -19,6 +21,7 @@ from commands import CommandReturn
 from commands.say import SayCommand
 from commands.client import ClientCommand
 from commands.server import ServerCommand
+from contextlib import contextmanager
 import core
 from core import SOURCE_ENGINE_BRANCH
 from cvars import ConVar
@@ -26,8 +29,11 @@ from engines.server import execute_server_command, queue_command_string
 from entities.helpers import index_from_edict
 from events import Event
 from filters.players import PlayerIter
+from listeners import ListenerManager
+from listeners import ListenerManagerDecorator
 from listeners import OnTick, OnLevelInit, OnLevelShutdown, OnClientActive
 from listeners.tick import Delay, Repeat
+
 from messages import HudMsg, SayText2, HintText
 from menus import PagedMenu
 from menus import PagedOption
@@ -37,18 +43,24 @@ from menus import Text
 from paths import PLUGIN_PATH
 from players.dictionary import PlayerDictionary
 from players.entity import Player
-from players.helpers import index_from_userid, userid_from_index,userid_from_edict
+from players.helpers import index_from_userid, userid_from_index,userid_from_edict,index_from_steamid
 from translations.strings import LangStrings
 
 #Eventscripts Emulator
 import es
+
+#SQL Alchemy
+from sqlalchemy import Column, ForeignKey, Integer, String, Index
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.expression import insert
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, desc
 
 #Warcraft Source
 from wcs import admin
 from wcs import changerace
 from wcs import commands
 from wcs import config
-from wcs.database import database
 from wcs import downloader
 from wcs import effects
 import wcs.events
@@ -82,10 +94,11 @@ from wcs import xtell
 color_codes = ['\x03', '\x04', '\x05', '\x06', '\x07']
 raceevents = {}
 aliass = {}
-tmp = {}
-tmp1 = {}
-tmp2 = {}
 item_names = []
+player_loaded = {}
+output = Queue()
+wcsplayers = {}
+wcs_rank = {}
 gamestarted = 0
 saved = 0
 
@@ -93,10 +106,45 @@ if os.path.isfile(os.path.join(PLUGIN_PATH, 'wcs/strings', 'strings.ini')):
 	strings = LangStrings(os.path.join(PLUGIN_PATH, 'wcs/strings', 'strings'))
 	
 # =============================================================================
+# >> DATABASE
+# =============================================================================	
+Base = declarative_base()
+db_method = ConVar('wcs_database_connectstring').get_string()
+engine = create_engine(db_method)
+
+class Races(Base):
+	__tablename__ = 'Races'
+	RaceID = Column(Integer, nullable=False, primary_key=True)
+	UserID = Column(Integer, nullable=False)
+	name = Column(String(50),nullable=False)
+	skills = Column(String(50),nullable=False)
+	level = Column(Integer,default=0)
+	xp = Column(Integer,default=0)
+	unused = Column(Integer,default=0)
+	Index('racesIndex',UserID)
+ 
+class Players(Base):
+	__tablename__ = 'Players'
+	UserID = Column(Integer,nullable=False,primary_key=True)
+	steamid = Column(String(30),nullable=False)
+	currace = Column(String(30),nullable=False)
+	name = Column(String(30),nullable=False)
+	totallevel = Column(Integer,default=0)
+	lastconnect = Column(Integer)
+	Index('playersIndex', steamid)
+
+if not engine.dialect.has_table(engine, 'Players'):
+	Base.metadata.create_all(engine)
+	
+Session = sessionmaker(bind=engine)
+
+# =============================================================================
 # >> LOAD
 # =============================================================================	
 def load():
-	database.updateRank()
+	Thread(target=_load_ranks).start()
+	for player in PlayerIter():
+		wcsplayers[player.userid] = WarcraftPlayer(player.userid)
 	global curmap
 	curmap = ConVar("host_map").get_string().strip('.bsp')
 	races = racedb.getAll()
@@ -149,13 +197,8 @@ def load():
 # >> UNLOAD
 # =============================================================================	
 def unload():
-	tmp.clear()
-	tmp1.clear()
-	tmp2.clear()
 	aliass.clear()
-	database.save()
 	levelbank.database.save()
-	database.close()
 	levelbank.database.close()
 	
 # =============================================================================
@@ -271,53 +314,183 @@ if len(racedb.getAll()):
 	
 
 # =============================================================================
-# >> PLAYER CLASSES
+# >> PLAYER CLASS
 # =============================================================================
-class PlayerObject(object):
-	def __init__(self, userid):
-		self.userid				= userid
-		self.index				= index_from_userid(self.userid)
-		self.player_entity		= Player(self.index)
-		self.steamid			= self.player_entity.steamid
+class WarcraftPlayer(object):
+	def __init__(self,userid):
+		self.userid = int(userid)
+		self.player_entity = Player.from_userid(self.userid)
+		self.index = self.player_entity.index
+		self.steamid = self.player_entity.steamid
+		self.name = self.remove_warnings(self.player_entity.name)
 		if self.steamid == 'BOT':
-			self.steamid = 'BOT_'+str(self.player_entity.name)
-		self.UserID				= database.getUserIdFromSteamId(self.steamid)
+			self.steamid = 'BOT_'+str(self.name)
+			
+		#Dict to check for load status
+		player_loaded[self.userid] = False
 		
-		if self.UserID is None:
-			self.UserID			= database.addPlayer(self.steamid, self.player_entity.name)
+		#Dict to store all the players races:
+		self.all_races = {}
+			
+		#Player data
+		self.UserID = -1
+		self.currace = ""
+		self.totallevel = 0
+		self.lastconnect = -1
+		
+		
+		#Race data
+		self.RaceID = -1
+		self.level = -1
+		self.xp = -1
+		self.unused = -1
+		self.skills = ''
+		self.race_name = ''
+				
+		Thread(target=self._load_from_database).start()
+		
+	def _load_from_database(self):
+		with session_scope() as session:
+			#Player data
+	
+			player = session.query(Players).filter(Players.steamid==self.steamid).one_or_none()
+			if player is None:
+				player = Players(steamid=self.steamid,currace="Undead Scourge",name=self.name,lastconnect=time.time())
+				session.add(player)
+				session.commit()
+			self.UserID = player.UserID
+			self.currace = player.currace
+			self.race_name = self.currace
+			self.totallevel = player.totallevel
+			self.lastconnect = player.lastconnect
+			if self.steamid not in wcs_rank:
+				wcs_rank[self.steamid] = self.totallevel
+			#Race data
+			race = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).one_or_none()
+			if race is None:
+				if self.skills == '':
+					skills = []
+					for x in range(1,10):
+						skill = 'skill'+str(x)
+						if skill in racedb.races[self.race_name]:
+							skills.append('0')
 
-		self.player				= _getPlayer(self.userid, self.UserID)
-		self.race				= _getRace(self.UserID, self.player.currace, self.userid)
+					self.skills = '|'.join(skills)
+					
+				race = Races(UserID=self.UserID,name=self.race_name,skills=self.skills)
+				session.add(race)
+				session.commit()
+			self.RaceID = race.RaceID
+			self.level = race.level
+			self.xp = race.xp
+			self.unused = race.unused
+			self.skills = race.skills
+			self.race_name = race.name
 
-	def __del__(self):
-		self.save()
-
-	def __str__(self):
-		return str(self.userid)
-
-	def __int__(self):
-		return self.userid
-
+			#Storing all saved races in the all_races dict
+			races = session.query(Races).filter(Races.UserID==self.UserID).all()
+			if races:
+				for race_ in races:
+					self.all_races[race_.name] = {}
+			for race in self.all_races:
+				info = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race).one_or_none()
+				self.all_races[race]['level'] = info.level
+				self.all_races[race]['xp'] = info.xp
+				self.all_races[race]['unused'] = info.unused
+				self.all_races[race]['skills'] = info.skills
+				
+				
+		output.put(self._on_finish)
+		
+	def _on_finish(self):
+		try:
+			index_from_userid(self.userid)
+		except ValueError:
+			pass
+		else:
+			OnPlayerLoaded.manager.notify(self)	
+			
 	def save(self):
-		self.player.save()
-		self.race.save()
+		try:
+			index_from_userid(self.userid)
+		except:
+			return			
+		Thread(target=self._save_player_to_database).start()
+		
+	def _save_player_to_database(self):
+		with session_scope() as session:
+			player = session.query(Players).filter(Players.UserID==self.UserID).one_or_none()
+			player.steamid = self.steamid
+			player.currace = self.currace
+			player.name = self.name
+			player.totallevel = self.totallevel
+			player.lastconnect = self.lastconnect
+			session.commit()
+			for race_ in self.all_races:			
+				race = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race_).one_or_none()
+				race.name = race_
+				race.skills = self.all_races[race_]['skills']
+				race.level = self.all_races[race_]['level']
+				race.xp = self.all_races[race_]['xp']
+				race.unused = self.all_races[race_]['unused']
+				session.commit()
+		output.put(self._on_player_saved)
+		
+	def _on_player_saved(self):
+		try:
+			index_from_steamid(self.steamid)
+		except ValueError:
+			pass
+		else:
+			OnPlayerSaved.manager.notify(self)		
+		
+	def remove_warnings(self, value):
+		return str(value).replace("'", "").replace('"', '')
+		
+	def show_xp(self):
+		xp		   = self.all_races[self.currace]['xp']
+		level	   = self.all_races[self.currace]['level']
+		if config.cfgdata['experience_system'] == 0:
+			needed	   = config.cfgdata['interval']*level if level else config.cfgdata['interval']
+		elif config.cfgdata['experience_system'] == 1:
+			level_string = config.cfgdata['custom_system'].split(',')
+			if level < len(level_string):
+				needed = int(level_string[level])
+			else:
+				needed = int(level_string[len(level_string)-1])
+		race	   = self.currace
 
-	def changeRace(self, race, kill=True,who=None):
-		self.race.save()
-
-		if self.race.racedb['onchange']:
-			command = self.race.racedb['onchange']
+		tell(self.userid, '\x04[WCS] \x04%s \x05 - Level: \x04%s \x05 - XP: \x04%s/%s' % (race, level, xp, needed))
+	
+	def changerace(self, race, kill=True,who=None):
+		if racedb.races[self.race_name]['onchange']:
+			command = racedb.races[self.race_name]['onchange']
 			command = command.split(";")
 			for com in command:
 				execute_server_command('es', com)
-		oldrace = self.player.currace
+		oldrace = self.currace
 
-		self.player.currace = str(race)
+		self.currace = str(race)
+		wcs_rank[self.steamid]['currace'] = str(race)
+		
+		if self.currace not in self.all_races:
+			self.all_races[self.currace] = {}
+			self.all_races[race]['level'] = 0
+			self.all_races[race]['xp'] = 0
+			self.all_races[race]['unused'] = 0
+			
+			skill_list = []
+			for x in range(1,10):
+				skill = 'skill'+str(x)
+				if skill in racedb.races[self.race_name]:
+					skill_list.append('0')
+			skills = '|'.join(skill_list)
+			self.all_races[race]['skills'] = skills
 
-		self.race = _getRace(self.UserID, race, self.userid)
-		self.race.update()
-		self.race.refresh()
-		self.race.save()
+		self.level = self.all_races[self.currace]['level']
+		self.xp = self.all_races[self.currace]['xp']
+		self.unused = self.all_races[self.currace]['unused']
+		self.skills = self.all_races[self.currace]['skills']
 		if kill:
 			self.player_entity.client_command("kill", True)
 		if who == None:
@@ -328,317 +501,204 @@ class PlayerObject(object):
 			self.player_entity.clan_tag = race
 		event_instance = wcs.events.wcs_changerace(userid=self.userid, oldrace=oldrace, newrace=race)
 		event_instance.fire()
-
-	def giveXp(self, amount, reason=''):
-		return self.race.addXp(amount, reason)
-
-	def giveLevel(self, amount):
-		return self.race.addLevel(amount)
-
-	def giveUnused(self, amount):
-		return self.race.addUnused(amount)
-
-	def givePoint(self, skill):
-		return self.race.addPoint(skill)
-
-	def showXp(self):
-		xp		   = self.race.xp
-		level	   = self.race.level
-		if config.cfgdata['experience_system'] == 0:
-			needed	   = config.cfgdata['interval']*level if level else config.cfgdata['interval']
-		elif config.cfgdata['experience_system'] == 1:
-			level_string = config.cfgdata['custom_system'].split(',')
-			if level < len(level_string):
-				needed = int(level_string[level])
-			else:
-				needed = int(level_string[len(level_string)-1])
-		race	   = self.player.currace
-
-		tell(self.userid, '\x04[WCS] \x04%s \x05 - Level: \x04%s \x05 - XP: \x04%s/%s' % (race, level, xp, needed))
-
-	def showRank(self):
-		name	   = self.player.name
-		race	   = self.player.currace
-		level	   = self.race.level
-		place	   = database.getRank(self.steamid)
-		total	   = str(len(database))
-		xp		   = self.race.xp
-		if config.cfgdata['experience_system'] == 0:
-			needed	   = config.cfgdata['interval']*level if level else config.cfgdata['interval']
-		elif config.cfgdata['experience_system'] == 1:
-			level_string = config.cfgdata['custom_system'].split(',')
-			if level < len(level_string):
-				needed = int(level_string[level])
-			else:
-				needed = int(level_string[len(level_string)-1])
-		unused	   = self.race.unused
-
-		for player in PlayerIter():
-			tell(player.userid, "\x05[WCS] \x05%s \x04is on race \x05%s \x04level\x05 %s\x04, ranked \x05%s/%s \x04with\x05 %s/%s \x04XP and \x05%s \x04Unused." % (name, race, level, place, total, xp, needed, unused))
-
-	def delRace(self):
-		self.player.totallevel -= int(self.race.level)
-		database.delRace(self.UserID,self.player.currace)
-		self.race.level = 0
-		self.race.xp = 0
-		self.race.skills = ''
-		self.race.unused = 0
-		self.race.refresh()
-		self.race.save()
-
-	def delPlayer(self):
-		database.delPlayer(self.UserID)
-
-		del tmp1[self.userid]
-		del tmp2[self.userid]
-
-		self.player = _getPlayer(self.userid, self.UserID)
-		self.race = _getRace(self.UserID, self.player.currace, self.userid)
-
-		self.race.refresh()
-
-class Player_WCS(object):
-	def __init__(self, userid, UserID):
-		self.userid = userid
-		self.UserID = UserID
-		self.update()
-
-	def update(self):
-		self.steamid, self.currace, self.name, self.totallevel, self.lastconnect = self._getInfo(('steamid',
-																								  'currace',
-																								  'name',
-																								  'totallevel',
-																								  'lastconnect'))
-
-		self.name = database.removeWarnings(self.name)
-
-	def save(self):
-		try:
-			self._setInfo((self.steamid,self.currace,self.name,self.totallevel,self.lastconnect))
-		except:
-			return
-			
-	def _getInfo(self, what):
-		if not hasattr(what, '__iter__'):
-			what = (what, )
-
-		v = database.getInfoPlayer(what,self.UserID)
-		if v is None:
-			player_entity = Player(index_from_userid(self.userid))
-			return (player_entity.steamid, standardrace, player_entity.name, 0, time.time())
-
-		return v
-
-	def _setInfo(self, options):
-		database.setInfoPlayer(options,self.UserID)
-
-
-# =============================================================================
-# >> RACE CLASS
-# =============================================================================
-class Race(object):
-	def __init__(self, UserID, race, user):
-		self.userid		= user
-		self.index = index_from_userid(self.userid)
-		self.player_entity = Player(self.index)
-		self.steamid	= self.player_entity.steamid
-		if self.steamid == 'BOT':
-			self.steamid == 'BOT_'+str(self.player_entity.name)
-		self.UserID		= UserID
-		self.player		= _getPlayer(self.userid, self.UserID)
-
-		if not race in racedb:
-			race = standardrace
-			self.player.currace = standardrace
-
-		self.RaceID		= database.getRaceIdFromUserIdAndRace(self.UserID, race)
-		if self.RaceID is None:
-			self.RaceID = database.addRaceIntoPlayer(self.UserID, race)
-
-		self.racedb = racedb.getRace(race)
-
-		self.update()
-		self.refresh()
-
-	def update(self):
-		self.name, self.skills, self.level, self.xp, self.unused = self._getInfo(('name',
-																				  'skills',
-																				  'level',
-																				  'xp',
-																				  'unused'))
-
-	def save(self):
-		try:
-			self._setInfo((self.name,self.skills,self.level,self.xp,self.unused))
-		except:
-			return
-
-	def refresh(self):
-		if not self.skills or self.skills is None or self.skills == 'None':
-			skills = []
-			for x in range(1,10):
-				skill = 'skill'+str(x)
-				if skill in self.racedb:
-					skills.append('0')
-
-			self.skills = '|'.join(skills)
-
-	def _getInfo(self, what):
-		if not hasattr(what, '__iter__'):
-			what = (what, )
-			
-		v = database.getInfoRace(what,self.UserID,self.RaceID)			
-		if v is None:
-			return (self.player.currace, '', 0, 0, 0)
-
-		return v
-
-	def _setInfo(self, options):
-		database.setInfoRace(options,self.UserID,self.RaceID)
-
-
-	def addXp(self, amount, reason=''):
+		
+	def give_xp(self, amount, reason=''):
 		amount = int(amount)
 		if not amount:
 			return
 
 		maximumlevel = config.cfgdata['maximum_level']
 
-		if 'maximumlevel' in self.racedb: #Tha Pwned
-			maximumlevel = int(self.racedb['maximumlevel']) #Tha Pwned
+		if 'maximumlevel' in racedb.races[self.currace]: #Tha Pwned
+			maximumlevel = int(racedb.races[self.currace]['maximumlevel']) #Tha Pwned
 
-		if self.level >= maximumlevel: #Tha Pwned
+		if self.all_races[self.currace]['level'] >= maximumlevel: #Tha Pwned
 			return #Tha Pwned
 
-		currentXp = self.xp + amount
+		current_xp = self.all_races[self.currace]['xp'] + amount
 
-		amountOfLevels = 0
+		amount_of_levels = 0
 		
 		
 		if config.cfgdata['experience_system'] == 0:
-			nextLevelXp = config.cfgdata['interval']*self.level if self.level else config.cfgdata['interval']
+			next_level_xp = config.cfgdata['interval']*self.all_races[self.currace]['level'] if self.all_races[self.currace]['level'] else config.cfgdata['interval']
 		elif config.cfgdata['experience_system'] == 1:
 			level_string = config.cfgdata['custom_system'].split(',')
-			if self.level < len(level_string):
-				nextLevelXp = int(level_string[self.level])
+			if self.all_races[self.currace]['level'] < len(level_string):
+				next_level_xp = int(level_string[self.all_races[self.currace]['level']])
 			else:
-				nextLevelXp = int(level_string[len(level_string)-1])
+				next_level_xp = int(level_string[len(level_string)-1])
 				
 				
 		if config.cfgdata['experience_system'] == 0:
-			while currentXp >= nextLevelXp:
-				amountOfLevels += 1
-				currentXp -= nextLevelXp
-				nextLevelXp += config.cfgdata['interval']
+			while current_xp >= next_level_xp:
+				amount_of_levels += 1
+				current_xp -= next_level_xp
+				next_level_xp += config.cfgdata['interval']
 		elif config.cfgdata['experience_system'] == 1:
 			x = 0
 			level_string = config.cfgdata['custom_system'].split(',')
-			while currentXp >=nextLevelXp:
-				amountOfLevels += 1
-				currentXp -= nextLevelXp
-				if self.level+x < len(level_string):
-					nextLevelXp = int(level_string[self.level+x])
+			while current_xp >=next_level_xp:
+				amount_of_levels += 1
+				current_xp -= next_level_xp
+				if self.all_races[self.currace]['level']+x < len(level_string):
+					next_level_xp = int(level_string[self.all_races[self.currace]['level']+x])
 				else:
-					nextLevelXp = int(level_string[len(level_string)-1])
+					next_level_xp = int(level_string[len(level_string)-1])
 				x += 1
-
-		self.xp = currentXp
+		self.all_races[self.currace]['xp'] = current_xp
 		if not reason:
 			tell(self.userid, '\x04[WCS] \x05You have gained \x04%s XP.' % amount)
 		else:
 			tell(self.userid, '\x04[WCS] \x05You have gained \x04%s XP %s' % (amount, reason))
 
-		if amountOfLevels+self.level >= maximumlevel: #Tha Pwned
-			amountOfLevels = maximumlevel-self.level #Tha Pwned
+		if amount_of_levels+self.all_races[self.currace]['level'] >= maximumlevel: #Tha Pwned
+			amount_of_levels = maximumlevel-self.all_races[self.currace]['level'] #Tha Pwned
 			
-		if amountOfLevels:
-			self.addLevel(amountOfLevels)
+		if amount_of_levels:
+			self.give_level(amount_of_levels)
 
-		event_instance = wcs.events.wcs_gainxp(userid=self.userid, amount=amount, levels=amountOfLevels, currentxp=self.xp,reason=reason)
+		event_instance = wcs.events.wcs_gainxp(userid=self.userid, amount=amount, levels=amount_of_levels, currentxp=self.xp,reason=reason)
 		event_instance.fire()		
 		
-		return currentXp
-
-	def addLevel(self, amount):
+		return current_xp
+		
+	def give_level(self, amount):
 		amount = int(amount)
 		if not amount:
 			return
 			
 		maximumlevel = config.cfgdata['maximum_level']
 
-		if 'maximumlevel' in self.racedb: #Tha Pwned
-			maximumlevel = int(self.racedb['maximumlevel']) #Tha Pwned
+		if 'maximumlevel' in racedb.races[self.currace]: #Tha Pwned
+			maximumlevel = int(racedb.races[self.currace]['maximumlevel']) #Tha Pwned
 
-		if self.level >= maximumlevel: #Tha Pwned
+		if self.all_races[self.currace]['level'] >= maximumlevel: #Tha Pwned
 			return #Tha Pwned
 
-		if amount+self.level >= maximumlevel: #Tha Pwned
-			amount = maximumlevel-self.level #Tha Pwned
+		if amount+self.all_races[self.currace]['level'] >= maximumlevel: #Tha Pwned
+			amount = maximumlevel-self.all_races[self.currace]['level'] #Tha Pwned
 			
-		self.level += amount
-		self.unused += amount
-		self.player.totallevel += amount
+		self.all_races[self.currace]['level'] += amount
+		self.all_races[self.currace]['unused'] += amount
+		self.totallevel += amount
+		wcs_rank[self.steamid]['totallevel'] += amount
 
 		if 'BOT' in self.steamid:
-			maxlevel = int(self.racedb['numberoflevels'])
+			maxlevel = int(racedb.races[self.currace]['numberoflevels'])
 
 			while True:
-				if not self.unused:
+				if not self.all_races[self.currace]['unused']:
 					break
 
-				possibleChoices = []
-				skills = self.skills.split('|')
-
-				if len(skills):
-					if skills[0] == '':
-						self.raceUpdate()
+				possible_choices = []
+				skills = self.all_races[self.currace]['skills'].split('|')
 
 				for skill, level in enumerate(skills):
 					if int(skills[skill]) < maxlevel:
-						possibleChoices.append(str(skill+1))
+						possible_choices.append(str(skill+1))
 
-				if not len(possibleChoices):
+				if not len(possible_choices):
 					break
 
-				choice = random.choice(possibleChoices)
-				self.addPoint(choice)
+				choice = random.choice(possible_choices)
+				self.add_point(choice)
 
 		else:
 			if config.cfgdata['experience_system'] == 0:
-				needed = config.cfgdata['interval']*self.level
+				needed = config.cfgdata['interval']*self.all_races[self.currace]['level']
 			elif config.cfgdata['experience_system'] == 1:
 				level_string = config.cfgdata['custom_system'].split(',')
-				if self.level < len(level_string):
-					needed = int(level_string[self.level])
+				if self.all_races[self.currace]['level'] < len(level_string):
+					needed = int(level_string[self.all_races[self.currace]['level']])
 				else:
-					needed = int(level_string[len(level_string)-1])			
-			tell(self.userid, '\x04[WCS] \x05You are on level \x04%s\x05 XP: \x04%s/%s' % (self.level, self.xp, needed))
+					needed = int(level_string[len(level_string)-1])
+			tell(self.userid, '\x04[WCS] \x05You are on level \x04%s\x05 XP: \x04%s/%s' % (self.all_races[self.currace]['level'], self.all_races[self.currace]['xp'], needed))
 			Delay(2.0, spendskills.doCommand, (self.userid,))
 			return
-		oldlevel = self.level - amount
-		event_instance = wcs.events.wcs_levelup(userid=self.userid, race=self.name, oldlevel=oldlevel, newlevel=self.level,amount=amount)
+		oldlevel = self.all_races[self.currace]['level'] - amount
+		event_instance = wcs.events.wcs_levelup(userid=self.userid, race=self.name, oldlevel=oldlevel, newlevel=self.all_races[self.currace]['level'],amount=amount)
 		event_instance.fire()	
 
-		return self.level
+		return self.all_races[self.currace]['level']
+		
 
-	def addUnused(self, amount):
-		self.unused += amount
-		return self.unused
-
-	def addPoint(self, skill):
-		skills = self.skills.split('|')
+	def add_point(self, skill):
+		skills = self.all_races[self.currace]['skills'].split('|')
 		index = int(skill)-1
 		level = int(skills[index])
 
-		if self.unused:
+		if self.all_races[self.currace]['unused']:
 			skills.pop(index)
 			skills.insert(index, str(level+1))
 
-			self.skills = '|'.join(skills)
+			self.all_races[self.currace]['skills'] = '|'.join(skills)
 
-			self.unused -= 1
+			self.all_races[self.currace]['unused'] -= 1
 
 			return level+1
+			
+	def get_rank(self):
+		rank_list = []
+		for x in wcs_rank:
+			rank_list.append(wcs_rank[x])
+		rank_list = sorted(wcs_rank, key=lambda x: wcs_rank[x]['totallevel'],reverse=True)
+		i = 0
+		for x in rank_list:
+			i+=1
+			if self.steamid == x:
+				rank = i
+				break
+		return (i,len(rank_list))
+		
+	def show_rank(self):
+		rank,total = self.get_rank()
+		if config.cfgdata['experience_system'] == 0:
+			needed	   = config.cfgdata['interval']*self.level if self.level else config.cfgdata['interval']
+		elif config.cfgdata['experience_system'] == 1:
+			level_string = config.cfgdata['custom_system'].split(',')
+			if self.level < len(level_string):
+				needed = int(level_string[self.level])
+			else:
+				needed = int(level_string[len(level_string)-1])
+		unused	   = self.unused
+		for player in PlayerIter('all'):
+			tell(player.userid, "\x04[WCS] \x05%s \x04is on race \x05%s \x04level\x05 %s\x04, ranked \x05%s/%s \x04with\x05 %s/%s \x04XP and \x05%s \x04Unused." % (self.name, self.currace, self.all_races[self.currace]['level'], rank, total, self.all_races[self.currace]['xp'], needed, self.all_races[self.currace]['unused']))
+		
+	def delete_race(self):
+		Thread(target=self._delete_race).start()
+
+	def _delete_race(self):
+		with session_scope() as session:
+			delete = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).one_or_none()
+			session.delete(delete)
+			session.commit()		
+		
+	def delete_player(self):
+		Thread(target=self._delete_player).start()
+		
+	def _delete_player(self):
+		with session_scope() as session:
+			delete_races = session.query(Races).filter(Races.UserID==self.UserID).all()
+			delete = session.query(Players).filter(Players.UserID==self.UserID).one_or_none()
+			for x in delete_races:
+				session.delete(x)
+			session.delete(delete)
+			session.commit()		
+		
+		
+for player in PlayerIter('all'):
+	wcsplayers[player.userid] = WarcraftPlayer(player.userid)
+		
+@Repeat
+def repeat():
+	try:
+		callback = output.get_nowait()
+	except Empty:
+		pass
+	else:
+		callback()
+repeat.start(0.1)
 			
 # =============================================================================
 # >> PLAYER COMMANDS
@@ -647,7 +707,6 @@ class Race(object):
 @ClientCommand(config.ultimate_list)
 def _ultimate_command(command, index, team=None):
 	userid = userid_from_index(index)
-	player = getPlayer(userid)
 	player_entity = Player(index)
 	if int(player_entity.team) > 1 and not int(player_entity.dead):
 		returned = checkEvent1(userid, 'player_ultimate')
@@ -662,7 +721,6 @@ def _ultimate_command(command, index, team=None):
 @ClientCommand(config.ability_list)
 def _ultimate_command(command, index, team=None):
 	userid = userid_from_index(index)
-	player = getPlayer(userid)
 	player_entity = Player(index)
 	if int(player_entity.team) > 1 and not int(player_entity.dead):
 		value = wcsgroup.getUser(userid, 'ability')
@@ -699,7 +757,8 @@ def _wcs_top_command(command, index, team=None):
 @ClientCommand(config.showxp_list)
 def _showxp_command(command, index, team=None):
 		userid = userid_from_index(index)
-		getPlayer(userid).showXp()
+		wcsplayers[userid].show_xp()
+		return CommandReturn.BLOCK
 
 @SayCommand(config.wcsmenu_list)
 @ClientCommand(config.wcsmenu_list)
@@ -784,7 +843,7 @@ def _playerinfo_command(command, index, team=None):
 def buyitem_menu_select(menu, index, choice):
 	userid = userid_from_index(index)
 	shopmenu.addItem(userid, choice.value, pay=True, tell=True,close_menu=True)
-	
+		
 @SayCommand(config.wcsbuyitem_list)
 @ClientCommand(config.wcsbuyitem_list)
 def wcs_buy_item(command,index,team=None):
@@ -825,26 +884,24 @@ def _wcs_changerace(command):
 				race = race+" "+x
 	else:
 		race = str(command[2])
-	player = getPlayer(userid)
-	player.changeRace(race)
+	wcsplayers[userid].changerace(race)
+	
 	
 @ServerCommand('wcs_reload')
 def _wcs_reload_command(command):
 	load_races()
 	
 @ServerCommand('wcs_givexp')
-def _wcs_givexp_command(command):
+def _wcs_give_xp_command(command):
 	userid = int(command[1])
 	amount = int(command[2])
-	player = getPlayer(userid)
-	player.giveXp(amount)
+	wcsplayers[userid].give_xp(amount)
 
 @ServerCommand('wcs_givelevel')
 def _wcs_givelevel_command(command):
 	userid = int(command[1])
 	amount = int(command[2])
-	player = getPlayer(userid)
-	player.giveLevel(amount)
+	wcsplayers[userid].give_level(amount)
 	
 @ServerCommand('wcs_xalias')
 def _wcs_xalias_command(command):
@@ -871,63 +928,55 @@ def get_skill_level(command):
 	var = str(command[2])
 	skillnum = int(command[3])
 	
-	player = getPlayer(userid)
-	skills = player.race.skills.split('|')
+	skills = wcsplayers[userid].all_races[race]['skills'].split('|')
 	if skillnum <= len(skills):
 		ConVar(var).set_string(skills[skillnum-1])
 	
 @ServerCommand('wcs_getinfo')
 def getInfoRegister(command):
 	if len(command) == 5:
-		userid = str(command[1])
+		userid = int(command[1])
 		var = str(command[2])
 		info = str(command[3])
 		where = str(command[4])
- 
-		player = getPlayer(userid)
+		race = wcsplayers[userid].currace
  
 		if where == 'race':
-			if hasattr(player.race, info):
-				returned = getattr(player.race, info)
+			if info in wcsplayers[userid].all_races[race]:
+				returned = wcsplayers[userid].all_races[race][info]
 				ConVar(var).set_string(str(returned))
  
 		elif where == 'player':
-			if hasattr(player.player, info):
-				returned = getattr(player.player, info)
+			if hasattr(wcsplayers[userid], info):
+				returned = getattr(wcsplayers[userid], info)
 				ConVar(var).set_string(str(returned))
 		else:
 			if not where in racedb:
 				return
  
-			v = _getRace(player.player.UserID, info, userid)
-			if hasattr(v, info):
-				returned = getattr(v, info)
+			if info in wcsplayers[userid].all_races[where]:
+				returned = wcsplayers[userid].all_races[where][info]
 				ConVar(var).set_string(str(returned))
 	
 # =============================================================================
 # >> EVENTS
 # =============================================================================	
-@Event('player_changename')
-def _player_changename(event):
-	userid = event.get_int('userid')
-	getPlayer(userid).player.name = database.removeWarnings(ev['newname'])
-	
 @Event('player_activate')	
 def _player_activate(event):
 	userid = int(event['userid'])
-	player = getPlayer(userid)
 	player_entity = Player(index_from_userid(userid))
-	player.player.name = database.removeWarnings(player_entity.name)
+	wcsplayers[userid].name = wcsplayers[userid].remove_warnings(player_entity.name)
 
 	if not player_entity.steamid == 'BOT':
 		Delay(10.0, tell, (userid, '\x04[WCS] \x05Welcome to this \x04WCS server\x05. Try \x04"wcshelp" \x05and bind mouse3 ultimate'))
-	race = player.player.currace
-	raceinfo = racedb.getRace(race)
-	if raceinfo['allowonly'] != "":
-		if not player_entity.steamid in raceinfo['allowonly']:
-			rand_race = get_random_race(int(userid))
-			player.changeRace(rand_race)
-	player_entity.clan_tag = player.player.currace
+	race = wcsplayers[userid].currace
+	if player_loaded[userid] == True:
+		raceinfo = racedb.races[race]
+		if raceinfo['allowonly'] != "":
+			if not player_entity.steamid in raceinfo['allowonly']:
+				rand_race = get_random_race(int(userid))
+				player.changerace(rand_race)
+		player_entity.clan_tag = race
 	wcsgroup.addUser(userid)
 	delay = ConVar('mp_force_pick_time').get_int()
 	Delay(float(delay),set_team,(event['userid'],))
@@ -938,21 +987,15 @@ def _event_freeze(ev):
 	gamestarted = 1
 
 @Event('player_disconnect')	
-def player_disconnect(event):
-	userid = event.get_int('userid')
+def player_disconnect(ev):
+	userid = ev.get_int('userid')
 	player_entity = Player(index_from_userid(userid))
-
-	if userid in tmp:
-		tmp[userid].player.lastconnect = time.time()
-		tmp[userid].player.name = database.removeWarnings(player_entity.name)
-		tmp[userid].save()
-		tmp1[userid].save()
-		for x in tmp2[userid]:
-			tmp2[userid][x].save()
-
-		del tmp[userid]
-		del tmp1[userid]
-		del tmp2[userid]
+	
+	wcsplayers[ev['userid']].save()
+	if userid in wcsplayers:
+		wcsplayers[ev['userid']].lastconnect = time.time()
+		wcsplayers[ev['userid']].name = wcsplayers[ev['userid']].remove_warnings(player_entity.name)
+		wcsplayers[ev['userid']].save()
 
 	wcsgroup.delUser(userid)
 
@@ -965,8 +1008,8 @@ def round_start(event):
 	for player in PlayerIter():
 		userid = player.userid
 		if player.team >= 2:
-			race = getPlayer(userid).player.currace
-			raceinfo = racedb.getRace(race)
+			race = wcsplayers[userid].currace
+			raceinfo = racedb.races[race]
 			if raceinfo['roundstartcmd']:
 				command = raceinfo['roundstartcmd']
 				command = command.split(";")
@@ -978,34 +1021,24 @@ def round_start(event):
 def round_end(event):
 	global gamestarted
 	gamestarted = 0
-	delay = ConVar('mp_round_restart_delay').get_int()
-	Delay(float(delay)-0.2,remove_effects)
 	for player in PlayerIter():
 		userid = player.userid
-		if player.team >= 2:
-			race = getPlayer(userid).player.currace
-			raceinfo = racedb.getRace(race)
-			if raceinfo['roundendcmd']:
-				command = raceinfo['roundendcmd']
-				command = command.split(";")
-				for com in command:
-					execute_server_command('es', com)
+		if player_loaded[userid] == True:
+			if player.team >= 2:
+				race = wcsplayers[userid].currace
+				raceinfo = racedb.getRace(race)
+				if raceinfo['roundendcmd']:
+					command = raceinfo['roundendcmd']
+					command = command.split(";")
+					for com in command:
+						execute_server_command('es', com)
 				
 	xpsaver = config.coredata['xpsaver']
 	if xpsaver:
 		global saved
 		if xpsaver <= saved:
-			for x in tmp:
-				tmp[x].save()
-
-			for x in tmp1:
-				tmp1[x].save()
-
-			for x in tmp2:
-				for q in tmp2[x]:
-					tmp2[x][q].save()
-
-			database.save()
+			for user in wcsplayers:
+				wcsplayers[user].save()
 			levelbank.database.save()
 			saved = 0
 
@@ -1025,15 +1058,13 @@ def round_end(event):
 			winxp = config.cfgdata['bot_roundwxp']
 		else:
 			winxp = config.cfgdata['player_roundwxp']
-		wcs_player = getPlayer(player.userid)
-		Delay(1, wcs_player.giveXp, (winxp, 'for winning the round'))
+		Delay(1, wcsplayers[player.userid].give_xp, (winxp, 'for winning the round'))
 	for player in PlayerIter(other):
 		if player.steamid == 'BOT':
 			surxp = config.cfgdata['bot_roundsxp']
 		else:
 			surxp = config.cfgdata['player_roundsxp']		
-		wcs_player = getPlayer(player.userid)
-		Delay(1, wcs_player.giveXp, (surxp, 'for surviving the round'))			
+		Delay(1,  wcsplayers[player.userid].give_xp, (surxp, 'for surviving the round'))			
 
 @Event('player_death')			
 def player_death(event):
@@ -1053,14 +1084,12 @@ def player_death(event):
 		attacker_entity = Player(index_from_userid(attacker))
 				
 	if attacker and victim:
-		player = getPlayer(victim)
 
 		if not victim == attacker:
 			if not victim_entity.team == attacker_entity.team:
-				player1 = getPlayer(attacker)
 				bonus = 0
-				if player1.race.level < player.race.level:
-					diffience = player.race.level - player1.race.level
+				if wcsplayers[attacker_entity.userid].level <  wcsplayers[victim_entity.userid].level:
+					diffience = wcsplayers[victim_entity.userid].level - wcsplayers[attacker_entity.userid].level
 					#Bonus XP
 					if attacker_entity.steamid == 'BOT':
 						limit = config.cfgdata['bot_levellimit']
@@ -1094,30 +1123,31 @@ def player_death(event):
 					if SOURCE_ENGINE_BRANCH == 'csgo':
 						molotovxp = config.cfgdata['player_molotovxp']
 				if bonus:
-					Delay(1, player1.giveXp, (killxp+bonus, 'for killing a higher-level enemy. (\x04%s level difference bonus xp!)' % diffience))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (killxp+bonus, 'for killing a higher-level enemy. (\x04%s level difference bonus xp!)' % diffience))
 				else:
-					Delay(1, player1.giveXp, (killxp, 'for making a kill'))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (killxp, 'for making a kill'))
 
 				if headshot == 1:
-					Delay(1, player1.giveXp, (headshotxp, 'for making a headshot'))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (headshotxp, 'for making a headshot'))
 					
 				elif 'knife' in weapon:
-					Delay(1, player1.giveXp, (knifexp, 'for making a knife kill'))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (knifexp, 'for making a knife kill'))
 				elif weapon == 'hegrenade':
-					Delay(1, player1.giveXp, (hexp, 'for making a explosive grenade kill'))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (hexp, 'for making a explosive grenade kill'))
 				elif weapon == 'smokegrenade':
-					Delay(1, player1.giveXp, (smokexp, 'for making a smoke grenade kill'))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (smokexp, 'for making a smoke grenade kill'))
 				elif weapon == 'flashbang':
-					Delay(1, player1.giveXp, (flashbangxp, 'for making a flashbang grenade kill'))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (flashbangxp, 'for making a flashbang grenade kill'))
 				elif weapon == 'inferno':
-					Delay(1, player1.giveXp, (molotovxp, 'for making a fire kill'))
+					Delay(1, wcsplayers[attacker_entity.userid].give_xp, (molotovxp, 'for making a fire kill'))
 			
 
 			checkEvent(victim,	'player_death')
 			checkEvent(attacker, 'player_kill')
 
-		if player.race.racedb['deathcmd']:
-			command = player.race.racedb['deathcmd']
+		race = wcsplayers[attacker].currace
+		if racedb.races[race]['deathcmd']:
+			command = racedb.races[race]['deathcmd']
 			command = command.split(";")
 			for com in command:
 				execute_server_command('es', com)
@@ -1130,9 +1160,9 @@ def player_death(event):
 			assistxp = config.cfgdata('bot_assistxp')
 		else:
 			assistxp = config.cfgdata('player_assistxp')
-		wcs_player = getPlayer(assister)
-		Delay(1, wcs_player.giveXp, (assistxp, 'for assisting in a kill'))
+		Delay(1, wcsplayers[assister].give_xp, (assistxp, 'for assisting in a kill'))
 		checkEvent(assister,'player_assister')
+		
 
 @Event('player_hurt')
 def _player_hurt(event):
@@ -1140,6 +1170,7 @@ def _player_hurt(event):
 	attacker = event.get_int('attacker')
 	weapon = event.get_string('weapon')
 	health = event.get_int('health')
+	
 	if victim:
 		victim_entity = Player(index_from_userid(victim))
 	if attacker:
@@ -1163,8 +1194,7 @@ def bomb_planted(event):
 		plantxp = config.cfgdata['bot_plantxp']
 	else:
 		plantxp = config.cfgdata['player_plantxp']
-	wcs_player = getPlayer(userid)
-	Delay(1, wcs_player.giveXp, (plantxp, 'for planting the bomb!'))
+	Delay(1, wcsplayers[userid].give_xp, (plantxp, 'for planting the bomb!'))
 		
 @Event('bomb_defused')
 def bomb_planted(event):
@@ -1174,8 +1204,7 @@ def bomb_planted(event):
 		defusexp = config.cfgdata['bot_defusexp']
 	else:
 		defusexp = config.cfgdata['player_defusexp']
-	wcs_player = getPlayer(userid)
-	Delay(1, wcs_player.giveXp, (defusexp, 'for defusing the bomb!'))
+	Delay(1, wcsplayers[userid].give_xp, (defusexp, 'for defusing the bomb!'))
 
 @Event('bomb_exploded')
 def bomb_exploded(event):
@@ -1185,8 +1214,7 @@ def bomb_exploded(event):
 		explodexp = config.cfgdata['bot_explodexp']
 	else:
 		explodexp = config.cfgdata['player_explodexp']
-	wcs_player = getPlayer(userid)
-	Delay(1, wcs_player.giveXp, (explodexp, 'for letting the bomb explode!'))
+	Delay(1, wcsplayers[userid].give_xp, (explodexp, 'for letting the bomb explode!'))
 
 @Event('hostage_rescued')
 def hostage_rescued(event):
@@ -1196,17 +1224,30 @@ def hostage_rescued(event):
 		rescuexp = config.cfgdata['bot_rescuexp']
 	else:
 		rescuexp = config.cfgdata['player_rescuexp']
-	wcs_player = getPlayer(userid)
-	Delay(1, wcs_player.giveXp, (rescuexp, 'for rescuing a hostage!'))		
+	Delay(1, wcsplayers[userid].give_xp, (rescuexp, 'for rescuing a hostage!'))		
 
 			
 @Event('player_spawn')			
 def _player_spawn(event):
 	userid = event.get_int('userid')
+	queue_command_string('wcs_color %s 255 255 255 255' % userid)
+	queue_command_string('wcs_setgravity %s 1.0' % userid)
+	queue_command_string('es playerset speed %s 1.0' % userid)
+	queue_command_string('es wcsgroup set regeneration_active %s 0' % userid)
+	if player_loaded[userid] == True:
+		event_instance = wcs.events.wcs_player_spawn(userid=userid)
+		event_instance.fire()
+	else:
+		return
+		
+@Event('wcs_player_spawn')
+def _wcs_player_spawn(event):
+	userid = event.get_int('userid')
 	index = index_from_userid(userid)
 	players = PlayerDictionary()
-	player = getPlayer(userid)
-	race = player.player.currace
+	if userid not in wcsplayers:
+		wcsplayers[userid] = WarcraftPlayer(userid)
+	race = wcsplayers[userid].currace
 	players[index].clan_tag = race
 	if userid and players[index].team >= 2:
 		for i, v in {'gravity':1.0,'speed':1.0,'longjump':1.0}.items():
@@ -1216,16 +1257,12 @@ def _player_spawn(event):
 		players[index].color = Color(255,255,255,255)
 
 
-		player = getPlayer(userid)
-
-
 		wcsgroup.addUser(userid)
 
-		player.showXp()
+		wcsplayers[userid].show_xp()
 
 		checkEvent(userid, 'player_spawn')
 
-		race = player.player.currace
 		raceinfo = racedb.getRace(race)
 		if int(raceinfo['restrictteam']) and not players[index].steamid == 'BOT':
 			if players[index].team == int(raceinfo['restrictteam']) and players[index].team >= 2 and not players[index].steamid == 'BOT':
@@ -1257,14 +1294,27 @@ def _player_spawn(event):
 def player_say(event):
 	userid = event.get_int('userid')
 	checkEvent(userid, 'player_say')
-	
 # =============================================================================
 # >> LISTENERS
 # =============================================================================	
+class OnPlayerSaved(ListenerManagerDecorator):
+	manager = ListenerManager()
+	
+class OnPlayerLoaded(ListenerManagerDecorator):
+	manager = ListenerManager()
+	
+@OnPlayerLoaded
+def on_loaded(wcsplayer):
+	player_loaded[wcsplayer.userid] = True
+	player = Player.from_userid(int(wcsplayer.userid))
+	if player.dead == 0:
+		event_instance = wcs.events.wcs_player_spawn(userid=wcsplayer.userid)
+		event_instance.fire()
+	
 @OnClientActive
 def on_client_active(index):
-	player = getPlayer(userid_from_index(index))
-	race = player.player.currace
+	wcsplayers[Player(index).userid] = WarcraftPlayer(Player(index).userid)
+	race = wcsplayers[Player(index).userid].currace
 	Player(index).clan_tag = race
 
 @OnLevelShutdown
@@ -1273,9 +1323,9 @@ def level_shutdown_listener():
 		userid = player.userid
 		savexp.doCommand(userid)
 	
-	database.save()
+	for user in wcsplayers:
+		wcsplayers[user].save()
 	levelbank.database.save()
-	database.updateRank()
 
 @OnLevelInit
 def level_init_listener(mapname):
@@ -1283,7 +1333,6 @@ def level_init_listener(mapname):
 	allow_alpha.set_int(1)
 	autokick = ConVar('mp_autokick')
 	autokick.set_int(0)
-	tmp.clear()
 	queue_command_string('sp reload wcs')
 	global curmap
 	if ".bsp" in mapname:
@@ -1301,12 +1350,10 @@ def on_tick():
 			user_queue = PagedMenu.get_user_queue(player.index)
 			if user_queue.active_menu is None:
 				userid = player.userid
-				p = getPlayer(userid)
-
-				race = p.player.currace
-				totallevel = p.player.totallevel
-				level = p.race.level
-				xp = p.race.xp
+				race = wcsplayers[userid].currace
+				totallevel = wcsplayers[userid].totallevel
+				level = wcsplayers[userid].level
+				xp = wcsplayers[userid].xp
 				if config.cfgdata['experience_system'] == 0:
 					needed = config.cfgdata['interval']*level if level else config.cfgdata['interval']
 				elif config.cfgdata['experience_system'] == 1:
@@ -1318,8 +1365,8 @@ def on_tick():
 				steamid = player.steamid
 				if steamid == 'BOT':
 					steamid == 'BOT_'+str(player.name)
-				rank = database.getRank(steamid)
-				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(len(database))
+				rank,total = wcsplayers[player.userid].get_rank()
+				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(total)
 				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)
 				
 				
@@ -1327,23 +1374,29 @@ def on_tick():
 # >> Functions
 # =============================================================================
 
-def _getPlayer(userid, UserID):
-	userid = int(userid)
-	if not userid in tmp1:
-		tmp1[userid] = Player_WCS(userid, UserID)
-
-	return tmp1[userid]
+def _load_ranks():
+	with session_scope() as session:
+		query = session.query(Players, Races).filter(Players.UserID == Races.UserID).filter(Players.currace == Races.name).all()
+		if query != None:
+			for (user, race) in query:
+				wcs_rank[user.steamid] = {}
+				wcs_rank[user.steamid]['name'] = user.name
+				wcs_rank[user.steamid]['totallevel'] = user.totallevel
+				wcs_rank[user.steamid]['currace'] = user.currace
+				wcs_rank[user.steamid]['level'] = race.level
+				
+@contextmanager
+def session_scope():
+	session = Session()
+	try:
+		yield session
+		session.commit()
+	except:
+		session.rollback()
+		raise
+	finally:
+		session.close()
 	
-def _getRace(userid, race, user):
-	user = int(user)
-	if not user in tmp2:
-		tmp2[user] = {}
-
-	if not race in tmp2[user]:
-		tmp2[user][race] = Race(userid, race, user)
-
-	return tmp2[user][race]
-		
 def centertell(userid,message):
 	index = index_from_userid(userid)
 	if SOURCE_ENGINE_BRANCH == "css":
@@ -1355,11 +1408,10 @@ def checkEvent(userid, event, other_userid=0, health=0, armor=0, weapon='', dmg_
 	if userid is not None:
 		player_entity = Player(index_from_userid(userid))
 		if int(player_entity.team) > 1:
-			player = getPlayer(userid)
-			race = player.player.currace
-			race1 = racedb.getRace(race)
+			race = wcsplayers[userid].currace
+			race1 = racedb.races[race]
 			if event in raceevents[race]:
-				skills = player.race.skills.split('|')
+				skills = wcsplayers[userid].all_races[race]['skills'].split('|')
 				for index in raceevents[race][event]:
 					try:
 						level = int(skills[int(index)])
@@ -1381,7 +1433,6 @@ def checkEvent(userid, event, other_userid=0, health=0, armor=0, weapon='', dmg_
 									execute_server_command('es', settings)
 						except IndexError:
 							continue
-
 						if 'cmd' in race1[skill]:
 							if race1[skill]['cmd']:
 								command = race1[skill]['cmd']
@@ -1401,11 +1452,10 @@ def checkEvent1(userid, event):
 	if userid is not None:
 		player_entity = Player(index_from_userid(userid))
 		if int(player_entity.team) > 1:
-			player = getPlayer(userid)
-			race = player.player.currace
-			race1 = racedb.getRace(race)
+			race = wcsplayers[userid].currace
+			race1 = racedb.races[race]
 			if event in raceevents[race]:
-				skills = player.race.skills.split('|')
+				skills = wcsplayers[userid].all_races[race]['skills'].split('|')
 				index = raceevents[race][event][0]
 
 				try:
@@ -1425,7 +1475,7 @@ def checkEvent1(userid, event):
 						wcsgroup.setUser(userid, event+'_pre_cooldown', cooldown)
 						timed = int(float(time.time()))
 						downtime = str(race1[skill]['cooldown']).split('|')
-						if len(downtime) == int(player.race.racedb['numberoflevels']):
+						if len(downtime) == int(race1['numberoflevels']):
 							downtime = int(downtime[level-1])
 						else:
 							downtime = int(downtime[0])
@@ -1471,16 +1521,8 @@ def checkEvent1(userid, event):
 	return None
 
 def do_save():
-	for x in tmp:
-		tmp[x].save()
-
-	for x in tmp1:
-		tmp1[x].save()
-
-	for x in tmp2:
-		for q in tmp2[x]:
-			tmp2[x][q].save()
-	database.save()
+	for x in wcsplayers:
+		wcsplayers[x].save()
 	levelbank.database.save()
 		
 def exists(userid):
@@ -1515,11 +1557,10 @@ def gather_subsection(section, key):
 			item_names.append(section.name)
 			
 def get_cooldown(userid):
-	player = getPlayer(userid)
-	race = player.player.currace
-	race1 = racedb.getRace(race)
+	race = wcsplayers[userid].currace
+	race1 = racedb.races[race]
 	if 'player_ultimate' in raceevents[race]:
-		skills = player.race.skills.split('|')
+		skills = wcsplayers[userid].all_races[race]['skills'].split('|')
 		index = raceevents[race]['player_ultimate'][0]
 		skill = 'skill'+str(int(index)+1)
 		try:
@@ -1528,7 +1569,7 @@ def get_cooldown(userid):
 			level = None
 		if level:
 			downtime = str(race1[skill]['cooldown']).split('|')
-			if len(downtime) == int(player.race.racedb['numberoflevels']):
+			if len(downtime) == int(race1['numberoflevels']):
 				downtime = int(downtime[level-1])
 				if not downtime:
 					downtime = str(race1[skill]['cooldown']).split('|')
@@ -1551,12 +1592,6 @@ def get_random_race(userid):
 	else:
 		return -1
 
-def getPlayer(userid):
-	userid = int(userid)
-	if not userid in tmp:
-		tmp[userid] = PlayerObject(userid)
-	return tmp[userid]		
-	
 def is_number(s):
 	try:
 		float(s)

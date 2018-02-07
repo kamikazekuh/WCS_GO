@@ -34,11 +34,11 @@ def wcs_amount_select(menu, index, choice):
 	player_entity = Player(index)
 	if choice.value == 'xp':
 		for player in PlayerIter():
-			wcs.wcs.getPlayer(player.userid).giveXp(amount)
+			wcs.wcs.wcsplayers[player.userid].give_xp(amount)
 			wcs.wcs.tell(player.userid, '\x04[WCS] \x05You got \x04%s XP \x05from admin \x04%s!' % (amount, player_entity.name))
 	if choice.value == 'level':
 		for player in PlayerIter():
-			wcs.wcs.getPlayer(player.userid).giveLevel(amount)
+			wcs.wcs.wcsplayers[player.userid].give_level(amount)
 			wcs.wcs.tell(player.userid, '\x04[WCS] \x05You got \x04%s Levels \x05from admin \x04%s!' % (amount, player_entity.name))
 	if choice.value == 'cash':
 		for player in PlayerIter():

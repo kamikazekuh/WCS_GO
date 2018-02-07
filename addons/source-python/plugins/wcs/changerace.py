@@ -26,7 +26,8 @@ if config.coredata['categories'] == "1":
 	cats = ConfigObj(cats)
 
 unassigned_cat = ConVar('wcs_unassigned_category')
-	
+
+
 @OnConVarChanged
 def on_convar_changed(convar, old_value):
 	if config.coredata['categories'] == 1:
@@ -59,8 +60,10 @@ def changerace_menu_build(menu, index):
 	allraces = races.keys()
 	for number, race in enumerate(allraces):
 		if cat_to_change_to == 0:
-			player = wcs.wcs.getPlayer(userid)
-			level = wcs.wcs._getRace(player.player.UserID, race, userid).level
+			if race in wcs.wcs.wcsplayers[userid].all_races:
+				level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
+			else:
+				level = 0
 			v = canUse(userid, race)
 			raceinfo = wcs.wcs.racedb.getRace(race)
 			nol = int(raceinfo['numberoflevels'])
@@ -71,8 +74,6 @@ def changerace_menu_build(menu, index):
 				level_buffer = max_level
 			team = player_entity.team
 			if not v:
-				if config.coredata['showracelevel']:
-					level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				if level > 0:
 					option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 					menu.append(option)
@@ -91,7 +92,7 @@ def changerace_menu_build(menu, index):
 					menu.append(option)
 				else:
 					if wcs.wcs.showracelevel:
-						level = wcs.wcs._getRace(player.player.UserID, race, userid).level
+						level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
 					if level > 0:
 						option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 						menu.append(option)
@@ -113,8 +114,6 @@ def changerace_menu_build(menu, index):
 				if races[race]['category'] == "0" or races[race]['category'] == "":
 					races[race]['category'] = 'unassigned'
 			if cat_to_change_to in str(races[race]['category']):
-				player = wcs.wcs.getPlayer(userid)
-				level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				v = canUse(userid, race)
 				raceinfo = wcs.wcs.racedb.getRace(race)
 				nol = int(raceinfo['numberoflevels'])
@@ -125,8 +124,6 @@ def changerace_menu_build(menu, index):
 					level_buffer = max_level
 				team = player_entity.team
 				if not v:
-					if config.coredata['showracelevel']:
-						level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 					if level > 0:
 						option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 						menu.append(option)
@@ -144,8 +141,6 @@ def changerace_menu_build(menu, index):
 						option = PagedOption('%s - Restricted team %s' % (str(race), {2:'T',3:'CT'}[team]), race, highlight=False, selectable=False)
 						menu.append(option)
 					else:
-						if config.coredata['showracelevel']:
-							level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 						if level > 0:
 							option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 							menu.append(option)
@@ -163,8 +158,9 @@ def changerace_menu_build(menu, index):
 	
 def changerace_menu_select(menu, index, choice):
 	userid = userid_from_index(index)
-	player = wcs.wcs.getPlayer(userid)
-	player.changeRace(choice.value)
+	wcs.wcs.wcsplayers[userid].changerace(choice.value)
+	
+changerace_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_menu_build, select_callback=changerace_menu_select)	
 		
 def doCommand(userid,value=0):
 	global cat_to_change_to
@@ -174,7 +170,7 @@ def doCommand(userid,value=0):
 		races = wcs.wcs.racedb.getAll()
 		allraces = races.keys()
 		if len(allraces):
-			changerace_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_menu_build, select_callback=changerace_menu_select)
+			#changerace_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_menu_build, select_callback=changerace_menu_select)
 			if config.coredata['categories'] == 1:
 				changerace_menu.parent_menu = changerace_menu_cats
 			changerace_menu.send(index)
@@ -185,10 +181,9 @@ def doCommand(userid,value=0):
 		races = wcs.wcs.racedb.getAll()
 		allraces = races.keys()
 		if len(allraces):
-			changerace_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_menu_build, select_callback=changerace_menu_select,parent_menu=changerace_menu_cats)
+			#changerace_menu = PagedMenu(title='Changerace Menu',build_callback=changerace_menu_build, select_callback=changerace_menu_select,parent_menu=changerace_menu_cats)
 			changerace_menu.send(index)		
-		
-		
+			
 		
 def changerace_menu_cats_build(menu, index):
 	menu.clear()
@@ -221,8 +216,7 @@ def doCommand_cats(userid):
 		
 def changerace_racename_select(menu, index, choice):
 	userid = userid_from_index(index)
-	player = wcs.wcs.getPlayer(userid)
-	player.changeRace(choice.value)		
+	wcs.wcs.wcsplayers[userid].changerace(choice.value)		
 		
 def changerace_racename_build(menu, index):
 	races = wcs.wcs.racedb.getAll()
@@ -232,8 +226,10 @@ def changerace_racename_build(menu, index):
 	allraces = races.keys()
 	for number, race in enumerate(allraces):
 		if race_arg.lower() in race.lower():
-			player = wcs.wcs.getPlayer(userid)
-			level = wcs.wcs._getRace(player.player.UserID, race, userid).level
+			if race in wcs.wcs.wcsplayers[userid].all_races:
+				level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
+			else:
+				level = 0
 			v = canUse(userid, race)
 			raceinfo = wcs.wcs.racedb.getRace(race)
 			nol = int(raceinfo['numberoflevels'])
@@ -244,8 +240,6 @@ def changerace_racename_build(menu, index):
 				level_buffer = max_level
 			team = player_entity.team
 			if not v:
-				if config.coredata['showracelevel']:
-					level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				if level > 0:
 					option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 					menu.append(option)
@@ -263,8 +257,6 @@ def changerace_racename_build(menu, index):
 					option = PagedOption('%s - Restricted team %s' % (str(race), {2:'T',3:'CT'}[team]), race, highlight=False, selectable=False)
 					menu.append(option)
 				else:
-					if config.coredata['showracelevel']:
-						level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 					if level > 0:
 						option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 						menu.append(option)
@@ -315,13 +307,14 @@ def canUse(userid, race):
 		admins = raceinfo['allowonly'].split('|')
 		if (len(admins) and not admins[0]) or (player_entity.steamid in admins) or ('ADMINS' in admins):
 			team = int(player_entity.team)
-			if not raceinfo['restrictteam'] or int(raceinfo['restrictteam']) == 0 or not int(raceinfo['restrictteam']) == team:
-				totallevel = wcs.wcs.getPlayer(userid).player.totallevel
+			if not raceinfo['restrictteam'] or raceinfo['restrictteam'] == 0 or not int(raceinfo['restrictteam']) == team:
+				totallevel = wcs.wcs.wcsplayers[userid].totallevel
 				if totallevel >= int(raceinfo['required']):
 					if int(raceinfo['maximum']) and totallevel > int(raceinfo['maximum']):
 						return 2
 					return 0
 				return 3
+			print('test')
 			return 4
 		return 5
 	return 6		

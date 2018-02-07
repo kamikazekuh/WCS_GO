@@ -77,9 +77,11 @@ def changerace_menu_build(menu, index):
 	userid = chosen_player
 	allraces = races.keys()
 	for number, race in enumerate(allraces):
+		if race in wcs.wcs.wcsplayers[userid].all_races:
+			level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
+		else:
+			level = 0
 		if cat_to_change_to == 0:
-			player = wcs.wcs.getPlayer(userid)
-			level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 			raceinfo = wcs.wcs.racedb.getRace(race)
 			nol = int(raceinfo['numberoflevels'])
 			nos = int(raceinfo['numberofskills'])
@@ -88,8 +90,6 @@ def changerace_menu_build(menu, index):
 			if level_buffer > max_level:
 				level_buffer = max_level
 			team = player_entity.team
-			if wcs.wcs.showracelevel:
-				level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 			if level > 0:
 				option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 				menu.append(option)
@@ -103,8 +103,6 @@ def changerace_menu_build(menu, index):
 				if races[race]['category'] == "0" or races[race]['category'] == "":
 					races[race]['category'] = 'unassigned'
 			if cat_to_change_to in str(races[race]['category']):
-				player = wcs.wcs.getPlayer(userid)
-				level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				raceinfo = wcs.wcs.racedb.getRace(race)
 				nol = int(raceinfo['numberoflevels'])
 				nos = int(raceinfo['numberofskills'])
@@ -113,8 +111,6 @@ def changerace_menu_build(menu, index):
 				if level_buffer > max_level:
 					level_buffer = max_level
 				team = player_entity.team
-				if wcs.wcs.showracelevel:
-					level = wcs.wcs._getRace(player.player.UserID, race, userid).level
 				if level > 0:
 					option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 					menu.append(option)
@@ -125,8 +121,7 @@ def changerace_menu_build(menu, index):
 	
 def changerace_menu_select(menu, index, choice):
 	userid = chosen_player
-	player = wcs.wcs.getPlayer(userid)
-	player.changeRace(choice.value,True,'admin')
+	wcs.wcs.wcsplayers[userid].changerace(choice.value,True,'admin')
 
 def changerace_menu_cats_select(menu, index, choice):
 	userid = userid_from_index(index)

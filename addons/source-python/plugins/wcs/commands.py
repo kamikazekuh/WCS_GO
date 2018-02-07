@@ -206,6 +206,8 @@ def wcs_explosion(command):
 @Event('round_end')
 def round_end(ev):
 	for player in PlayerIter('all'):
+		if player.userid not in repeat_dict:
+			repeat_dict[player.userid] = 0
 		if repeat_dict[player.userid] != 0:
 			repeat_dict[player.userid].stop()
 			repeat_dict[player.userid] = 0

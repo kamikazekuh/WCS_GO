@@ -30,8 +30,7 @@ def wcs_amount_select(menu, index, choice):
 	userid = choice.value.userid
 	if choice.text == 'Yes':
 		player_entity = Player(index)
-		player = wcs.wcs.getPlayer(userid)
-		player.delRace()
+		wcs.wcs.wcsplayers[player_entity.userid].delete_race()
 		wcs.wcs.tell(userid, '\x04[WCS] \x05Your race has been reset by admin \x04%s!' % player_entity.name)
 	if choice.text == 'No':
 		menu.close(index)

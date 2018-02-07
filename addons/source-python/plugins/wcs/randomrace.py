@@ -24,8 +24,7 @@ def doCommand(userid):
 		if v == 0:
 			allraces.remove(race)
 	change_to = random.choice(allraces)
-	player = wcs.wcs.getPlayer(userid)
-	player.changeRace(change_to)
+	wcs.wcs.wcsplayers[userid].changerace(change_to)
 	
 
 
@@ -34,7 +33,7 @@ def doCommand(userid):
 def canUse(userid, race):
 	player_entity = Player(index_from_userid(userid))
 	raceinfo = wcs.wcs.racedb.getRace(race)
-	totallevel = wcs.wcs.getPlayer(userid).player.totallevel
+	totallevel = wcs.wcs.wcsplayers[userid].totallevel
 	if totallevel >= int(raceinfo['required']):
 		return 1
 	return 0

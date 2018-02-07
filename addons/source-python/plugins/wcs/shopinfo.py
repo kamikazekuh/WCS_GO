@@ -6,10 +6,12 @@ from menus import PagedOption
 from menus import Text
 import wcs
 from menus import PagedMenu
+from wcs import wcsmenu
 
 #2
 def shopinfo_menu_cats_build(menu, index):
 	menu.clear()
+	menu.parent_menu = wcsmenu.main_menu
 	allitems = wcs.wcs.itemdb.getSections()
 	for item in allitems:
 		option = PagedOption('%s' % str(item), item)
@@ -20,7 +22,7 @@ def shopinfo_menu_cats_select(menu, index, choice):
 	userid = userid_from_index(index)
 	doCommand1(userid, choice.value)		
 		
-shopinfo_menu_cats = PagedMenu(title='Shopinfo Menu', build_callback=shopinfo_menu_cats_build, select_callback=shopinfo_menu_cats_select)
+shopinfo_menu_cats = PagedMenu(title='Shopinfo Menu', build_callback=shopinfo_menu_cats_build, select_callback=shopinfo_menu_cats_select,parent_menu=wcsmenu.main_menu)
 
 #1	
 def doCommand(userid):

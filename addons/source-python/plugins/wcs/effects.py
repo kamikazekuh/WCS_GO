@@ -78,7 +78,7 @@ def est_effect_06(command):
 		str_vec = command[5]
 		str_vec = str_vec.split(",")
 		vec2 = Vector(float(str_vec[0]),float(str_vec[1]),float(str_vec[2]))
-		te = TempEntity('BeamPoints', model_index=Model(str(command[3])).index,halo_index=Model(str(command[3])).index,start_point=vec,end_point=vec2,frame_rate=int(command[6]),life_time=float(command[7]),start_width=int(command[8]),end_width=int(command[9]),fade_length=int(command[10]),amplitude=int(command[11]),red=int(command[12]),green=int(command[13]),blue=int(command[14]),alpha=int(command[15]),speed=int(command[16]))
+		te = TempEntity('BeamPoints', model_index=Model(str(command[3])).index,halo_index=Model(str(command[3])).index,start_point=vec,end_point=vec2,frame_rate=int(command[6]),life_time=float(command[7]),start_width=float(command[8]),end_width=float(command[9]),fade_length=int(command[10]),amplitude=int(command[11]),red=int(command[12]),green=int(command[13]),blue=int(command[14]),alpha=int(command[15]),speed=int(command[16]))
 		te.create(delay=float(command[2]))
 	
 @ServerCommand('est_effect_07')

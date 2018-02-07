@@ -30,7 +30,7 @@ def wcs_amount_select(menu, index, choice):
 	userid = choice.value.userid
 	amount = int(choice.text)
 	player = Player(index)
-	wcs.wcs.getPlayer(userid).giveXp(amount)
+	wcs.wcs.wcsplayers[userid].give_xp(amount)
 	wcs.wcs.tell(userid, '\x04[WCS] \x05You got \x04%s XP \x05from admin \x04%s!' % (amount, player.name))
 			
 amount_menu = PagedMenu(title='Amount Menu', select_callback=wcs_amount_select)

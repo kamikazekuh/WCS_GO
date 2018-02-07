@@ -20,19 +20,18 @@ def myinfo2_select(menu, index, choice):
 		
 def doCommand2(userid):
 	player_entity = Player(index_from_userid(userid))
-	player = wcs.wcs.getPlayer(userid) 
 	available = available_races(userid)
 	left = left_to_next(userid)
 	all_count = all_races()
 	perc = float(available)/(float(all_count)/100.0)
 	perc = Decimal(perc)
 	perc = round(perc,2)
-	rank = wcs.wcs.database.getRank(player.steamid)
+	rank = wcs.wcs.wcsplayers[userid].get_rank()
 	myinfo2_menu = SimpleMenu()
 	myinfo2_menu.select_callback = myinfo2_select
 	myinfo2_menu.append(Text('->1. %s' % player_entity.name))
 	myinfo2_menu.append(Text('-'*25))
-	myinfo2_menu.append(Text('Total level: %s' % str(player.player.totallevel)))
+	myinfo2_menu.append(Text('Total level: %s' % str(wcs.wcs.wcsplayers[userid].totallevel)))
 	myinfo2_menu.append(Text('-'*25))
 	myinfo2_menu.append(Text('- WCS rank: %s' % rank))
 	myinfo2_menu.append(Text('- Levels to next race: %s' % left))
@@ -46,18 +45,18 @@ def doCommand2(userid):
 
 def doCommand(userid):
 	player_entity = Player(index_from_userid(userid))
-	player = wcs.wcs.getPlayer(userid)
-	race = wcs.wcs.racedb.getRace(player.player.currace)
+	racel = wcs.wcs.wcsplayers[userid].currace
+	race = wcs.wcs.racedb.getRace(racel)
 	name = race['skillnames'].split('|')
-	skills = player.race.skills.split('|')
+	skills = wcs.wcs.wcsplayers[userid].skills.split('|')
 	levels = int(race['numberoflevels'])
 	myinfo_menu = SimpleMenu()
 	myinfo_menu.select_callback = myinfo_select
 	myinfo_menu.append(Text('->1. %s' % player_entity.name))
 	myinfo_menu.append(Text('-'*25))
-	myinfo_menu.append(Text('o Total level %s' % str(player.player.totallevel)))
+	myinfo_menu.append(Text('o Total level %s' % str(wcs.wcs.wcsplayers[userid].totallevel)))
 	myinfo_menu.append(Text('-'*25))
-	myinfo_menu.append(Text('o %s: Level %s' % (str(player.player.currace), str(player.race.level))))
+	myinfo_menu.append(Text('o %s: Level %s' % (str(wcs.wcs.wcsplayers[userid].currace), str(wcs.wcs.wcsplayers[userid].level))))
 	for skill, level in enumerate(skills):
 		myinfo_menu.append(Text(' - %s: [%s/%s]' % (name[skill], str(level), str(levels))))
 	myinfo_menu.append(Text('-'*25))
@@ -96,7 +95,7 @@ def left_to_next(userid):
 	for number, race in enumerate(allraces):
 		raceinfo = wcs.wcs.racedb.getRace(race)
 		race_dict[race] = int(raceinfo['required'])
-	totallevel = wcs.wcs.getPlayer(userid).player.totallevel
+	totallevel = wcs.wcs.wcsplayers[userid].totallevel
 	level_list = sorted(race_dict.values())
 	last_element = len(level_list)-1
 	if totallevel < int(level_list[last_element]):
@@ -113,7 +112,7 @@ def left_to_next(userid):
 def canUse(userid, race):
 	player_entity = Player(index_from_userid(userid))
 	raceinfo = wcs.wcs.racedb.getRace(race)
-	totallevel = wcs.wcs.getPlayer(userid).player.totallevel
+	totallevel = wcs.wcs.wcsplayers[userid].totallevel
 	admins = raceinfo['allowonly'].split('|')
 	if totallevel >= int(raceinfo['required']):
 		return 1

@@ -16,14 +16,23 @@ def raceinfo_menu_build(menu, index):
 	player_entity = Player(index)
 	allraces = races.keys()
 	for number, race in enumerate(allraces):
-		player = wcs.wcs.getPlayer(userid)
-		level = wcs.wcs._getRace(player.player.UserID, race, userid).level
+		if race in wcs.wcs.wcsplayers[userid].all_races:
+			level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
+		else:
+			level = 0
 		raceinfo = wcs.wcs.racedb.getRace(race)
-		option = PagedOption('%s' % str(race), race)
+		nol = int(raceinfo['numberoflevels'])
+		nos = int(raceinfo['numberofskills'])
+		max_level = nol * nos
+		if level > max_level:
+			level = max_level
+		if level:
+			option = PagedOption('%s - [%s/%s]' % (race,level,max_level),race)
+		else:
+			option = PagedOption('%s' % str(race), race)
 		menu.append(option)
 		
-
-	
+		
 def raceinfo_menu_select(menu, index, choice):
 	race = choice.value
 	raceinfo = wcs.wcs.racedb.getRace(race)
@@ -53,11 +62,12 @@ def raceinfo_menu_select(menu, index, choice):
 			raceinfo_race_menu.append(Text('%s' % y))
 		x +=1
 	raceinfo_race_menu.send(index)
+	
+raceinfo_menu = PagedMenu(title='Raceinfo Menu',build_callback=raceinfo_menu_build, select_callback=raceinfo_menu_select)
 
 def doCommand(userid):
 	index = index_from_userid(userid)
 	races = wcs.wcs.racedb.getAll()
 	allraces = races.keys()
 	if len(allraces):
-		raceinfo_menu = PagedMenu(title='Raceinfo Menu',build_callback=raceinfo_menu_build, select_callback=raceinfo_menu_select)
 		raceinfo_menu.send(index)
