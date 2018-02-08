@@ -91,8 +91,6 @@ def changerace_menu_build(menu, index):
 					option = PagedOption('%s - Restricted team %s' % (str(race), {2:'T',3:'CT'}[team]), race, highlight=False, selectable=False)
 					menu.append(option)
 				else:
-					if wcs.wcs.showracelevel:
-						level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
 					if level > 0:
 						option = PagedOption('%s - [%s/%s]' % (str(race), str(level_buffer),str(max_level)), race)
 						menu.append(option)
