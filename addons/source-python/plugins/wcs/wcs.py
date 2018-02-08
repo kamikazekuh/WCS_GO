@@ -639,9 +639,7 @@ class WarcraftPlayer(object):
 			return level+1
 			
 	def get_rank(self):
-		rank_list = []
-		for x in wcs_rank:
-			rank_list.append(wcs_rank[x])
+		rank_list = wcs_rank.values()
 		rank_list = sorted(wcs_rank, key=lambda x: wcs_rank[x]['totallevel'],reverse=True)
 		i = 0
 		for x in rank_list:
