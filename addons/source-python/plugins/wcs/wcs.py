@@ -321,10 +321,8 @@ class WarcraftPlayer(object):
 		self.userid = int(userid)
 		self.player_entity = Player.from_userid(self.userid)
 		self.index = self.player_entity.index
-		self.steamid = self.player_entity.steamid
+		self.steamid = self.player_entity.uniqueid
 		self.name = self.remove_warnings(self.player_entity.name)
-		if self.steamid == 'BOT':
-			self.steamid = 'BOT_'+str(self.name)
 			
 		#Dict to check for load status
 		player_loaded[self.userid] = False
@@ -1360,9 +1358,7 @@ def on_tick():
 						needed = int(level_string[level])
 					else:
 						needed = int(level_string[len(level_string)-1])
-				steamid = player.steamid
-				if steamid == 'BOT':
-					steamid == 'BOT_'+str(player.name)
+				steamid = player.uniqueid
 				rank,total = wcsplayers[player.userid].get_rank()
 				text = str(race)+'\n--------------------\nTotallevel: '+str(totallevel)+'\nLevel: '+str(level)+'\nXp: '+str(xp)+'/'+str(needed)+'\n--------------------\nWCS rank: '+str(rank)+'/'+str(total)
 				HudMsg(text, 0.025, 0.4,hold_time=0.2).send(player.index)
