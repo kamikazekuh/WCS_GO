@@ -23,8 +23,6 @@ def join_test(command,index):
 	player_race = wcs.wcs.wcsplayers[Player(index).userid].currace
 	raceinfo = wcs.wcs.racedb.getRace(player_race)
 	restrictteam = raceinfo['restrictteam']
-	if wcs.wcs.player_loaded[Player(index).userid] == False:
-		return CommandReturn.BLOCK
 	if restrictteam != None:
 		restrictteam = int(restrictteam)
 	if restrictteam == team_to_join:
@@ -80,6 +78,3 @@ def join_test(command,index):
 		if current_map == restrictmap:
 			wcs.wcs.centertell(userid_from_index(index),"%s is restricted on %s" % (player_race,restrictmap))
 			return CommandReturn.BLOCK
-		
-		
-		
