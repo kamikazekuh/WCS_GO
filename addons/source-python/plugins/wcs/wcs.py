@@ -198,8 +198,6 @@ def load():
 # =============================================================================	
 def unload():
 	aliass.clear()
-	levelbank.database.save()
-	levelbank.database.close()
 	
 # =============================================================================
 # >> INI MANAGER
@@ -401,19 +399,12 @@ class WarcraftPlayer(object):
 		output.put(self._on_finish)
 		
 	def _on_finish(self):
-		try:
-			index_from_userid(self.userid)
-		except ValueError:
-			pass
-		else:
+		if exists(self.userid):
 			OnPlayerLoaded.manager.notify(self)	
 			
 	def save(self):
-		try:
-			index_from_userid(self.userid)
-		except:
-			return			
-		Thread(target=self._save_player_to_database).start()
+		if exists(self.userid):		
+			Thread(target=self._save_player_to_database).start()
 		
 	def _save_player_to_database(self):
 		with session_scope() as session:
@@ -435,11 +426,7 @@ class WarcraftPlayer(object):
 		output.put(self._on_player_saved)
 		
 	def _on_player_saved(self):
-		try:
-			index_from_steamid(self.steamid)
-		except ValueError:
-			pass
-		else:
+		if exists(self.userid):
 			OnPlayerSaved.manager.notify(self)		
 		
 	def remove_warnings(self, value):
@@ -974,8 +961,9 @@ def _player_activate(event):
 				player.changerace(rand_race)
 		player_entity.clan_tag = race
 	wcsgroup.addUser(userid)
-	delay = ConVar('mp_force_pick_time').get_int()
-	Delay(float(delay),set_team,(event['userid'],))
+	if SOURCE_ENGINE_BRANCH == 'csgo':
+		delay = ConVar('mp_force_pick_time').get_int()
+		Delay(float(delay),set_team,(event['userid'],))
 
 @Event('round_freeze_end')
 def _event_freeze(ev):
@@ -1035,7 +1023,6 @@ def round_end(event):
 		if xpsaver <= saved:
 			for user in wcsplayers:
 				wcsplayers[user].save()
-			levelbank.database.save()
 			saved = 0
 
 		else:
@@ -1321,7 +1308,6 @@ def level_shutdown_listener():
 	
 	for user in wcsplayers:
 		wcsplayers[user].save()
-	levelbank.database.save()
 
 @OnLevelInit
 def level_init_listener(mapname):
@@ -1517,13 +1503,13 @@ def checkEvent1(userid, event):
 def do_save():
 	for x in wcsplayers:
 		wcsplayers[x].save()
-	levelbank.database.save()
 		
 def exists(userid):
 	try:
 		index_from_userid(userid)
 	except ValueError:
-		return 0	
+		return False
+	return True
 
 def find_items(name):
 	item_list = []
