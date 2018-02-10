@@ -231,7 +231,7 @@ if SOURCE_ENGINE_BRANCH == 'csgo':
 		   'bot_hexp':				bot_grenade_he_exp.get_int(),
 		   'bot_smokexp':			bot_grenade_smoke_exp.get_int(),
 		   'bot_flashxp':			bot_grenade_flashbang_exp.get_int(),
-		   'bot_moltovxp':			bot_grenade_molotov_exp.get_int(),
+		   'bot_molotovxp':			bot_grenade_molotov_exp.get_int(),
 		   'bot_assistxp':			bot_assist_exp.get_int(),
 		   'bot_difxp':				bot_level_difference_exp.get_int(),
 		   'bot_levellimit':		bot_level_exp_limit.get_int(),
