@@ -1140,9 +1140,9 @@ def player_death(event):
 	if assister:
 		assist_player = Player.from_userid(int(assister))
 		if assist_player.steamid == 'BOT':
-			assistxp = config.cfgdata('bot_assistxp')
+			assistxp = config.cfgdata['bot_assistxp']
 		else:
-			assistxp = config.cfgdata('player_assistxp')
+			assistxp = config.cfgdata['player_assistxp']
 		Delay(1, wcsplayers[assister].give_xp, (assistxp, 'for assisting in a kill'))
 		checkEvent(assister,'player_assister')
 		
