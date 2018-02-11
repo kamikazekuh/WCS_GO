@@ -360,7 +360,11 @@ class WarcraftPlayer(object):
 			self.totallevel = player.totallevel
 			self.lastconnect = player.lastconnect
 			if self.steamid not in wcs_rank:
-				wcs_rank[self.steamid] = self.totallevel
+				wcs_rank[self.steamid] = {}
+				wcs_rank[self.steamid]['name'] = self.name
+				wcs_rank[self.steamid]['totallevel'] = self.totallevel
+				wcs_rank[self.steamid]['currace'] = self.currace
+				wcs_rank[self.steamid]['level'] = 0
 			#Race data
 			race = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).one_or_none()
 			if race is None:
