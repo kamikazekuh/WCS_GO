@@ -418,9 +418,14 @@ class WarcraftPlayer(object):
 			player.name = self.name
 			player.totallevel = self.totallevel
 			player.lastconnect = self.lastconnect
+			
 			session.commit()
-			for race_ in self.all_races:			
+			for race_ in self.all_races:
 				race = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race_).one_or_none()
+				if not race:
+					new_race = Races(UserID=self.UserID,name=race_,skills=self.all_races[race_]['skills'])
+					session.add(new_race)
+					session.commit()
 				race.name = race_
 				race.skills = self.all_races[race_]['skills']
 				race.level = self.all_races[race_]['level']
@@ -703,6 +708,7 @@ def _ultimate_command(command, index, team=None):
 			elif len(returned) == 3 and not returned[0]:
 				tell(userid, '\x04[WCS] \x05You cannot use your \x04ultimate! \x05Cooldown time is \x04'+str(returned[1])+' \x05seconds, \x04'+str(returned[1]-returned[2])+' \x05left!')
 	return CommandReturn.BLOCK
+	
 		
 @SayCommand(config.ability_list)
 @ClientCommand(config.ability_list)
