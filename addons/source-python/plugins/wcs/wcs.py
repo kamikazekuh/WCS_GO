@@ -351,7 +351,7 @@ class WarcraftPlayer(object):
 	
 			player = session.query(Players).filter(Players.steamid==self.steamid).one_or_none()
 			if player is None:
-				player = Players(steamid=self.steamid,currace="Undead Scourge",name=self.name,lastconnect=time.time())
+				player = Players(steamid=self.steamid,currace=ConVar('wcs_default_race').get_string(),name=self.name,lastconnect=time.time())
 				session.add(player)
 				session.commit()
 			self.UserID = player.UserID
