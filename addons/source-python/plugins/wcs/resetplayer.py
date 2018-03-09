@@ -47,5 +47,6 @@ def wcsadmin_resetplayer_menu_select(menu, index, choice):
 		
 def doCommand(userid):
 	index = index_from_userid(userid)
-	wcsadmin_resetplayer_menu = PagedMenu(title='Resetplayer Menu', build_callback=wcsadmin_resetplayer_menu_build, select_callback=wcsadmin_resetplayer_menu_select)
 	wcsadmin_resetplayer_menu.send(index)
+	
+wcsadmin_resetplayer_menu = PagedMenu(title='Resetplayer Menu', build_callback=wcsadmin_resetplayer_menu_build, select_callback=wcsadmin_resetplayer_menu_select)

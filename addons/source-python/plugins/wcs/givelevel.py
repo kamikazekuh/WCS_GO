@@ -49,5 +49,6 @@ def wcsadmin_givelevel_menu_select(menu, index, choice):
 		
 def doCommand(userid):
 	index = index_from_userid(userid)
-	wcsadmin_givelevel_menu = PagedMenu(title='GiveLevel Menu', build_callback=wcsadmin_givelevel_menu_build, select_callback=wcsadmin_givelevel_menu_select)
 	wcsadmin_givelevel_menu.send(index)
+
+wcsadmin_givelevel_menu = PagedMenu(title='GiveLevel Menu', build_callback=wcsadmin_givelevel_menu_build, select_callback=wcsadmin_givelevel_menu_select)

@@ -47,5 +47,6 @@ def wcsadmin_resetrace_menu_select(menu, index, choice):
 		
 def doCommand(userid):
 	index = index_from_userid(userid)
-	wcsadmin_resetrace_menu = PagedMenu(title='Resetrace Menu', build_callback=wcsadmin_resetrace_menu_build, select_callback=wcsadmin_resetrace_menu_select)
 	wcsadmin_resetrace_menu.send(index)
+	
+wcsadmin_resetrace_menu = PagedMenu(title='Resetrace Menu', build_callback=wcsadmin_resetrace_menu_build, select_callback=wcsadmin_resetrace_menu_select)

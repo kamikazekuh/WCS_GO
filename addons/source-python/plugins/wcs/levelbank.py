@@ -225,12 +225,9 @@ def wcs_bank_command(command, index, team=None):
 			
 def doCommand(userid):
 	index = index_from_userid(userid)
-	if wcs.admin.is_admin(userid):
-		if wcs.admin.has_flag(userid, 'wcsadmin_bank'):
-			wcsadmin_bank_menu = PagedMenu(title='WCSBank Menu', build_callback=wcsadmin_bank_menu_build, select_callback=wcsadmin_bank_menu_select)
-			wcsadmin_bank_menu.send(index)
-	else:
-		wcs.wcs.tell(userid, '\x04[WCS] \x05You\'re \x04not \x05an WCS-Bank admin')		
+	wcsadmin_bank_menu.send(index)	
+	
+wcsadmin_bank_menu = PagedMenu(title='WCSBank Menu', build_callback=wcsadmin_bank_menu_build, select_callback=wcsadmin_bank_menu_select)
 	
 @ClientCommand('wcsbankadmin')
 @SayCommand('wcsbankadmin')

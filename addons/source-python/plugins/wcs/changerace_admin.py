@@ -166,5 +166,6 @@ def get_cats():
 		
 def doCommand(userid):
 	index = index_from_userid(userid)
-	wcsadmin_changerace_menu = PagedMenu(title='Choose a player', build_callback=wcsadmin_changerace_menu_build, select_callback=wcsadmin_changerace_menu_select)
 	wcsadmin_changerace_menu.send(index)
+	
+wcsadmin_changerace_menu = PagedMenu(title='Choose a player', build_callback=wcsadmin_changerace_menu_build, select_callback=wcsadmin_changerace_menu_select)
