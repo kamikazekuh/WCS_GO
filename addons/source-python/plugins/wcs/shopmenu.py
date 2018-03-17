@@ -227,7 +227,8 @@ def checkEvent(userid, event):
 								for com in sub_settings:
 									execute_server_command('es', com)
 							else:
-								execute_server_command('es', settings)						
+								execute_server_command('es', settings)
+							wcs.wcs.tell(userid, '\x04[WCS] %s \x05activated!' % iteminfo['name'])
 
 						v -= 1
 							
@@ -259,6 +260,7 @@ def checkBuy(userid, item):
 					execute_server_command('es', com)
 			else:
 				execute_server_command('es', settings)
+			
 	
 
 #Shopmenu Execution Stuff
@@ -309,7 +311,7 @@ def player_hurt(event):
 				checkEvent(attacker, 'player_attacker')
 		checkEvent(victim, 'player_hurt')
 
-@Event('player_spawn')
+@Event('wcs_player_spawn')
 def player_spawn(event):
 	userid = event.get_int('userid')
 	if userid:

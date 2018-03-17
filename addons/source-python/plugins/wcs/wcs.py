@@ -105,6 +105,18 @@ saved = 0
 if os.path.isfile(os.path.join(PLUGIN_PATH, 'wcs/strings', 'strings.ini')):
 	strings = LangStrings(os.path.join(PLUGIN_PATH, 'wcs/strings', 'strings'))
 	
+@contextmanager
+def session_scope():
+	session = Session()
+	try:
+		yield session
+		session.commit()
+	except:
+		session.rollback()
+		raise
+	finally:
+		session.close()
+	
 # =============================================================================
 # >> DATABASE
 # =============================================================================	
@@ -1223,9 +1235,10 @@ def hostage_rescued(event):
 @Event('player_spawn')			
 def _player_spawn(event):
 	userid = event.get_int('userid')
-	queue_command_string('wcs_color %s 255 255 255 255' % userid)
-	queue_command_string('wcs_setgravity %s 1.0' % userid)
-	queue_command_string('es playerset speed %s 1.0' % userid)
+	player = Player.from_userid(userid)
+	player.color = Color(255,255,255,255)
+	player.gravity = 1.0
+	player.speed = 1.0
 	queue_command_string('es wcsgroup set regeneration_active %s 0' % userid)
 	if player_loaded[userid] == True:
 		event_instance = wcs.events.wcs_player_spawn(userid=userid)
@@ -1375,17 +1388,6 @@ def _load_ranks():
 				wcs_rank[user.steamid]['currace'] = user.currace
 				wcs_rank[user.steamid]['level'] = race.level
 				
-@contextmanager
-def session_scope():
-	session = Session()
-	try:
-		yield session
-		session.commit()
-	except:
-		session.rollback()
-		raise
-	finally:
-		session.close()
 	
 def centertell(userid,message):
 	index = index_from_userid(userid)
