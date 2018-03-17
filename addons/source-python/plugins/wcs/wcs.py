@@ -675,8 +675,30 @@ class WarcraftPlayer(object):
 	def _delete_race(self):
 		with session_scope() as session:
 			delete = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).one_or_none()
-			session.delete(delete)
-			session.commit()		
+			if delete != None:
+				session.delete(delete)
+				session.commit()
+			else:
+				self.totallevel -= self.all_races[self.currace]['level']
+				self.all_races[self.currace] = {}
+				self.all_races[self.currace]['level'] = 0
+				self.all_races[self.currace]['xp'] = 0
+				self.all_races[self.currace]['unused'] = 0
+				
+				skill_list = []
+				for x in range(1,10):
+					skill = 'skill'+str(x)
+					if skill in racedb.races[self.currace]:
+						skill_list.append('0')
+				skills = '|'.join(skill_list)
+				self.all_races[self.currace]['skills'] = skills
+				
+				
+		output.put(self._on_race_deleted)
+	
+	def _on_race_deleted(self):
+		if exists(self.userid):
+			OnRaceDeleted.manager.notify(self.index,self.currace)
 		
 	def delete_player(self):
 		wcsplayers.pop(self.userid)
@@ -1320,6 +1342,9 @@ class OnPlayerLoaded(ListenerManagerDecorator):
 class OnPlayerDeleted(ListenerManagerDecorator):
 	manager = ListenerManager()
 	
+class OnRaceDeleted(ListenerManagerDecorator):
+	manager = ListenerManager()
+	
 @OnPlayerLoaded
 def on_loaded(wcsplayer):
 	player_loaded[wcsplayer.userid] = True
@@ -1339,6 +1364,7 @@ def on_player_deleted(index):
 	userid = userid_from_index(index)
 	if userid not in wcsplayers:
 		wcsplayers[userid] = WarcraftPlayer(userid)
+		
 
 @OnLevelShutdown
 def level_shutdown_listener():
