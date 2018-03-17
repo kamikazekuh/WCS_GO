@@ -423,8 +423,8 @@ class WarcraftPlayer(object):
 			for race_ in self.all_races:
 				race = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race_).one_or_none()
 				if not race:
-					new_race = Races(UserID=self.UserID,name=race_,skills=self.all_races[race_]['skills'])
-					session.add(new_race)
+					race = Races(UserID=self.UserID,name=race_,skills=self.all_races[race_]['skills'])
+					session.add(race)
 					session.commit()
 				race.name = race_
 				race.skills = self.all_races[race_]['skills']
