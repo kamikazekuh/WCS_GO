@@ -55,6 +55,17 @@ output = Queue()
 bank_player_loaded = {}
 bankplayer = {}
 
+@contextmanager
+def session_scope():
+	session = Session()
+	try:
+		yield session
+		session.commit()
+	except:
+		session.rollback()
+		raise
+	finally:
+		session.close()
 
 class BankPlayers(Base):
 	__tablename__ = 'BankPlayers'
@@ -137,19 +148,7 @@ def exists(userid):
 	except ValueError:
 		return False
 	return True		
-				
-@contextmanager
-def session_scope():
-	session = Session()
-	try:
-		yield session
-		session.commit()
-	except:
-		session.rollback()
-		raise
-	finally:
-		session.close()
-		
+						
 def wcsadmin_bank_menu_build(menu, index):
 	menu.clear()
 	for player in PlayerIter():
