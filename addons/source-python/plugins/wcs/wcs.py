@@ -679,6 +679,7 @@ class WarcraftPlayer(object):
 			session.commit()		
 		
 	def delete_player(self):
+		wcsplayers.pop(self.userid)
 		Thread(target=self._delete_player).start()
 		
 	def _delete_player(self):
@@ -688,7 +689,13 @@ class WarcraftPlayer(object):
 			for x in delete_races:
 				session.delete(x)
 			session.delete(delete)
-			session.commit()		
+			session.commit()
+		output.put(self._on_player_deleted)
+		
+	def _on_player_deleted(self):
+		if exists(self.userid):
+			OnPlayerDeleted.manager.notify(self.index)	
+			
 		
 		
 for player in PlayerIter('all'):
@@ -1310,6 +1317,9 @@ class OnPlayerSaved(ListenerManagerDecorator):
 class OnPlayerLoaded(ListenerManagerDecorator):
 	manager = ListenerManager()
 	
+class OnPlayerDeleted(ListenerManagerDecorator):
+	manager = ListenerManager()
+	
 @OnPlayerLoaded
 def on_loaded(wcsplayer):
 	player_loaded[wcsplayer.userid] = True
@@ -1323,6 +1333,12 @@ def on_client_active(index):
 	wcsplayers[Player(index).userid] = WarcraftPlayer(Player(index).userid)
 	race = wcsplayers[Player(index).userid].currace
 	Player(index).clan_tag = race
+	
+@OnPlayerDeleted
+def on_player_deleted(index):
+	userid = userid_from_index(index)
+	if userid not in wcsplayers:
+		wcsplayers[userid] = WarcraftPlayer(userid)
 
 @OnLevelShutdown
 def level_shutdown_listener():
