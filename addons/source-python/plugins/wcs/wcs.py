@@ -1015,13 +1015,14 @@ def round_start(event):
 		userid = player.userid
 		if player.team >= 2:
 			race = wcsplayers[userid].currace
-			raceinfo = racedb.races[race]
-			if raceinfo['roundstartcmd']:
-				command = raceinfo['roundstartcmd']
-				command = command.split(";")
-				ConVar("wcs_userid").set_int(userid)
-				for com in command:
-					execute_server_command('es', com)
+			if race != '':
+				raceinfo = racedb.races[race]
+				if raceinfo['roundstartcmd']:
+					command = raceinfo['roundstartcmd']
+					command = command.split(";")
+					ConVar("wcs_userid").set_int(userid)
+					for com in command:
+						execute_server_command('es', com)
 
 @Event('round_end')
 def round_end(event):
