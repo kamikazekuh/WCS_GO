@@ -19,22 +19,19 @@ def doCommand(userid):
 		raceinfo = wcs.wcs.racedb.getRace(race)
 		skills = int(raceinfo['numberofskills'])
 		levels = int(raceinfo['numberoflevels'])
-		level = wcs.wcs.wcsplayers[userid].level
+		level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
 		unused = wcs.wcs.wcsplayers[userid].all_races[race]['unused']
 
 		maxunused = skills*levels
 		v = 0
-		for x in wcs.wcs.wcsplayers[userid].skills.split('|'):
+		for x in wcs.wcs.wcsplayers[userid].all_races[race]['skills'].split('|'):
 			v += int(x)
 		unused += v
-		if maxunused <= unused:
+		if unused > maxunused:
 			playerunused = maxunused
 		else:
 			playerunused = unused
-
-		'''for x in skills:
-			levels += int(x)'''
-		print("unused: "+str(unused))
+			
 		skills = []
 		for x in range(1,10):
 			skill = 'skill'+str(x)
