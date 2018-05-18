@@ -1285,6 +1285,10 @@ def _wcs_player_spawn(event):
 	if userid not in wcsplayers:
 		wcsplayers[userid] = WarcraftPlayer(userid)
 	race = wcsplayers[userid].currace
+	allraces = racedb.getAll()
+	if race not in allraces:
+		race = ConVar('wcs_default_race').get_string()
+		wcsplayers[userid].changerace(ConVar('wcs_default_race').get_string(), kill=False,who='silent',safe=True)
 	players[index].clan_tag = race
 	if userid and players[index].team >= 2:
 		for i, v in {'gravity':1.0,'speed':1.0,'longjump':1.0}.items():
