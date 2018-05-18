@@ -468,13 +468,12 @@ class WarcraftPlayer(object):
 
 		tell(self.userid, '\x04[WCS] \x04%s \x05 - Level: \x04%s \x05 - XP: \x04%s/%s' % (race, level, xp, needed))
 	
-	def changerace(self, race, kill=True,who=None,safe=False):
-		if safe == False:
-			if racedb.races[self.race_name]['onchange']:
-				command = racedb.races[self.race_name]['onchange']
-				command = command.split(";")
-				for com in command:
-					execute_server_command('es', com)
+	def changerace(self, race, kill=True,who=None):
+		if racedb.races[self.race_name]['onchange']:
+			command = racedb.races[self.race_name]['onchange']
+			command = command.split(";")
+			for com in command:
+				execute_server_command('es', com)
 		oldrace = self.currace
 
 		self.currace = str(race)
@@ -482,17 +481,17 @@ class WarcraftPlayer(object):
 		
 		if self.currace not in self.all_races:
 			self.all_races[self.currace] = {}
-			self.all_races[self.currace]['level'] = 0
-			self.all_races[self.currace]['xp'] = 0
-			self.all_races[self.currace]['unused'] = 0
+			self.all_races[race]['level'] = 0
+			self.all_races[race]['xp'] = 0
+			self.all_races[race]['unused'] = 0
 			
 			skill_list = []
 			for x in range(1,10):
 				skill = 'skill'+str(x)
-				if skill in racedb.races[self.currace]:
+				if skill in racedb.races[self.race_name]:
 					skill_list.append('0')
 			skills = '|'.join(skill_list)
-			self.all_races[self.currace]['skills'] = skills
+			self.all_races[race]['skills'] = skills
 
 		self.level = self.all_races[self.currace]['level']
 		self.xp = self.all_races[self.currace]['xp']
@@ -1285,10 +1284,6 @@ def _wcs_player_spawn(event):
 	if userid not in wcsplayers:
 		wcsplayers[userid] = WarcraftPlayer(userid)
 	race = wcsplayers[userid].currace
-	allraces = racedb.getAll()
-	if race not in allraces:
-		race = ConVar('wcs_default_race').get_string()
-		wcsplayers[userid].changerace(ConVar('wcs_default_race').get_string(), kill=False,who='silent',safe=True)
 	players[index].clan_tag = race
 	if userid and players[index].team >= 2:
 		for i, v in {'gravity':1.0,'speed':1.0,'longjump':1.0}.items():
@@ -1687,3 +1682,20 @@ def tell(userid, message):
 	if text_message == 2:
 		message = format_message(message)
 		HintText(message).send(index)
+
+@ServerCommand("wcs_giveprivate")
+def _give_private_race(command):
+	userid = int(command[1])
+	race_name = str(command[2])
+	steamid = Player.from_userid(userid).uniqueid
+	race_dict = ConfigObj(ini.races)
+	allowonly = race_dict[race_name]['allowonly']
+	if steamid not in allowonly:
+		if allowonly != "":
+			new_only = str(allowonly)+"|"+str(steamid)
+		else:
+			new_only = str(steamid)
+		race_dict[race_name]['allowonly'] = new_only
+		race_dict.write()
+		ini.races = os.path.join(PLUGIN_PATH, 'wcs/races', 'races.ini')
+		racedb.races = ini.getRaces
