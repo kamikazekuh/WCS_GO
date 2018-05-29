@@ -84,6 +84,7 @@ from wcs import showskills
 from wcs import spendskills
 from wcs import svar
 from wcs import teamrestrictions
+from wcs import vip
 from wcs import wcs_commands
 from wcs import wcsgroup
 from wcs import wcshelp
