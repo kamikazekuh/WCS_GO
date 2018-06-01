@@ -6,6 +6,7 @@ from menus import PagedOption
 from menus import Text
 import wcs
 from wcs import config
+from wcs import vip
 from menus import PagedMenu
 from cvars import ConVar
 from configobj import ConfigObj
@@ -103,6 +104,9 @@ def changerace_menu_build(menu, index):
 			elif v == 6:
 				option = PagedOption('%s - Restricted map: %s' % (str(race), wcs.wcs.curmap), race, highlight=False, selectable=False)
 				menu.append(option)
+			elif v == 7:
+				option = PagedOption('%s - VIP Race' % (str(race)), race, highlight=False, selectable=False)
+				menu.append(option)
 			else:
 				break
 		else:
@@ -154,6 +158,9 @@ def changerace_menu_build(menu, index):
 					menu.append(option)
 				elif v == 6:
 					option = PagedOption('%s - Restricted map: %s' % (str(race), wcs.wcs.curmap), race, highlight=False, selectable=False)
+					menu.append(option)
+				elif v == 7:
+					option = PagedOption('%s - VIP Race' % (str(race)), race, highlight=False, selectable=False)
 					menu.append(option)
 				else:
 					break			
@@ -305,20 +312,27 @@ def doRacename(userid,args):
 def canUse(userid, race):
 	raceinfo = wcs.wcs.racedb.getRace(race)
 	player_entity = Player(index_from_userid(userid))
-	if not wcs.wcs.curmap in raceinfo['restrictmap'].split('|'):
-		admins = raceinfo['allowonly'].split('|')
-		if (len(admins) and not admins[0]) or (player_entity.steamid in admins) or ('ADMINS' in admins):
-			team = int(player_entity.team)
-			if not raceinfo['restrictteam'] or raceinfo['restrictteam'] == 0 or not int(raceinfo['restrictteam']) == team:
-				totallevel = wcs.wcs.wcsplayers[userid].totallevel
-				if totallevel >= int(raceinfo['required']):
-					if int(raceinfo['maximum']) and totallevel > int(raceinfo['maximum']):
-						return 2
-					return 0
-				return 3
-			return 4
-		return 5
-	return 6		
+	steamid = player_entity.steamid
+	admins = raceinfo['allowonly'].split('|')
+	if str(player_entity.steamid) in str(vip.vips):
+		vip_access = vip.vips[steamid]['race_access']
+	else:
+		vip_access = 0
+	if (not 'VIP' in admins) or (vip_access == "1"):
+		if not wcs.wcs.curmap in raceinfo['restrictmap'].split('|'):
+			if (len(admins) and not admins[0]) or (player_entity.steamid in admins) or ('ADMINS' in admins) or ('VIP' in admins):
+				team = int(player_entity.team)
+				if not raceinfo['restrictteam'] or raceinfo['restrictteam'] == 0 or not int(raceinfo['restrictteam']) == team:
+					totallevel = wcs.wcs.wcsplayers[userid].totallevel
+					if totallevel >= int(raceinfo['required']):
+						if int(raceinfo['maximum']) and totallevel > int(raceinfo['maximum']):
+							return 2
+						return 0
+					return 3
+				return 4
+			return 5
+		return 6
+	return 7
 
 		
 
