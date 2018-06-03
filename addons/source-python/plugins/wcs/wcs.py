@@ -1461,6 +1461,9 @@ def checkEvent(userid, event, other_userid=0, health=0, armor=0, weapon='', dmg_
 					if level:
 						wcs_dice = ConVar('wcs_dice')
 						wcs_dice.set_int(random.randint(0, 100))
+						for x in range(1, 9):
+							wcs_dice = ConVar('wcs_dice'+str(x))
+							wcs_dice.set_int(random.randint(0,100))
 						skill = 'skill'+str(int(index)+1)
 
 						try:
@@ -1508,6 +1511,9 @@ def checkEvent1(userid, event):
 					if gamestarted:
 						wcs_dice = ConVar('wcs_dice')
 						wcs_dice.set_int(random.randint(0, 100))
+						for x in range(1, 9):
+							wcs_dice = ConVar('wcs_dice'+str(x))
+							wcs_dice.set_int(random.randint(0,100))
 						skill = 'skill'+str(int(index)+1)
 						cooldown = wcsgroup.getUser(userid, event+'_cooldown')
 						if cooldown is None:
