@@ -1189,7 +1189,7 @@ def player_death(event):
 			for com in command:
 				execute_server_command('es', com)
 
-	if victim and not attacker:
+	if (victim and not attacker) or (victim == attacker):
 		checkEvent(victim,	'player_death')
 	if assister:
 		assist_player = Player.from_userid(int(assister))
