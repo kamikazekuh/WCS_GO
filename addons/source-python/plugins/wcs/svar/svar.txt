@@ -61,3 +61,13 @@ wcs_tmp2
 wcs_tmp3
 wcs_tmp4
 wcs_tmp12
+wcs_dice
+wcs_dice1
+wcs_dice2
+wcs_dice3
+wcs_dice4
+wcs_dice5
+wcs_dice6
+wcs_dice7
+wcs_dice8
+wcs_dice9
