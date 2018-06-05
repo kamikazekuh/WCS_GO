@@ -7,8 +7,12 @@ block load
 	es_xset wcs_team_targetn 0
 	es_xset wcs_wardenround 0
 	es_xset wcs_exists 0
+	es_xset wcs_hitid 0
+	es_xset wcs_hitdmg 0
 	es_xexists wcs_exists command wcs_warden
-	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_warden races/shadow_hunter/wcs_warden "Warden, deals damage to nearby enemies"
+	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_warden wcs/races/shadow_hunter/wcs_warden "Warden, deals damage to nearby enemies"
+	es_xexists wcs_exists command wcs_warden_hit
+	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_warden_hit wcs/races/shadow_hunter/wcs_warden_hit "Warden Hit"
 }
 
 block wcs_warden
@@ -70,16 +74,31 @@ block wcs_warden
 						es_createvectorstring vector5 server_var(wcs_x3) server_var(wcs_y3) server_var(wcs_z3)
 						es est_effect_06 #a 0 server_var(wcs_flare) server_var(vector3) server_var(vector5) 1 1 18 1 0 0 255 150 70 125 10
 						es est_effect_06 #a 0 sprites/lgtning.vmt server_var(vector3) server_var(vector5) 1 1 14 1 0 0 server_var(wcs_red) server_var(wcs_green) server_var(wcs_blue) 115 10
-						alias wcs_run_warden "es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 server_var(wcs_targetid);es_math wcs_z2 + 25;es_createvectorstring vector4 server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2);es est_effect_06 #a 0 server_var(wcs_flare) server_var(vector4) server_var(vector3) 1 1 8 4 0 0 255 150 70 125 15;es est_effect_06 #a 0 sprites/lgtning.vmt server_var(vector4) server_var(vector3) 1 1 8 4 0 0 server_var(wcs_red) server_var(wcs_green) server_var(wcs_blue) 115 15;wcs_run_warden2"
-						alias wcs_run_warden2 "es wcsgroup get swardinvul wcs_shopvar server_var(wcs_targetid);if (server_var(wcs_shopvar) = 0) then wcs_run_warden3"
-						alias wcs_run_warden3 "es wcs_dealdamage server_var(wcs_targetid) server_var(wcs_uid) server_var(wcs_dmg);es_tell server_var(wcs_uid) #multi #green [WCS]: #lightgreen Serpent ward - Dealt server_var(wcs_dmg) damage;es_tell server_var(wcs_targetid) #multi #green [WCS]: #lightgreen Serpent ward - Took server_var(wcs_dmg) damage"
-						es wcs_nearcoord wcs_targetid server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_radius2) "es_getplayerprop wcs_dead server_var(wcs_targetid) CCSPlayer.baseclass.pl.deadflag;if (server_var(wcs_dead) = 0) then wcs_run_warden"
+						es wcs_nearcoord wcs_targetid server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_radius2) "es_getplayerprop wcs_dead server_var(wcs_targetid) CCSPlayer.baseclass.pl.deadflag;if (server_var(wcs_dead) = 0) then wcs_warden_hit server_var(wcs_targetid) server_var(wcs_dmg)"
 						es_xmath wcs_duration - 1
 						es_delayed 1 wcs_warden server_var(wcs_uid) server_var(wcs_duration) server_var(wcs_dmg) server_var(wcs_radius2) server_var(wcs_team_target) server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_wardenround)
 					}
 				}
 			}
 		}
+	}
+}
+
+block wcs_warden_hit
+{
+	es_xgetargv wcs_hitid 1
+	es_xgetargv wcs_hitdmg 2
+	es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 server_var(wcs_hitid)
+	es_math wcs_z2 + 25
+	es_createvectorstring vector4 server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2)
+	es est_effect_06 #a 0 server_var(wcs_flare) server_var(vector4) server_var(vector3) 1 1 8 4 0 0 255 150 70 125 15
+	es est_effect_06 #a 0 sprites/lgtning.vmt server_var(vector4) server_var(vector3) 1 1 8 4 0 0 server_var(wcs_red) server_var(wcs_green) server_var(wcs_blue) 115 15
+	es wcsgroup get swardinvul wcs_shopvar server_var(wcs_hitid)
+	if (server_var(wcs_shopvar) = 0) do
+	{
+		es wcs_dealdamage server_var(wcs_hitid) server_var(wcs_uid) server_var(wcs_hitdmg)
+		es_tell server_var(wcs_uid) #multi #green [WCS]: #lightgreen Serpent ward - Dealt server_var(wcs_hitdmg) damage
+		es_tell server_var(wcs_hitid) #multi #green [WCS]: #lightgreen Serpent ward - Took server_var(wcs_hitdmg) damage
 	}
 }
 
