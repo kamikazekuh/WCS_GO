@@ -326,7 +326,11 @@ def push_forward(command):
 	x1 = float(command[2])
 	y1 = float(command[3])
 	z1 = float(command[4]) + 50.0
-	vec = Vector(x1,y1,z1)
+	if len(command) > 5:
+		force = float(command[5])
+	else:
+		force = 1.0
+	vec = Vector(x1,y1,z1)*force
 	player = Player(index_from_userid(userid))
 	player.teleport(None, None, Vector(x1, y1, z1) - player.origin)
 	
