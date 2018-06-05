@@ -10,7 +10,7 @@ from engines.server import queue_command_string
 import core
 
 def remove_freeze(player):
-	player.freeze = 0
+	player.move_type = MoveType.WALK
 
 def cancel(userid, what):
 	wcsgroup.setUser(userid, what+'_cooldown', wcsgroup.getUser(userid, what+'_pre_cooldown'))
@@ -30,7 +30,7 @@ def wcs_ulti_roots():
 				vic_origin = play.origin
 				if vic_origin.get_distance(atk_origin) <= radius:
 					if not wcsgroup.getUser(play.userid, 'ulti_immunity'):
-						play.freeze = 1
+						play.move_type = MoveType.NONE
 						count += 1
 						Delay(time, remove_freeze, (play,))
 						es.emitsound('player', play.userid, 'wcs/root.wav', 1.0, 0.6)
