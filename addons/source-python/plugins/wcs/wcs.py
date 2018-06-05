@@ -1054,6 +1054,9 @@ def round_start(event):
 					ConVar("wcs_userid").set_int(userid)
 					for com in command:
 						execute_server_command('es', com)
+	round_count = ConVar('wcs_roundcounter').get_int()
+	round_count += 1
+	ConVar('wcs_roundcounter').set_int(round_count)
 
 @Event('round_end')
 def round_end(event):
