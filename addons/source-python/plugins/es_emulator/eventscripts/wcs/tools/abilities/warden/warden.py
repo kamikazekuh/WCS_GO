@@ -25,7 +25,7 @@ def warden():
 				color = '10 0 255 150'
 
 			x,y,z = es.getplayerlocation(userid)
-			es.server.queuecmd('wcs_warden '+userid+' '+param[0]+' '+param[1]+' '+param[2]+' '+teamtarget+' '+teamtargetn+' '+str(x)+' '+str(y)+' '+str(z)+' '+str(es.ServerVar('wcs_wardencounter')))
+			es.server.queuecmd('wcs_warden '+userid+' '+param[0]+' '+param[1]+' '+param[2]+' '+teamtarget+' '+teamtargetn+' '+str(x)+' '+str(y)+' '+str(z)+' '+str(es.ServerVar('wcs_roundcounter')))
 
 			tell(userid, 'a_wardencreated')
 
