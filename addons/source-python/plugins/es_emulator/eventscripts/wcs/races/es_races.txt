@@ -1,9 +1,5 @@
 block load
 {
-	es_load wcs/races/chameleon
-	es_load wcs/races/succubus_hunter
-	es_load wcs/races/flame_predator
-	es_load wcs/races/crypt_lord
 	es_load wcs/races/warden
 	es_load wcs/races/archmage_proudmoore
 	es_load wcs/races/blood_mage
