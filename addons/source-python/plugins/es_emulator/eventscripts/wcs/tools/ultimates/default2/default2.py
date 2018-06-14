@@ -8,6 +8,7 @@ from wcs import wcsgroup
 from mathlib import Vector
 from engines.server import queue_command_string
 import core
+from entities.constants import MoveType
 
 def remove_freeze(player):
 	player.move_type = MoveType.WALK
