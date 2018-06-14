@@ -19,7 +19,6 @@ block knives
 block knivesdamage
 {
 	es_xrand wcs_dmg 8 19
-	es wcs_dealdamage server_var(wcs_players) event_var(attacker) server_var(wcs_dmg)
 	es wcs_centertell event_var(attacker) Fan of knives dealt server_var(wcs_dmg) damage to nearby enemies
 	es wcs_centertell server_var(wcs_players) Took server_var(wcs_dmg) damage from fan of knives
 	es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
@@ -30,6 +29,7 @@ block knivesdamage
 	es_delayed .2 est_effect_08 #a 0 models/manhack/blur01.vmt server_var(vector2) 50 225 10 .5 30 10 2 255 255 255 140 10 1
 	es_delayed .3 est_effect_08 #a 0 models/manhack/blur01.vmt server_var(vector2) 50 225 10 .5 30 10 2 255 255 255 120 13 1
 	es_delayed .4 est_effect_08 #a 0 models/manhack/blur01.vmt server_var(vector2) 50 225 10 .5 30 10 2 255 255 255 100 13 1
+	es wcs_dealdamage server_var(wcs_players) event_var(attacker) server_var(wcs_dmg)
 }
 
 block immunity
@@ -48,8 +48,7 @@ block damage
 		if (event_var(es_userdead) = 0) do
 		{
 			if (event_var(es_attackerdead) = 0) do
-			{
-				es wcs_timedamage event_var(userid) event_var(attacker) 4 1 4
+			{	
 				es_tell event_var(attacker) #multi #green [WCS]: #lightgreen Shadow strike - You poisoned your target for 4 seconds
 				es_tell event_var(userid) #multi #green [WCS]: #lightgreen Shadow strike - You've been poisoned for 4 seconds
 				es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(attacker)
@@ -62,6 +61,7 @@ block damage
 				es est_effect_06 #a 0 models/manhack/blur01.vmt server_var(vector1) server_var(vector2) 1 .5 4 4 0 0 255 255 255 180 5
 				es est_effect_06 #a 0 sprites/tp_beam001.vmt server_var(vector1) server_var(vector2) 1 .5 10 10 0 0 25 255 20 130 5
 				es est_effect_06 #a 0 models/manhack/blur01.vmt server_var(vector1) server_var(vector2) 1 .5 4 4 0 0 255 255 255 180 5
+				es wcs timed_damage event_var(userid) event_var(attacker) 4 1 4
 			}
 		}
 	}

@@ -102,7 +102,6 @@ block flame
 			if (event_var(es_attackerdead) = 0) do 
 			{
 				es_xrand wcs_dmg 7 13
-				es wcs_dealdamage event_var(userid) event_var(attacker) server_var(wcs_dmg)
 				es wcs_centertell event_var(attacker) Flame strike dealt + server_var(wcs_dmg) fire damage! 
 				es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
 				es_getplayerlocation wcs_x2 wcs_y2 wcs_z2 event_var(attacker)
@@ -111,6 +110,7 @@ block flame
 				es_xmath wcs_z1 + 10
 				es_xmath wcs_z2 + 20
 				es est_effect 3 #a 0 sprites/crystal_beam1.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 0.7 10 10 232 111 0 255
+				es wcs_dealdamage event_var(userid) event_var(attacker) server_var(wcs_dmg)
 			}
 		}
 	}

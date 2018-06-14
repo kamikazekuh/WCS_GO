@@ -9,7 +9,7 @@ block spawn
 
 block evade
 {
-	es wcs_evasion event_var(userid) 1 server_var(wcs_chance)
+	es_delayed 0.5 wcs_evasion event_var(userid) 1 server_var(wcs_chance)
 	es_tell event_var(userid) #multi #green[WCS] #lightgreenEvasion - You will be able to dodge bullets.
 }
 
@@ -21,7 +21,6 @@ block thorns
 		{
 			if (event_var(es_attackerdead) = 0) do 
 			{
-				es wcs_dealdamage event_var(attacker) event_var(userid) server_var(wcs_dmg)
 				es wcs_centertell event_var(attacker) Took server_var(wcs_dmg) mirror damage from event_var(es_username)'s thorns!
 				es wcs_centertell event_var(userid) Thorns did server_var(wcs_dmg) damage to event_var(es_attackername)! 
 				es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
@@ -30,6 +29,7 @@ block thorns
 				es_xmath wcs_z2 + 15
 				es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 8 8 175 175 255 155
 				es est_effect 3 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1 15 15 175 175 200 155
+				es wcs_dealdamage event_var(attacker) event_var(userid) server_var(wcs_dmg)
 			}
 		}
 	}
