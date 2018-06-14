@@ -25,6 +25,7 @@ def register(command):
 	if len(command) >= 4:
 		todo = str(command[1]).lower()
 		userid = str(command[2])
+		userid = int(userid)
 		if todo == 'damage':
 			v,q,w = int(command[3]) if int(command[3]) else None, int(command[5]) if len(command) >= 6 else False, str(command[6]) if len(command) == 7 else None
 			damage(userid, str(command[4]), v, q, w)
@@ -103,29 +104,38 @@ def register(command):
 			if len(command) == 4:
 				changeTeam(userid, str(command[3]))
 				
+				
+
+				
 def remove_poison(userid):
-	if poison_dict[int(userid)] != 0:
-		poison_dict[userid].stop()		
+	if userid in poison_dict:
+		if poison_dict[userid] != 0:
+			poison_dict[userid].stop()		
 	
 def remove_timed(userid):
-	if timed_dict[int(userid)] != 0:
-		timed_dict[userid].stop()
+	if userid in timed_dict:
+		if timed_dict[userid] != 0:
+			timed_dict[userid].stop()
 
 def spawn(userid, force=False):
-	Player.from_userid(int(userid)).spawn(force)
+	userid = int(userid)
+	Player.from_userid(userid).spawn(force)
 	
 def fade(userid, r,g,b,a,time):
+	userid = int(userid)
 	color = Color(r,g,b,a)
 	Fade(int(time), int(time),color,FadeFlags.PURGE).send(Player.from_userid(userid).index)	
 
 def strip(userid):
-	player = Player.from_userid(int(userid))
+	userid = int(userid)
+	player = Player.from_userid(userid)
 	entity = Entity.create('player_weaponstrip')
 	entity.call_input("Strip", activator=player)
 	entity.remove()
 
 def drop(userid, weapon):
-	player = Player.from_userid(int(userid))
+	userid = int(userid)
+	player = Player.from_userid(userid)
 	if str(weapon) == "1":
 		wpn = player.get_weapon(is_filters='primary')
 		if wpn:
@@ -145,11 +155,12 @@ def drop(userid, weapon):
 def push(userid, xm, ym=0, zm=0):
 	userid = int(userid)
 	vec = Vector(float(xm),float(ym),float(zm))
-	player = Player.from_userid(int(userid))
+	player = Player.from_userid(userid)
 	player.set_property_vector("m_vecBaseVelocity", vec)
 
 
 def pushto(userid, coord, force):
+	userid = int(userid)
 	coords = coord.split(",")
 	vec = Vector(coords[0],coords[1],coords[2])
 	player = Player(index_from_userid(userid))
@@ -175,13 +186,14 @@ def damage(victim, dmg, attacker=None, armor=False, weapon=None, solo=None):
 		vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)'''
 
 def gravity(userid, value):
-	Player.from_userid(int(userid)).gravity = float(value)
+	userid = int(userid)
+	Player.from_userid(userid).gravity = float(value)
 
 
 def removeWeapon(userid, weapon):
 	userid = int(userid)
 	slot_weapon = weapon
-	player = Player.from_userid(int(userid))
+	player = Player.from_userid(userid)
 	if slot_weapon in "1;2;3;4;5":
 		if slot_weapon == "1":
 			weapon = player.get_weapon(is_filters='primary')
@@ -199,15 +211,18 @@ def removeWeapon(userid, weapon):
 				player.drop_weapon(weapon)
 				weapon.remove()
 
-def getViewEntity(userid):	
-	return Player.from_userid(int(userid)).get_view_entity().index
+def getViewEntity(userid):
+	userid = int(userid)
+	return Player.from_userid(userid).get_view_entity().index
 
 
 def getViewPlayer(userid):
-	return Player.from_userid(int(userid)).get_view_player().userid
+	userid = int(userid)
+	return Player.from_userid(userid).get_view_player().userid
 
 
 def keyHint(userid, text):
+	userid = int(userid)
 	if not len(text):
 		return
 
@@ -228,15 +243,18 @@ def keyHint(userid, text):
 	es.usermsg('delete', 'keyhint')
 
 def give(userid, entity):
+	userid = int(userid)
 	execute_server_command('es_give', '%s %s' % (userid, entity))
 
 def fire(userid, time=0):
+	userid = int(userid)
 	if time == 0:
 		time = 999
-	Player.from_userid(int(userid)).ignite_lifetime(float(time))
+	Player.from_userid(userid).ignite_lifetime(float(time))
 
 def extinguish(userid):
-	Player.from_userid(int(userid)).ignite_lifetime(0.0)
+	userid = int(userid)
+	Player.from_userid(userid).ignite_lifetime(0.0)
 
 def drug(userid, time=0):
 	userid = int(userid)
@@ -249,7 +267,8 @@ def remove_drug(userid):
 
 
 def drunk(userid, time=0, value=155):
-	player = Player.from_userid(int(userid))
+	userid = int(userid)
+	player = Player.from_userid(userid)
 	player.set_property_uchar('m_iDefaultFOV', value)
 	player.set_property_uchar('m_iFOV', value)
 	if time:
@@ -263,6 +282,9 @@ def remove_drunk(player):
 	
 @Event('player_spawn')
 def player_spawn(ev):
+	userid = int(ev['userid'])
+	remove_poison(userid)
+	remove_timed(userid)
 	player = Player.from_userid(ev['userid'])
 	player.set_property_uchar('m_iDefaultFOV', 90)
 	player.set_property_uchar('m_iFOV', 90)
@@ -282,10 +304,11 @@ def round_end(ev):
 				timed_dict[int(player.userid)] = 0
 	
 def dealTimed(userid, attacker, dmg, time):
+	userid = int(userid)
 	if userid not in timed_dict:
 		timed_dict[userid] = 0
 	timed_repeat = Repeat(_timed_repeat,(userid,attacker,dmg))
-	timed_dict[int(userid)] = timed_repeat
+	timed_dict[userid] = timed_repeat
 	timed_repeat.start(time,execute_on_start=True)
 	
 def _timed_repeat(userid,attacker,dmg):
@@ -293,15 +316,16 @@ def _timed_repeat(userid,attacker,dmg):
 	#wcs.wcs.tell(int(userid),"\x04[WCS] \x05Poison did \x04%s \x05damage to you!" % (dmg))
 
 def dealPoison(userid, attacker, dmg, time):
+	userid = int(userid)
 	if userid not in poison_dict:
 		poison_dict[userid] = 0
 	poison_repeat = Repeat(_poison_repeat,(userid,attacker,dmg))
-	poison_dict[int(userid)] = poison_repeat
+	poison_dict[userid] = poison_repeat
 	poison_repeat.start(time,execute_on_start=True)
 	
 def _poison_repeat(userid,attacker,dmg):
 	damage(userid,dmg,attacker)
-	wcs.wcs.tell(int(userid),"\x04[WCS] \x05Poison did \x04%s \x05damage to you!" % (dmg))
+	wcs.wcs.tell(userid,"\x04[WCS] \x05Poison did \x04%s \x05damage to you!" % (dmg))
 
 def changeTeam(userid, team):
-	Player.from_userid(int(userid)).set_team(int(team))
+	Player.from_userid(userid).set_team(int(team))

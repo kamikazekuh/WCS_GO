@@ -28,4 +28,8 @@
         "item"	"string"	// Item that was bought
         "cost"	"short"	// Cost of the item
     }
+    "wcs_player_spawn"
+    {
+        "userid"	"short"	// The userid of the player involved in the event.
+    }
 }

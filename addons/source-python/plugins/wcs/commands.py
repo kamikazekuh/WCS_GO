@@ -62,6 +62,31 @@ def fade(command):
 	color = Color(r,g,b,a)
 	Fade(int(time), int(time),color,FadeFlags.PURGE).send(Player.from_userid(userid).index)
 	
+@ServerCommand('wcs_absorb')
+def absorb(command):
+	userid = int(command[1])
+	amount = float(command[2])
+	wcsgroup.setUser(userid,'absorb',amount)
+
+@EntityPreHook(EntityCondition.is_bot_player, 'on_take_damage')
+@EntityPreHook(EntityCondition.is_human_player, 'on_take_damage')
+def _pre_take_damage(stack_data):
+	take_damage_info = make_object(TakeDamageInfo, stack_data[1])
+	attacker = Entity(take_damage_info.attacker)
+	if attacker.classname != 'player':
+		return
+		
+	damage = take_damage_info.damage
+	attacker = Player(attacker.index)
+	victim = make_object(Player, stack_data[0])
+	absorb = float(wcsgroup.getUser(victim.userid,'absorb'))
+	if absorb > 0:
+		absorb_dmg = damage*absorb
+		if int(absorb_dmg) > 0:
+			take_damage_info.damage -= int(absorb_dmg)
+			wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You absorbed %s damage!' % int(absorb_dmg))
+	return
+	
 @ServerCommand('wcs_randplayer')
 def randplayer(command):
 	var = str(command[1])
@@ -212,6 +237,7 @@ def round_end(ev):
 			
 @Event('player_spawn')
 def player_spawn(ev):
+	wcsgroup.setUser(ev['userid'],'absorb',0.0)
 	if ev['userid'] not in repeat_dict:
 		repeat_dict[ev['userid']] = 0
 	if repeat_dict[ev['userid']] != 0:
@@ -368,25 +394,25 @@ def remove_weapon(command):
 				
 @ServerCommand('wcs_teleport_push')
 def _push_teleport(command):
-    userid = int(command[1])
-    force = float(command[2])
-    index = index_from_userid(userid)
-    player = Player(index)
-    origin = player.origin
-    coords = player.view_coordinates
-    coords -= origin
-    player.set_property_vector('localdata.m_vecBaseVelocity', coords*force)
+	userid = int(command[1])
+	force = float(command[2])
+	index = index_from_userid(userid)
+	player = Player(index)
+	origin = player.origin
+	coords = player.view_coordinates
+	coords -= origin
+	player.set_property_vector('localdata.m_vecBaseVelocity', coords*force)
   
 @ServerCommand('wcs_speed_ulti')
 def _speed_ulti(command):
-    userid = int(command[1])
-    speed = float(command[2])
-    delay = float(command[3])
-    player = Player(index_from_userid(userid))
-    player.speed += speed
-    queue_command_string('es_delayed %s playerset speed %s %s' % (delay, userid, player.speed-speed))
-    wcs.wcs.tell(player.userid,'\x04[WCS] \x05You got \x04%s%% Extra Speed \x05for \x04%s Seconds!' % (speed*100.0, delay))
-    
+	userid = int(command[1])
+	speed = float(command[2])
+	delay = float(command[3])
+	player = Player(index_from_userid(userid))
+	player.speed += speed
+	queue_command_string('es_delayed %s playerset speed %s %s' % (delay, userid, player.speed-speed))
+	wcs.wcs.tell(player.userid,'\x04[WCS] \x05You got \x04%s%% Extra Speed \x05for \x04%s Seconds!' % (speed*100.0, delay))
+	
 @ServerCommand('wcs_explode')
 def _wcs_explode_command(command):
 	userid = int(command[1])

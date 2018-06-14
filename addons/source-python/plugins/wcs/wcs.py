@@ -217,17 +217,32 @@ def unload():
 # =============================================================================
 class InI(object):
 	def __init__(self):
-
-		self.races = os.path.join(PLUGIN_PATH, 'wcs/races', 'races.ini')
+		if os.path.isfile(os.path.join(PLUGIN_PATH, 'wcs/races', 'races.ini')):
+			self.races = os.path.join(PLUGIN_PATH, 'wcs/races', 'races.ini')
+		else:
+			self.races = None
+		if config.coredata['default_races'] == 1:
+			self.default_races = os.path.join(PLUGIN_PATH, 'wcs/races', 'default_races.ini')
+		else:
+			self.default_races = None
 		self.items = os.path.join(PLUGIN_PATH, 'wcs/items', 'items.ini')
 
 	@property
 	def getRaces(self):
 		try:
-			return ConfigObj(self.races)
+			if self.races != None:
+				user_races = ConfigObj(self.races)
+			else:
+				user_races = {}
+			if self.default_races != None:
+				def_races = ConfigObj(self.default_races)
+			else:
+				def_races = {}
+			races_dict = {**def_races,**user_races}
+			return ConfigObj(races_dict)
 		except:
 			sys.excepthook(*sys.exc_info())
-			return ConfigObj(self._races)
+			return
 
 	@property
 	def getItems(self):
@@ -1057,7 +1072,7 @@ def round_start(event):
 	round_count = ConVar('wcs_roundcounter').get_int()
 	round_count += 1
 	ConVar('wcs_roundcounter').set_int(round_count)
-
+	
 @Event('round_end')
 def round_end(event):
 	global gamestarted
@@ -1104,7 +1119,8 @@ def round_end(event):
 			surxp = config.cfgdata['bot_roundsxp']
 		else:
 			surxp = config.cfgdata['player_roundsxp']		
-		Delay(1,  wcsplayers[player.userid].give_xp, (surxp, 'for surviving the round'))			
+		Delay(1,  wcsplayers[player.userid].give_xp, (surxp, 'for surviving the round'))
+	
 
 @Event('player_death')			
 def player_death(event):
@@ -1122,7 +1138,6 @@ def player_death(event):
 	victim_entity = Player(index_from_userid(victim))
 	if attacker:
 		attacker_entity = Player(index_from_userid(attacker))
-				
 	if attacker and victim:
 
 		if not victim == attacker:
@@ -1191,7 +1206,6 @@ def player_death(event):
 			command = command.split(";")
 			for com in command:
 				execute_server_command('es', com)
-
 	if (victim and not attacker) or (victim == attacker):
 		checkEvent(victim,	'player_death')
 	if assister:

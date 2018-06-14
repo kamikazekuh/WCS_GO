@@ -41,6 +41,8 @@ race_in_tag = core_config.cvar('wcs_activate_clantag_races', 1)
 
 logging = core_config.cvar('wcs_logging',1)
 
+default_races = core_config.cvar('wcs_use_default_race_file',1)
+
 core_config.write()
 core_config.execute()
 
@@ -55,7 +57,8 @@ coredata = {'saving':				saving.get_int(),
 		   'unassigned_cat':		unassigned_cat.get_int(),
 		   'changerace_racename':	changerace_racename.get_int(),
 		   'race_in_tag':			race_in_tag.get_int(),
-		   'logging':				logging.get_int()}
+		   'logging':				logging.get_int(),
+		   'default_races':			default_races.get_int()}
 		   
 
 

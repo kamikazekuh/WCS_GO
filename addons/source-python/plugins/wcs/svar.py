@@ -12,6 +12,7 @@ lines = [line.rstrip('\n') for line in file]
 for line in lines:
 	if not line.startswith('//'):
 		if line != "":
-			ConVar(line).set_int(1)
-			ConVar(line).set_int(0)
+			ConVar(line, "0").set_int(0)
+			#ConVar(line).set_int(1)
+			#ConVar(line).set_int(0)
 file.close()
