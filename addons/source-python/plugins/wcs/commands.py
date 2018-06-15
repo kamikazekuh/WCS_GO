@@ -311,6 +311,7 @@ def round_end(ev):
 @Event('player_spawn')
 def player_spawn(ev):
 	wcsgroup.setUser(ev['userid'],'absorb',0.0)
+	wcsgroup.setUser(ev['userid'],'noflash',0)
 	if ev['userid'] not in repeat_dict:
 		repeat_dict[ev['userid']] = 0
 	if repeat_dict[ev['userid']] != 0:
