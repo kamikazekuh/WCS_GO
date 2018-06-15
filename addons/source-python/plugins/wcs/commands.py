@@ -61,6 +61,69 @@ def fade(command):
 	time = float(command[6])
 	color = Color(r,g,b,a)
 	Fade(int(time), int(time),color,FadeFlags.PURGE).send(Player.from_userid(userid).index)
+from commands.server import ServerCommand
+from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index, edict_from_userid,inthandle_from_userid
+from players.entity import Player
+from messages import SayText2, HudMsg, TextMsg
+from cvars import ConVar
+from colors import Color
+from engines.server import queue_command_string, execute_server_command
+import string
+from events import Event
+from entities.entity import Entity
+from entities.constants import DamageTypes
+from filters.players import PlayerIter
+from listeners.tick import Delay, Repeat
+import random
+from filters.recipients import RecipientFilter
+from engines.precache import Model
+from effects.base import TempEntity
+from mathlib import Vector
+from messages import Fade, FadeFlags
+from entities import TakeDamageInfo
+from entities.hooks import EntityCondition
+from entities.hooks import EntityPreHook
+from memory import make_object
+import wcs
+from wcs import wcsgroup
+from weapons.entity import Weapon
+import time
+from random import choice
+from core import SOURCE_ENGINE_BRANCH
+
+from wcs import changerace
+
+beam_blood = Model('decals/bloodstain_003.vmt')
+beam_glow = Model('sprites/light_glow02.vmt')
+beam_chain = Model('sprites/cbbl_smoke.vmt')
+ring_spawn_thunder = Model('sprites/cbbl_smoke.vmt')
+ring_spawn_vampire = Model('decals/bloodstain_003.vmt')
+ring_raging_burn = Model('sprites/xfireball3.vmt')
+inner_fire_follow = Model('sprites/laserbeam.vmt')
+
+anti_falldamage = {}
+repeat_dict = {}
+regen_dict = {}
+for player in PlayerIter('all'):
+	regen_dict[player.userid] = 0
+	repeat_dict[player.userid] = 0
+	
+@ServerCommand('wcs_getindex')
+def get_index(command):
+	userid = int(command[1])
+	var = str(command[2])
+	ConVar(var).set_string(str(Player.from_userid(userid).index))
+	
+@ServerCommand('wcs_fade')
+def fade(command):
+	userid = int(command[1])
+	r = int(command[2])
+	g = int(command[3])
+	b = int(command[4])
+	a = int(command[5])
+	time = float(command[6])
+	color = Color(r,g,b,a)
+	Fade(int(time), int(time),color,FadeFlags.PURGE).send(Player.from_userid(userid).index)
 	
 @ServerCommand('wcs_absorb')
 def absorb(command):
@@ -79,13 +142,15 @@ def _pre_take_damage(stack_data):
 	damage = take_damage_info.damage
 	attacker = Player(attacker.index)
 	victim = make_object(Player, stack_data[0])
-	absorb = float(wcsgroup.getUser(victim.userid,'absorb'))
-	if absorb > 0:
-		absorb_dmg = damage*absorb
-		if int(absorb_dmg) > 0:
-			take_damage_info.damage -= int(absorb_dmg)
-			wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You absorbed %s damage!' % int(absorb_dmg))
-	return
+	absorb = wcsgroup.getUser(victim.userid,'absorb')
+	if absorb != None:
+		absorb = float(absorb)
+		if absorb > 0:
+			absorb_dmg = damage*absorb
+			if int(absorb_dmg) > 0:
+				take_damage_info.damage -= int(absorb_dmg)
+				wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You absorbed %s damage!' % int(absorb_dmg))
+		return
 	
 @ServerCommand('wcs_randplayer')
 def randplayer(command):
@@ -203,6 +268,14 @@ def player_death(ev):
 		repeat_dict[ev['userid']].stop()
 		repeat_dict[ev['userid']] = 0
 		
+@Event('player_blind')
+def player_blind(ev):
+	noflash = wcsgroup.getUser(int(ev['userid']),'noflash')
+	if noflash == 1:
+		player = Player.from_userid(int(ev['userid']))
+		player.set_property_float('m_flFlashDuration',0.0)
+		player.set_property_float('m_flFlashMaxAlpha',0.0)
+		
 @ServerCommand('wcs_explosion')
 def wcs_explosion(command):
 	userid = int(command[1])
@@ -247,7 +320,14 @@ def player_spawn(ev):
 @Event('player_activate')
 def player_activate(ev):
 	regen_dict[ev['userid']] = 0
-	repeat_dict[ev['userid']] = 0	
+	repeat_dict[ev['userid']] = 0
+	
+@Event('player_hurt')
+def player_hurt(ev):
+	userid = int(ev['userid'])
+	if wcsgroup.getUser(userid,'noflash') == 1:
+		remove_overlay(index_from_userid(userid))
+		
 	
 @ServerCommand('wcs_regeneration')
 def _regeneration(command):
@@ -345,7 +425,7 @@ def viewcoord(command):
 	ConVar(xvar).set_float(view_vec[0])
 	ConVar(yvar).set_float(view_vec[1])
 	ConVar(zvar).set_float(view_vec[2])
-
+	
 @ServerCommand('wcs_pushto')
 def push_forward(command):
 	if len(command) >= 5:
@@ -502,3 +582,25 @@ def random_race(command):
 	if len(race_list):
 		chosen = str(choice(race_list))
 		ConVar(var).set_string(chosen)
+		
+@ServerCommand('wcs_overlay')
+def wcs_overlay(command):
+	userid = int(command[1])
+	overlay = str(command[2])
+	duration = float(command[3])
+	create_overlay(userid,overlay,duration)
+	
+def create_overlay(userid,overlay,duration):
+	player = Player.from_userid(userid)
+	player.client_command('r_screenoverlay %s' % overlay)
+	player.delay(duration, remove_overlay, (player.index,))
+	
+def remove_overlay(index):
+    player = Player(index)
+    player.client_command('r_screenoverlay 0')
+		
+@ServerCommand('wcs_noflash')
+def noflash(command):
+	userid = int(command[1])
+	on_off = int(command[2])
+	wcsgroup.setUser(userid,'noflash',on_off)
