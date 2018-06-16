@@ -30,68 +30,7 @@ from core import SOURCE_ENGINE_BRANCH
 
 from wcs import changerace
 
-beam_blood = Model('decals/bloodstain_003.vmt')
-beam_glow = Model('sprites/light_glow02.vmt')
-beam_chain = Model('sprites/cbbl_smoke.vmt')
-ring_spawn_thunder = Model('sprites/cbbl_smoke.vmt')
-ring_spawn_vampire = Model('decals/bloodstain_003.vmt')
-ring_raging_burn = Model('sprites/xfireball3.vmt')
-inner_fire_follow = Model('sprites/laserbeam.vmt')
-
-anti_falldamage = {}
-repeat_dict = {}
-regen_dict = {}
-for player in PlayerIter('all'):
-	regen_dict[player.userid] = 0
-	repeat_dict[player.userid] = 0
-	
-@ServerCommand('wcs_getindex')
-def get_index(command):
-	userid = int(command[1])
-	var = str(command[2])
-	ConVar(var).set_string(str(Player.from_userid(userid).index))
-	
-@ServerCommand('wcs_fade')
-def fade(command):
-	userid = int(command[1])
-	r = int(command[2])
-	g = int(command[3])
-	b = int(command[4])
-	a = int(command[5])
-	time = float(command[6])
-	color = Color(r,g,b,a)
-	Fade(int(time), int(time),color,FadeFlags.PURGE).send(Player.from_userid(userid).index)
-from commands.server import ServerCommand
-from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index, edict_from_userid,inthandle_from_userid
-from players.entity import Player
-from messages import SayText2, HudMsg, TextMsg
-from cvars import ConVar
-from colors import Color
-from engines.server import queue_command_string, execute_server_command
-import string
-from events import Event
-from entities.entity import Entity
-from entities.constants import DamageTypes
-from filters.players import PlayerIter
-from listeners.tick import Delay, Repeat
-import random
-from filters.recipients import RecipientFilter
-from engines.precache import Model
-from effects.base import TempEntity
-from mathlib import Vector
-from messages import Fade, FadeFlags
-from entities import TakeDamageInfo
-from entities.hooks import EntityCondition
-from entities.hooks import EntityPreHook
-from memory import make_object
-import wcs
-from wcs import wcsgroup
-from weapons.entity import Weapon
-import time
-from random import choice
-from core import SOURCE_ENGINE_BRANCH
-
-from wcs import changerace
+weapon_list = ["weapon_ak47","weapon_aug","weapon_awp","weapon_bizon","weapon_c4","weapon_cz75a","weapon_deagle","weapon_decoy","weapon_elite","weapon_famas","weapon_fiveseven","weapon_flashbang","weapon_g3sg1","weapon_galil","weapon_galilar","weapon_glock","weapon_hegrenade","weapon_incgrenade","weapon_hkp2000","weapon_knife","weapon_m249","weapon_m3","weapon_m4a1","weapon_m4a1_silencer","weapon_mac10","weapon_mag7","weapon_molotov","weapon_mp5navy","weapon_mp7","weapon_mp9","weapon_negev","weapon_nova","weapon_p228","weapon_p250","weapon_p90","weapon_sawedoff","weapon_scar17","weapon_scar20","weapon_scout","weapon_sg550","weapon_sg552","weapon_sg556","weapon_ssg08","weapon_smokegrenade","weapon_taser","weapon_tec9","weapon_tmp","weapon_ump45","weapon_usp","weapon_usp_silencer","weapon_xm1014","weapon_revolver"]
 
 beam_blood = Model('decals/bloodstain_003.vmt')
 beam_glow = Model('sprites/light_glow02.vmt')
@@ -130,6 +69,13 @@ def absorb(command):
 	userid = int(command[1])
 	amount = float(command[2])
 	wcsgroup.setUser(userid,'absorb',amount)
+	
+@ServerCommand('wcs_setresist')
+def set_resist(command):
+	userid = int(command[1])
+	amount = float(command[2])
+	weapon = str(command[3])
+	wcsgroup.setUser(userid,'resist_'+weapon,amount)
 
 @EntityPreHook(EntityCondition.is_bot_player, 'on_take_damage')
 @EntityPreHook(EntityCondition.is_human_player, 'on_take_damage')
@@ -138,7 +84,7 @@ def _pre_take_damage(stack_data):
 	attacker = Entity(take_damage_info.attacker)
 	if attacker.classname != 'player':
 		return
-		
+	weapon = Weapon(take_damage_info.weapon).class_name
 	damage = take_damage_info.damage
 	attacker = Player(attacker.index)
 	victim = make_object(Player, stack_data[0])
@@ -151,6 +97,14 @@ def _pre_take_damage(stack_data):
 				take_damage_info.damage -= int(absorb_dmg)
 				wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You absorbed %s damage!' % int(absorb_dmg))
 		return
+	resist = wcsgroup.getUser(victim.userid,'resist_'+weapon)
+	if resist != None:
+		resist = float(resist)
+		if resist > 0:
+			resist_dmg = damage*resist
+			if int(resist_dmg) > 0:
+				take_damage_info.damage -= int(resist_dmg)
+				wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You resisted %s damage!' % int(absorb_dmg))
 	
 @ServerCommand('wcs_randplayer')
 def randplayer(command):
@@ -298,6 +252,18 @@ def wcs_explosion(command):
 	ent.origin = player.origin
 	ent.call_input('Explode')
 	#Delay(0.1, ent.remove)
+	
+@ServerCommand('wcs_getcolors')
+def get_colors(command):
+	userid = int(command[1])
+	r = command[2]
+	g = command[3]
+	b = command[4]
+	a = command[5]
+	ConVar(r).set_int(Player.from_userid(userid).color[0])
+	ConVar(g).set_int(Player.from_userid(userid).color[1])
+	ConVar(b).set_int(Player.from_userid(userid).color[2])
+	ConVar(a).set_int(Player.from_userid(userid).color[3])
 		
 @Event('round_end')
 def round_end(ev):
@@ -307,6 +273,8 @@ def round_end(ev):
 		if repeat_dict[player.userid] != 0:
 			repeat_dict[player.userid].stop()
 			repeat_dict[player.userid] = 0
+		for weapon in weapon_list:
+			wcsgroup.setUser(player.userid,'resist_'+weapon,0.0)
 			
 @Event('player_spawn')
 def player_spawn(ev):
