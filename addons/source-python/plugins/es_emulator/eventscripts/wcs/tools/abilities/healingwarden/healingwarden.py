@@ -27,7 +27,7 @@ def healingwarden():
 			x,y,z = es.getplayerlocation(userid)
 			es.server.queuecmd('wcs_healingwarden '+userid+' '+param[0]+' '+param[1]+' '+param[2]+' '+teamtarget+' '+teamtargetn+' '+str(x)+' '+str(y)+' '+str(z)+' '+str(es.ServerVar('wcs_roundcounter')))
 
-			tell(userid, 'a_wardencreated')
+			tell(userid, 'a_healcreated')
 
 		if count and not count == -1:
 			wcsgroup.setUser(userid, 'ability_count', count-1)
