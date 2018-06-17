@@ -1,0 +1,97 @@
+block load
+{
+	es_xexists wcs_exists command wcs_trap
+	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_trap wcs/tools/trap/wcs_trap "Trap that explodes when an enemy comes close"
+	es_xexists wcs_exists command wcs_delayed_trap
+	if (server_var(wcs_exists) = 0) then es_xregcmd wcs_delayed_trap wcs/tools/trap/wcs_delayed_trap "internal fix"
+}
+
+block wcs_trap
+{
+	es_xgetargv wcs_uid 1
+	es_xgetargv wcs_duration 2
+	es_xgetargv wcs_dmg 3
+	es_xgetargv wcs_radius2 4
+	es_xgetargv wcs_team_target 5
+	es_xgetargv wcs_team_targetn 6
+	es_xgetargv wcs_x1 7
+	es_xgetargv wcs_y1 8
+	es_xgetargv wcs_z1 9
+	es_xgetargv wcs_wardenround 10
+	es_exists wcs_exists userid server_var(wcs_uid)
+	es_xset wcs_exploded 0
+	es_getlivingplayercount wcs_tmp12 server_var(wcs_team_target)
+	if (server_var(wcs_tmp12) < 1) then es_xset wcs_exists 0
+	if (server_var(wcs_wardenround) != server_var(wcs_roundcounter)) then es_xset wcs_duration 0
+	if (server_var(wcs_exists) = 1) do
+	{
+		es_getplayerteam wcs_team server_var(wcs_uid)
+		es_set wcs_math 5
+		es_math wcs_math - server_var(wcs_team)
+		if (server_var(wcs_math) == server_var(wcs_team_target)) do
+		{
+			if (server_var(wcs_duration) > 0) do
+			{
+				if (server_var(wcs_radius2) != "0") do
+				{
+					if (server_var(wcs_team_targetn) != "0") do
+					{
+							es_getplayerteam wcs_team server_var(wcs_uid)
+						if (server_var(wcs_team) = 2) do
+						{
+							es_xset wcs_red 120
+							es_xset wcs_green 20
+							es_xset wcs_blue 20
+							es_xset wcs_flare sprites/combineball_glow_red_1.vmt
+						}
+						if (server_var(wcs_team) = 3) do
+						{
+							es_xset wcs_red 20
+							es_xset wcs_green 20
+							es_xset wcs_blue 120
+							es_xset wcs_flare sprites/combineball_glow_blue_1.vmt
+						}
+						es_set wcs_x3 server_var(wcs_x1)
+						es_set wcs_y3 server_var(wcs_y1)
+						es_set wcs_z3 server_var(wcs_z1)
+						es_set wcs_z4 server_var(wcs_z1)
+						es_math wcs_z4 + 5
+						es_set wcs_radius4 server_var(wcs_radius2)
+						es_xmath wcs_radius4 * 2
+						es_set wcs_radius3 server_var(wcs_radius4)
+						es_xmath wcs_radius3 - 1
+						es est_effect 11 #a 0 server_var(wcs_flare) server_var(wcs_x3) server_var(wcs_y3) server_var(wcs_z3) 1 .45 175
+						es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_radius4) server_var(wcs_radius3) 1.1 5 5 .3 server_var(wcs_red) server_var(wcs_green) server_var(wcs_blue) 255 1
+						es_createvectorstring vector3 server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1)
+						es_createvectorstring vector5 server_var(wcs_x3) server_var(wcs_y3) server_var(wcs_z3)
+						es wcs_nearcoord wcs_targetid server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_radius2) "es_doblock wcs/tools/trap/trap_hit"
+						es_xmath wcs_duration - 1
+						es_delayed 1 wcs_delayed_trap server_var(wcs_uid) server_var(wcs_duration) server_var(wcs_dmg) server_var(wcs_radius2) server_var(wcs_team_target) server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_wardenround)
+					}
+				}
+			}
+		}
+	}
+}
+
+block wcs_delayed_trap
+{
+	es_xgetargv wcs_uid 1
+	es_xgetargv wcs_duration 2
+	es_xgetargv wcs_dmg 3
+	es_xgetargv wcs_radius2 4
+	es_xgetargv wcs_team_target 5
+	es_xgetargv wcs_team_targetn 6
+	es_xgetargv wcs_x1 7
+	es_xgetargv wcs_y1 8
+	es_xgetargv wcs_z1 9
+	es_xgetargv wcs_wardenround 10
+	if (server_var(wcs_exploded) == 0) then wcs_trap server_var(wcs_uid) server_var(wcs_duration) server_var(wcs_dmg) server_var(wcs_radius2) server_var(wcs_team_target) server_var(wcs_team_targetn) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_wardenround)
+}
+
+block trap_hit
+{
+	es_xset wcs_exploded 1
+	es wcs_explosion_point server_var(wcs_uid) server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) server_var(wcs_dmg) server_var(wcs_radius4)
+}
+

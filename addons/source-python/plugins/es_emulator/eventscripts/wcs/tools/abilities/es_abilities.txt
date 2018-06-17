@@ -2,4 +2,5 @@ block load
 {
 	es_load wcs/tools/abilities/warden
 	es_load wcs/tools/abilities/healingwarden
+	es_load wcs/tools/abilities/trap
 }
