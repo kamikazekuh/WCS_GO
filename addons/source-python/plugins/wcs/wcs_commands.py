@@ -213,12 +213,18 @@ def removeWeapon(userid, weapon):
 
 def getViewEntity(userid):
 	userid = int(userid)
-	return Player.from_userid(userid).get_view_entity().index
+	if Player.from_userid(userid).get_view_entity():
+		return Player.from_userid(userid).get_view_entity().index
+	else:
+		return 0
 
 
 def getViewPlayer(userid):
 	userid = int(userid)
-	return Player.from_userid(userid).get_view_player().userid
+	if Player.from_userid(userid).get_view_player():
+		return Player.from_userid(userid).get_view_player().userid
+	else:
+		return 0
 
 
 def keyHint(userid, text):
