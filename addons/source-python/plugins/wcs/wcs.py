@@ -333,6 +333,15 @@ class raceDatabase(object):
 		return self.races.keys().index(race)	 
 racedb = raceDatabase()
 
+list_of_str_keys = ["restrictmap","restrictteam","restrictitem","spawncmd","deathcmd","roundstartcmd","roundendcmd","preloadcmd","onchange","allowonly"]
+list_of_int_keys = ["teamlimit"]
+for race in racedb.getAll():
+	for key in list_of_str_keys:
+		if key not in racedb.getAll()[race]:
+			racedb.getAll()[race][key] = ""
+	for key in list_of_int_keys:
+		if key not in racedb.getAll()[race]:
+			racedb.getAll()[race][key] = 0
 
 if len(racedb.getAll()):
 	standardrace = racedb.getAll().keys()[0]
