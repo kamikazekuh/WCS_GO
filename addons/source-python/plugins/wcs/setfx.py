@@ -45,7 +45,10 @@ def _setfx_command(command):
 	userid = int(command[2])
 	operator = str(command[3])
 	amount = command[4]
-	time = float(command[5])
+	if len(command) > 5:
+		time = float(command[5])
+	else:
+		time = 0
 	player = Player(index_from_userid(userid))
 		
 	if todo == "blind":
@@ -54,6 +57,15 @@ def _setfx_command(command):
 				time == 10000.0
 			color = Color(255,255,255,int(amount))
 			Fade(int(time), int(time),color,FadeFlags.PURGE).send(player.index)
+	if todo == "flicker":
+		if time == 0.0:
+			time == 10000.0
+		if int(amount) == 1:
+			player.set_key_value_int("renderfx",13)
+		if int(amount) == 0:
+			player.set_key_value_int("renderfx",0)
+		if time:
+			Delay(time,removefx,("flicker",player,int(amount)))
 			
 	if todo == "1stclip":
 		clip = player.get_weapon(is_filters="primary").clip
@@ -333,4 +345,11 @@ def removefx(todo,player,amount):
 		player.health -= int(amount)
 	if todo == 'cash':
 		player.cash -= int(amount)
+	if todo == 'flicker':
+		if amount == 0:
+			player.set_key_value_int("renderfx", 13)
+		if amount == 1:
+			player.set_key_value_int("renderfx", 0)
+
+
 
