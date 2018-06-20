@@ -88,7 +88,10 @@ def restrict(index, weapons, reverse=0):
 	userid = player.userid
 	if userid not in restrictions:
 		restrictions[userid] = ""
-	buffer = weapons.split(";", 53)
+	if "," in weapons:
+		buffer = weapons.split(",",53)
+	else:
+		buffer = weapons.split(";", 53)
 	if weapons == "all":
 		restrictions[userid] = restrict_all
 		for index in player.weapon_indexes():
@@ -128,3 +131,4 @@ def unrestrict(index, weapons):
 			if x == "weapon_knife":
 				player.give_named_item('weapon_knife', 0, None, True)
 			restrictions[userid] = restrictions[userid].replace(x, "")
+
