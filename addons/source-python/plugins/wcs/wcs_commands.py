@@ -210,19 +210,22 @@ def removeWeapon(userid, weapon):
 			if weapon.classname == slot_weapon:
 				player.drop_weapon(weapon)
 				weapon.remove()
-
 def getViewEntity(userid):
 	userid = int(userid)
-	if Player.from_userid(userid).get_view_entity():
-		return Player.from_userid(userid).get_view_entity().index
+	player = Player.from_userid(userid)
+	view_ent = player.get_view_entity()
+	if view_ent:
+		return view_ent.index
 	else:
 		return 0
 
 
 def getViewPlayer(userid):
 	userid = int(userid)
-	if Player.from_userid(userid).get_view_player():
-		return Player.from_userid(userid).get_view_player().userid
+	player = Player.from_userid(userid)
+	view_player = player.get_view_player()
+	if view_player:
+		return view_player.userid
 	else:
 		return 0
 
