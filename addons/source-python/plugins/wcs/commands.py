@@ -408,7 +408,7 @@ def push_forward(command):
 	if len(command) < 5:
 		coords = command[2].split(',')
 		force = float(command[3])
-		coord = Vector(float(coords[0],float(coords[1]),float(coords[2])))
+		coord = Vector(float(coords[0]),float(coords[1]),float(coords[2]))
 	loca = player.origin
 	coord -= loca
 	coord = coord * float(force)
