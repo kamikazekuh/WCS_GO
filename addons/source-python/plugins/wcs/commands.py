@@ -397,28 +397,22 @@ def viewcoord(command):
 	
 @ServerCommand('wcs_pushto')
 def push_forward(command):
+	userid = int(command[1])
+	player = Player.from_userid(userid)
 	if len(command) >= 5:
-		userid = int(command[1])
 		x1 = float(command[2])
 		y1 = float(command[3])
-		z1 = float(command[4]) + 50.0
-		if len(command) > 5:
-			force = float(command[5])
-		else:
-			force = 1.0
-		vec = Vector(x1,y1,z1)*force
-	elif len(command) < 5:
-		userid = int(command[1])
-		vec = str(command[2]).split(",")
-		x1 = float(vec[0])
-		y1 = float(vec[1])
-		z1 = float(vec[2])
-		if len(command) == 4:
-			force = float(command[3])
-		else:
-			force = 1.0
-	player = Player(index_from_userid(userid))
-	player.teleport(None, None, Vector(x1, y1, z1) - player.origin)
+		z1 = float(command[4])
+		force = float(command[5])
+		coord = Vector(x1,y1,z1)
+	if len(command) < 5:
+		coords = command[2].split(',')
+		force = float(command[3])
+		coord = Vector(float(coords[0],float(coords[1]),float(coords[2])))
+	loca = player.origin
+	coord -= loca
+	coord = coord * float(force)
+	player.set_property_vector('m_vecBaseVelocity',coord)
 	
 @ServerCommand('wcs_pushed')
 def pushed(command):
