@@ -1397,6 +1397,12 @@ def on_player_deleted(index):
 	if userid not in wcsplayers:
 		wcsplayers[userid] = WarcraftPlayer(userid)
 		
+@ServerCommand('changelevel')
+def _changelevel_hook(command):
+	for user in wcsplayers:
+		wcsplayers[user].save()
+	return CommandReturn.CONTINUE
+		
 
 @OnLevelShutdown
 def level_shutdown_listener():
