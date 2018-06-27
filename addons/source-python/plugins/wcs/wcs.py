@@ -403,7 +403,13 @@ class WarcraftPlayer(object):
 				wcs_rank[self.steamid]['currace'] = self.currace
 				wcs_rank[self.steamid]['level'] = 0
 			#Race data
-			race = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).one_or_none()
+			try:
+				race = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).one_or_none()
+			except:
+				races = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).all()
+				session.delete(races[1])
+				session.commit
+				race = races[0]
 			if race is None:
 				if self.skills == '':
 					skills = []
@@ -430,7 +436,13 @@ class WarcraftPlayer(object):
 				for race_ in races:
 					self.all_races[race_.name] = {}
 			for race in self.all_races:
-				info = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race).one_or_none()
+				try:
+					info = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race).one_or_none()
+				except:
+					infos = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race).all()
+					session.delete(infos[1])
+					session.commit
+					info = infos[0]					
 				self.all_races[race]['level'] = info.level
 				self.all_races[race]['xp'] = info.xp
 				self.all_races[race]['unused'] = info.unused
