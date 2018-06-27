@@ -366,7 +366,11 @@ def active_weapon(command):
 	userid = int(command[1])
 	var = str(command[2])
 	player = Player.from_userid(userid)
-	ConVar(var).set_string(player.active_weapon.classname)
+	weapon = player.active_weapon
+	if weapon != None:
+		ConVar(var).set_string(weapon.classname)
+	else:
+		ConVar(var).set_string("")
 	
 @ServerCommand('wcs_set_cooldown')
 def set_cooldown(command):
