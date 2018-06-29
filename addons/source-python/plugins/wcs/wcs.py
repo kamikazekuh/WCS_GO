@@ -408,7 +408,7 @@ class WarcraftPlayer(object):
 			except:
 				races = session.query(Races).filter(Races.UserID==self.UserID,Races.name==self.currace).all()
 				session.delete(races[1])
-				session.commit
+				session.commit()
 				race = races[0]
 			if race is None:
 				if self.skills == '':
@@ -441,7 +441,7 @@ class WarcraftPlayer(object):
 				except:
 					infos = session.query(Races).filter(Races.UserID==self.UserID,Races.name==race).all()
 					session.delete(infos[1])
-					session.commit
+					session.commit()
 					info = infos[0]					
 				self.all_races[race]['level'] = info.level
 				self.all_races[race]['xp'] = info.xp
