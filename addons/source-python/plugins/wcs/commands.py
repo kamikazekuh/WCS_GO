@@ -7,6 +7,7 @@ from colors import Color
 from engines.server import queue_command_string, execute_server_command
 import string
 from events import Event
+from events.hooks import PreEvent
 from entities.entity import Entity
 from entities.constants import DamageTypes
 from filters.players import PlayerIter
@@ -47,6 +48,18 @@ for player in PlayerIter('all'):
 	regen_dict[player.userid] = 0
 	repeat_dict[player.userid] = 0
 	
+@ServerCommand('wcs_setmodel')
+def set_model(command):
+	userid = int(command[1])
+	model_str = str(command[2])
+	if ".mdl" not in model_str:
+		model_str = model_str+".mdl"
+	if "models/" not in model_str:
+		model_str = "models/"+model_str
+	model = Model(model_str)
+	player = Player.from_userid(userid)
+	player.model = model
+	
 @ServerCommand('wcs_getindex')
 def get_index(command):
 	userid = int(command[1])
@@ -77,34 +90,6 @@ def set_resist(command):
 	weapon = str(command[3])
 	wcsgroup.setUser(userid,'resist_'+weapon,amount)
 
-@EntityPreHook(EntityCondition.is_bot_player, 'on_take_damage')
-@EntityPreHook(EntityCondition.is_human_player, 'on_take_damage')
-def _pre_take_damage(stack_data):
-	take_damage_info = make_object(TakeDamageInfo, stack_data[1])
-	attacker = Entity(take_damage_info.attacker)
-	if attacker.classname != 'player':
-		return
-	weapon = Weapon(take_damage_info.weapon).class_name
-	damage = take_damage_info.damage
-	attacker = Player(attacker.index)
-	victim = make_object(Player, stack_data[0])
-	absorb = wcsgroup.getUser(victim.userid,'absorb')
-	if absorb != None:
-		absorb = float(absorb)
-		if absorb > 0:
-			absorb_dmg = damage*absorb
-			if int(absorb_dmg) > 0:
-				take_damage_info.damage -= int(absorb_dmg)
-				wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You absorbed %s damage!' % int(absorb_dmg))
-		return
-	resist = wcsgroup.getUser(victim.userid,'resist_'+weapon)
-	if resist != None:
-		resist = float(resist)
-		if resist > 0:
-			resist_dmg = damage*resist
-			if int(resist_dmg) > 0:
-				take_damage_info.damage -= int(resist_dmg)
-				wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You resisted %s damage!' % int(absorb_dmg))
 	
 @ServerCommand('wcs_randplayer')
 def randplayer(command):
@@ -216,6 +201,31 @@ def _decimal(command):
 	amount = int(round(float(command[2])))
 	ConVar(var).set_string(str(amount))
 	
+@PreEvent('player_hurt')
+def pre_hurt(ev):
+	victim = Player.from_userid(int(ev['userid']))
+	if ev['attacker'] != 0:
+		attacker = Player.from_userid(int(ev['attacker']))
+		weapon = ev['weapon']
+		damage = int(ev['dmg_health'])
+		absorb = wcsgroup.getUser(victim.userid,'absorb')
+		if absorb != None:
+			absorb = float(absorb)
+			if absorb > 0:
+				absorb_dmg = damage*absorb
+				if int(absorb_dmg) > 0:
+					player.health += int(absorb_dmg)
+					wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You absorbed %s damage!' % int(absorb_dmg))
+				return
+		resist = wcsgroup.getUser(victim.userid,'resist_'+weapon)
+		if resist != None:
+			resist = float(resist)
+			if resist > 0:
+				resist_dmg = damage*resist
+				if int(resist_dmg) > 0:
+					player.health += int(resist_dmg)
+					wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You resisted %s damage!' % int(absorb_dmg))
+	
 @Event('player_death')
 def player_death(ev):
 	if repeat_dict[ev['userid']] != 0:
@@ -252,6 +262,22 @@ def wcs_explosion(command):
 	ent.origin = player.origin
 	ent.call_input('Explode')
 	#Delay(0.1, ent.remove)
+	
+@ServerCommand('wcs_explosion_point')
+def wcs_explosion_point(command):
+	userid = int(command[1])
+	x = float(command[2])
+	y = float(command[3])
+	z = float(command[4])
+	magnitude = int(command[5])
+	radius = int(command[6])
+	ent = Entity.create('env_explosion')
+	ent.set_property_int('m_iMagnitude', magnitude)
+	ent.set_property_int('m_iRadiusOverride', radius)	
+	ent.owner_handle = inthandle_from_userid(userid)
+	ent.spawn()
+	ent.origin = Vector(x,y,z)
+	ent.call_input('Explode')
 	
 @ServerCommand('wcs_getcolors')
 def get_colors(command):
@@ -359,20 +385,16 @@ def getweapon(command):
 		ConVar(var).set_string(weapon.classname)
 	else:
 		ConVar(var).set_int(-1)
-		
-		
+	
 @ServerCommand('wcs_getactiveweapon')
 def active_weapon(command):
 	userid = int(command[1])
 	var = str(command[2])
 	player = Player.from_userid(userid)
-	weapon = player.active_weapon
-	if weapon != None:
-		ConVar(var).set_string(weapon.classname)
-	else:
-		ConVar(var).set_string("")
-	
-@ServerCommand('wcs_set_cooldown')
+	ConVar(var).set_string(player.active_weapon.classname)
+
+
+@ServerCommand('wcs_setcooldown')
 def set_cooldown(command):
 	userid = int(command[1])
 	amount = int(command[2])
@@ -420,11 +442,12 @@ def push_forward(command):
 	if len(command) < 5:
 		coords = command[2].split(',')
 		force = float(command[3])
-		coord = Vector(float(coords[0]),float(coords[1]),float(coords[2]))
+		coord = Vector(float(coords[0],float(coords[1]),float(coords[2])))
 	loca = player.origin
 	coord -= loca
 	coord = coord * float(force)
 	player.set_property_vector('m_vecBaseVelocity',coord)
+
 	
 @ServerCommand('wcs_pushed')
 def pushed(command):
