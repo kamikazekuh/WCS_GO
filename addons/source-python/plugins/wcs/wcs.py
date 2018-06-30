@@ -1335,6 +1335,7 @@ def _wcs_player_spawn(event):
 
 		players[index].gravity = 1.0
 		players[index].color = Color(255,255,255,255)
+		wcsgroup.setUser(userid,'ability',None)
 
 
 		wcsgroup.addUser(userid)
