@@ -400,3 +400,18 @@ def _est_effect(command):
 		te.model_index = Model(str(command[4])).index
 		te.origin = Vector(float(command[5]),float(command[6]),float(command[7]))
 		te.create()
+		
+@ServerCommand("wcs_spark_effect")
+def spark_effect(command):
+	x = float(command[1])
+	y = float(command[2])
+	z = float(command[3])
+	magnitude = int(command[4])
+	traillength = int(command[5])
+	duration = float(command[6])
+	entity = Entity.create('env_spark')
+	entity.magnitude = magnitude
+	entity.trail_length = traillength
+	entity.origin = Vector(x,y,z)
+	entity.call_input('StartSpark')
+	entity.delay(duration,entity.remove)
