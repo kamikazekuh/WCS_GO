@@ -10,4 +10,5 @@ block load
 	es_load wcs/races/undead_scourge
 	es_load wcs/races/crypt_lord
 	es_load wcs/races/flame_predator
+	es_load wcs/races/succubus_hunter
 }
