@@ -10,34 +10,6 @@ from entities.constants import MoveType
 from wcs import wcsgroup
 from engines.precache import Model
 
-'''	PrintToServer("   slow         |     =     | any float");
-	PrintToServer("   rebirth      |     =     | 1/0");
-	PrintToServer("   blind        |     =     | any value");
-	PrintToServer("   noclip       |     =     | 1/0");
-	PrintToServer("   flicker      |     =     | 1/0");
-	PrintToServer("   climb        |     =     | any float");
-	PrintToServer("   paralyze     |     =     | 1/0");
-	PrintToServer("   jetpack      |     =     | 1/0");
-	PrintToServer("   god          |     =     | 1/0");
-	PrintToServer("   burn         |     =     | 1/0");
-	PrintToServer("   speed        |   +/-/=   | any float");
-	PrintToServer("   invis        |   +/-/=   | any value");
-	PrintToServer("   invisp       |   +/-/=   | any value");
-	PrintToServer("   health       |   +/-/=   | any value");
-	PrintToServer("   armor        |   +/-/=   | any value");
-	PrintToServer("   money        |   +/-/=   | any value");
-	PrintToServer("   cash         |   +/-/=   | any value");
-	PrintToServer("   gravity      |   +/-/=   | any float");
-	PrintToServer("   antihead     |     =     | 1/0");
-	PrintToServer("   antibullet   |     =     | 1/0");
-	PrintToServer("   ulti_immunity|     =     | 1/0");
-	PrintToServer("   disguiser    |     =     | 2/3");
-	PrintToServer("   1stclip      |   +/-/=   | any value");
-	PrintToServer("   2ndclip      |   +/-/=   | any value");
-	PrintToServer("   1stammo      |   +/-/=   | any value");
-	PrintToServer("   2ndammo      |   +/-/=   | any value");
-	PrintToServer("   longjump     |   +/-/=   | any float");
-	'''
 
 @ServerCommand('wcs_setfx')
 def _setfx_command(command):
@@ -350,6 +322,22 @@ def removefx(todo,player,amount):
 			player.set_key_value_int("renderfx", 13)
 		if amount == 1:
 			player.set_key_value_int("renderfx", 0)
+			
+			
+	if todo == "size":
+		if operator == "=":
+			old_size = player.get_property_float("m_flModelScale")
+			player.set_property_float("m_flModelScale",float(amount))
+			if time:
+				Delay(time,player.set_property_float,("m_flModelScale",old_size))
+		if operator == "+":
+			player.set_property_float("m_flModelScale",player.get_property_float("m_flModelScale")+float(amount))
+			if time:
+				Delay(time, player.set_property_float,("m_flModelScale",player.get_property_float("m_flModelScale")-float(amount)))
+		if operator == "-":
+			player.set_property_float("m_flModelScale",player.get_property_float("m_flModelScale")-float(amount))
+			if time:
+				Delay(time, player.set_property_float,("m_flModelScale",player.get_property_float("m_flModelScale")+float(amount)))
 
 
 
