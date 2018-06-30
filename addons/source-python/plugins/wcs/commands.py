@@ -48,6 +48,13 @@ for player in PlayerIter('all'):
 	regen_dict[player.userid] = 0
 	repeat_dict[player.userid] = 0
 	
+@ServerCommand('wcs_resize')
+def wcs_resize(command):
+	userid = int(command[1])
+	size = float(command[2])
+	player = Player.from_userid(userid)
+	player.set_property_float("m_flModelScale",size)
+	
 @ServerCommand('wcs_setmodel')
 def set_model(command):
 	userid = int(command[1])
