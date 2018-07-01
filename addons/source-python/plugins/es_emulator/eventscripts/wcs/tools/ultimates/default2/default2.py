@@ -10,6 +10,72 @@ from engines.server import queue_command_string
 import core
 from entities.constants import MoveType
 
+from entities.entity import Entity
+from entities.constants import SolidType
+from listeners.tick import Repeat
+from colors import BLACK
+from engines.precache import Model
+from entities.hooks import EntityCondition
+from entities.hooks import EntityPostHook
+from memory import make_object
+from effects.base import TempEntity
+
+
+rocket_model = Model("models/weapons/w_missile.mdl")
+beam_model = Model("sprites/laser.vmt")
+
+
+def cluster_rockets():
+	player = Player.from_userid(int(es.ServerVar('wcs_userid')))
+	if player.team >= 2:
+		nade_repeat = Repeat(create_nade, (player,int(es.ServerVar('wcs_dmg'))))
+		nade_repeat.start(0.2, int(es.ServerVar('wcs_rockets')),True)
+		es.tell(player.userid, '#multi', '#green[WCS] #lightgreenYou fired #green%s Cluster Rockets!' % int(es.ServerVar('wcs_rockets')))
+		
+		
+def create_nade(player,damage):
+	ent = Entity.create('hegrenade_projectile')
+	origin = player.origin
+	origin[2] += 100
+	ent.origin = origin
+	ent.spawn()
+	angles = player.view_angle
+	forward = Vector()
+	right = Vector()
+	up = Vector()
+	angles.get_angle_vectors(forward, right, up)
+	ent.damage = damage
+	ent.set_property_vector('m_vecBaseVelocity',(forward+up)*400)
+	ent.thrower = player.inthandle
+	ent.model_index = rocket_model.index
+	ent.solid_type = SolidType.NONE
+	ent.angles = player.angles
+	ent.set_key_value_string('targetname', "cluster")
+	give_trail(ent,player.team)
+	
+def give_trail(ent,team):
+	if team == 2:
+		color = Color(255,0,0)
+	if team == 3:
+		color = Color(0,0,255)
+	entity = TempEntity('BeamFollow')
+	entity.start_width = 3
+	entity.end_width = 3
+	entity.color = color
+	entity.model = beam_model
+	entity.halo = beam_model
+	entity.entity_index = ent.index
+	entity.life_time = 2
+	entity.create()
+	
+@EntityPostHook(EntityCondition.equals_entity_classname("hegrenade_projectile"), 'start_touch')
+def Entity_StartTouch(args, ret):
+	entity = make_object(Entity, args[1])
+	touching = make_object(Entity, args[0])
+	if touching.classname == "worldspawn":
+		if entity.get_key_value_string('targetname') == "cluster":
+			entity.detonate()
+
 def remove_freeze(player):
 	player.move_type = MoveType.WALK
 
