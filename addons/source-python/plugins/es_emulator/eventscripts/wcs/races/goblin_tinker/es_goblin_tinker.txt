@@ -1,0 +1,48 @@
+block load
+{
+	es_xset wcs_amount 0
+	es_xset wcs_rockets 0
+}
+
+block spawn
+{
+	es wcs_restrict event_var(userid) knifeonly
+	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+}
+
+block demolish
+{
+	es_tell event_var(userid) #multi #green[WCS] #lightgreenYou were hit by #greenDemolish
+	es_tell event_var(attacker) #multi #green[WCS] #lightgreenYou hit#green event_var(es_username) #lightgreenwith #greenDemolish
+	es_set wcs_tmp event_var(dmg_health)
+	es_math wcs_tmp * server_var(wcs_damage)
+	es wcs_decimal wcs_tmp2 server_var(wcs_tmp)
+	es wcs damage event_var(userid) event_var(attacker) server_var(wcs_tmp2)
+	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+	es_math wcs_z1 + 30
+	es est_effect 10 #a 0 sprites/flame01.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 50 55 1.5 60 5 0 255 50 50 255 10
+}
+
+block robo_goblin
+{
+	es wcs_setfx health event_var(userid) + server_var(wcs_health) 0
+	es wcs_setfx speed event_var(userid) = server_var(wcs_speed) 0
+	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+	es wcs_spark_effect server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 8 3 3
+	es_tell event_var(userid) #multi #green[WCS] #lightgreenRobo Goblin increased your #greenspeed #lightgreenand #greenhealth.
+}
+
+
+block mine
+{
+	es wcsgroup set ability event_var(userid) trap
+	es wcsgroup set ability_count event_var(userid) server_var(wcs_count)
+	es wcsgroup set ability_parameter event_var(userid) server_var(wcs_params)
+	es wcsgroup set ability_cooldown event_var(userid) 3
+	es_tell event_var(userid) #multi #green[WCS] #lightgreenYou equipped#green server_var(wcs_count) Goblin Mines!
+}
+
+block ultimate
+{
+	es_xdoblock wcs/tools/ultimates/default2/cluster_rockets
+}
