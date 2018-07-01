@@ -19,9 +19,10 @@ from entities.hooks import EntityCondition
 from entities.hooks import EntityPostHook
 from memory import make_object
 from effects.base import TempEntity
+from core import SOURCE_ENGINE_BRANCH
 
-
-rocket_model = Model("models/weapons/w_missile.mdl")
+if SOURCE_ENGINE_BRANCH == 'css':
+	rocket_model = Model("models/weapons/w_missile.mdl")
 beam_model = Model("sprites/laser.vmt")
 
 
@@ -47,7 +48,8 @@ def create_nade(player,damage):
 	ent.damage = damage
 	ent.set_property_vector('m_vecBaseVelocity',(forward+up)*400)
 	ent.thrower = player.inthandle
-	ent.model_index = rocket_model.index
+	if SOURCE_ENGINE_BRANCH == 'css':
+		ent.model_index = rocket_model.index
 	ent.solid_type = SolidType.NONE
 	ent.angles = player.angles
 	ent.set_key_value_string('targetname', "cluster")
