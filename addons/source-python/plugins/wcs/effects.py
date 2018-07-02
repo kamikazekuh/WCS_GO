@@ -6,7 +6,7 @@ from commands.server import ServerCommand
 from mathlib import Vector
 from players.entity import Player
 from colors import Color
-
+from entities.entity import Entity
 
 @ServerCommand('est_effect_01')
 def est_effect_01(command):
