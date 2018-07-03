@@ -69,6 +69,7 @@ from wcs import ladderfix
 from wcs import levelbank
 from wcs import logging
 from wcs import longjump
+from wcs import mana
 from wcs import myinfo
 from wcs import playerinfo
 from wcs import raceinfo
