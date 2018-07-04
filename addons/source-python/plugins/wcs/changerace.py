@@ -67,10 +67,18 @@ def changerace_menu_build(menu, index):
 				level = 0
 			v = canUse(userid, race)
 			raceinfo = wcs.wcs.racedb.getRace(race)
-			nol = int(raceinfo['numberoflevels'])
+			nol = raceinfo['numberoflevels']
 			nos = int(raceinfo['numberofskills'])
-			max_level = nol * nos
+			if ('|') in nol:
+				nol = nol.split('|')
+			if len(nol) == 1:
+				max_level = nol * nos
+			else:
+				max_level = 0
+				for x in nol:
+					max_level += int(x)
 			level_buffer = level
+			max_level = int(max_level)
 			if level_buffer > max_level:
 				level_buffer = max_level
 			team = player_entity.team
@@ -122,9 +130,16 @@ def changerace_menu_build(menu, index):
 					level = 0
 				v = canUse(userid, race)
 				raceinfo = wcs.wcs.racedb.getRace(race)
-				nol = int(raceinfo['numberoflevels'])
+				nol = raceinfo['numberoflevels']
 				nos = int(raceinfo['numberofskills'])
-				max_level = nol * nos
+				if ('|') in nol:
+					nol = nol.split('|')
+				if len(nol) == 1:
+					max_level = nol * nos
+				else:
+					max_level = 0
+					for x in nol:
+						max_level += int(x)
 				level_buffer = level
 				if level_buffer > max_level:
 					level_buffer = max_level
@@ -241,9 +256,16 @@ def changerace_racename_build(menu, index):
 				level = 0
 			v = canUse(userid, race)
 			raceinfo = wcs.wcs.racedb.getRace(race)
-			nol = int(raceinfo['numberoflevels'])
+			nol = raceinfo['numberoflevels']
 			nos = int(raceinfo['numberofskills'])
-			max_level = nol * nos
+			if ('|') in nol:
+				nol = nol.split('|')
+			if len(nol) == 1:
+				max_level = nol * nos
+			else:
+				max_level = 0
+				for x in nol:
+					max_level += int(x)
 			level_buffer = level
 			if level_buffer > max_level:
 				level_buffer = max_level
@@ -332,6 +354,11 @@ def canUse(userid, race):
 				return 4
 			return 5
 		return 6
+	return 7
+
+		
+
+
 	return 7
 
 		
