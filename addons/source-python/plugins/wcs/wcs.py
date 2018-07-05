@@ -979,10 +979,13 @@ def _wcs_givelevel_command(command):
 @ServerCommand('wcs_xalias')
 def _wcs_xalias_command(command):
 	alias = str(command[1])
-	if alias in aliass:
-		todo = aliass[alias].split(";")
-		for com in todo:
-			execute_server_command('es', com)
+	if len(command) == 2:
+		if alias in aliass:
+			todo = aliass[alias].split(";")
+			for com in todo:
+				execute_server_command('es', com)
+	elif len(command) == 3:
+		aliass[alias] = str(command[2])
 	
 @ServerCommand('wcs_reload_races')
 def _wcs_reload_races_command(command):
