@@ -90,6 +90,7 @@ def bank_loaded(bankplayer):
 class WarcraftBankPlayer(object):
 	def __init__(self,userid):
 		self.userid = int(userid)
+		self.user_id = -1
 		self.steamid = Player.from_userid(self.userid).uniqueid
 		bank_player_loaded[self.userid] = False
 		self.levels = 0
@@ -115,12 +116,13 @@ class WarcraftBankPlayer(object):
 			Thread(target=self._save_player_to_database).start()
 
 	def _save_player_to_database(self):
-		with session_scope() as session:
-			player = session.query(BankPlayers).filter(BankPlayers.user_id==self.user_id).one_or_none()
-			player.steamid = self.steamid
-			player.levels = self.levels
-			session.commit()
-		output.put(self._on_player_saved)
+		if self.user_id != -1:
+			with session_scope() as session:
+				player = session.query(BankPlayers).filter(BankPlayers.user_id==self.user_id).one_or_none()
+				player.steamid = self.steamid
+				player.levels = self.levels
+				session.commit()
+			output.put(self._on_player_saved)
 	
 	def _on_player_saved(self):
 		if exists(self.userid):
@@ -202,9 +204,7 @@ def wcsadmin_bank_menu_select(menu, index, choice):
 def wcs_bank_command(command, index, team=None):
 	userid = userid_from_index(index)
 	if bank_player_loaded[userid] == True:
-		print('test')
 		if int(bankplayer[userid].levels) > 0:
-			print('test2')
 			amount_menu.clear()
 			amount_menu.append(Text('You have %s Levels in your bank' % bankplayer[userid].levels))
 			amount_menu.append(PagedOption('1', 'spendlevels'))
@@ -217,10 +217,7 @@ def wcs_bank_command(command, index, team=None):
 			amount_menu.append(PagedOption('2500', 'spendlevels'))
 			amount_menu.send(index)
 		else:
-			print('test3')
 			wcs.wcs.tell(userid, '\x04[WCS] \x05You do not have \x04any \x05levels in your \x04Levelbank')
-	else:
-		print('false')
 			
 def doCommand(userid):
 	index = index_from_userid(userid)
