@@ -99,6 +99,12 @@ def player_connect(ev):
 	userid = int(ev['userid'])
 	if userid not in mana_players:
 		mana_players[userid] = ManaPlayer(userid,-1)
+		
+@Event('player_disconnect')
+def player_disconnect(ev):
+	userid = int(ev['userid'])
+	if userid in mana_players:
+		mana_players.pop(userid)
 	
 	
 @ServerCommand('wcs_set_max_mana')
