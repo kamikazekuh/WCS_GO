@@ -1665,7 +1665,19 @@ def get_cooldown(userid):
 			level = None
 		if level:
 			downtime = str(race1[skill]['cooldown']).split('|')
-			if len(downtime) == int(race1['numberoflevels']):
+			nol = race1['numberoflevels']
+			if '|' in nol:
+				nol = nol.split('|')
+				nol = [int(x) for x in nol]
+			else:
+				nos = int(db['numberofskills'])
+				nol_tmp = int(db['numberoflevels'])
+				nol = []
+				x = 0
+				while x < nos:
+					nol.append(nol_tmp)
+					x += 1
+			if len(downtime) == nol[int(index)]:
 				downtime = int(downtime[level-1])
 				if not downtime:
 					downtime = str(race1[skill]['cooldown']).split('|')
