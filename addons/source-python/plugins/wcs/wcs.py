@@ -1571,7 +1571,20 @@ def checkEvent1(userid, event):
 						wcsgroup.setUser(userid, event+'_pre_cooldown', cooldown)
 						timed = int(float(time.time()))
 						downtime = str(race1[skill]['cooldown']).split('|')
-						if len(downtime) == int(race1['numberoflevels']):
+						nol = race1['numberoflevels']
+						if '|' in nol:
+							nol = nol.split('|')
+							nol = [int(x) for x in nol]
+						else:
+							nos = int(db['numberofskills'])
+							nol_tmp = int(db['numberoflevels'])
+							nol = []
+							x = 0
+							while x < nos:
+								nol.append(nol_tmp)
+								x += 1
+						
+						if len(downtime) == int(nol[int(index)]):
 							downtime = int(downtime[level-1])
 						else:
 							downtime = int(downtime[0])
