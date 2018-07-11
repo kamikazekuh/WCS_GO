@@ -1,4 +1,5 @@
 #include <sourcemod>
+#include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
 #include <console>
@@ -71,30 +72,14 @@ new Handle:trace = INVALID_HANDLE;
 
 public OnPluginStart()
 {
-	RegServerCmd("wcs_getviewplayer", ViewPlayer);
-	RegServerCmd("wcs_getviewindex", ViewIndex);
-	RegServerCmd("wcs_give", GivePlayer);
 	RegServerCmd("wcs_dealdamage", DoDamage);
-	RegServerCmd("wcs_drop", DropPlayer);
-	RegServerCmd("wcs_spawn", SpawnPlayer);
-	RegServerCmd("wcs_strip", StripPlayer);
-	RegServerCmd("wcs_setgravity", SetGravityPlayer);
 	RegServerCmd("wcs_fire", FirePlayer);
 	RegServerCmd("wcs_exstinguish", ExtingPlayer);
 	RegServerCmd("wcs_getwallbetween", GetWall_Register);
-	RegServerCmd("wcs_changeteam", ChangeTeam);
-	RegServerCmd("wcs_color", ColorRegister);
-	RegServerCmd("wcs_getplayerindex", GetIndex);
-	RegServerCmd("wcs_getgravity", GravityGet);
 	RegServerCmd("wcs_getgun", GunGet);
 	RegServerCmd("wcs_teleport", TeleportRegister);
 	RegServerCmd("wcs_slap", SlapRegister);
 	RegServerCmd("wcs_thirdperson", ThirdpersonRegister);
-	RegServerCmd("wcs_getdeaths", GetDeathRegister);
-	RegServerCmd("wcs_setdeaths", SetDeathRegister);
-	RegServerCmd("wcs_getscore", GetScoreRegister);
-	RegServerCmd("wcs_setscore", SetScoreRegister);
-	RegServerCmd("wcs_removeweapon", RemoveWeaponRegister);
 	RegServerCmd("wcs_shake", ShakeRegister);
 	RegServerCmd("wcs_getsmadmin", AdminRegister);
 	RegServerCmd("wcs_entitygethealth", EntityGetHealthRegister);
@@ -508,82 +493,6 @@ public Action:ShakeRegister(args)
 	Client_Shake(useridc, SHAKE_START, StringToFloat(amplitude), StringToFloat(frequenzy), StringToFloat(duration));
 }
 
-public Action:RemoveWeaponRegister(args)
-{
-	new String:userid[128];
-	new String:value[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, value, sizeof(value));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	if(StrEqual(value, "1")||StrEqual(value, "2")||StrEqual(value, "3")||StrEqual(value, "4")||StrEqual(value, "5"))
-	{
-		new slot = StringToInt(value);
-		new wpn_ent = GetPlayerWeaponSlot(useridc, slot-1);
-		new active_weapon = Client_GetActiveWeapon(useridc);
-		new String:classname[128];
-		GetEntityClassname(wpn_ent, classname, sizeof(classname))
-		Client_RemoveWeapon(useridc, classname, true, true);
-		if (wpn_ent == active_weapon)
-		{
-			new new_weapon = Client_GetFirstWeapon(useridc)
-			Client_SetActiveWeapon(useridc, new_weapon)
-		}
-	}
-	else
-	{
-		Client_RemoveWeapon(useridc, value, true, true);
-	}
-}
-
-public Action:SetScoreRegister(args)
-{
-	new String:userid[128];
-	new String:value[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, value, sizeof(value));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	Client_SetScore(useridc, StringToInt(value));
-}
-
-public Action:GetScoreRegister(args)
-{
-	new String:userid[128];
-	new String:bvar[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, bvar, sizeof(bvar));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	new score = Client_GetScore(useridc);
-	c_var = FindConVar(bvar);
-	SetConVarInt(c_var, score);
-}
-
-public Action:SetDeathRegister(args)
-{
-	new String:userid[128];
-	new String:value[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, value, sizeof(value));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	Client_SetDeaths(useridc, StringToInt(value));
-}
-
-public Action:GetDeathRegister(args)
-{
-	new String:userid[128];
-	new String:bvar[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, bvar, sizeof(bvar));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	new deaths = Client_GetDeaths(useridc);
-	c_var = FindConVar(bvar);
-	SetConVarInt(c_var, deaths);
-}
-
 
 public Action:ThirdpersonRegister(args)
 {
@@ -616,18 +525,6 @@ public Action:SlapRegister(args)
 }
 
 
-public Action:GetIndex(args)
-{
-	new String:bvar[128];
-	new String:userid[128];
-	GetCmdArg(1, bvar, sizeof(bvar));
-	GetCmdArg(2, userid, sizeof(userid));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	c_var = FindConVar(bvar);
-	SetConVarInt(c_var, useridc);
-}
-
 public Action:GunGet(args)
 {
 	new String:userid[128];
@@ -640,87 +537,6 @@ public Action:GunGet(args)
 	GetClientWeapon(useridc, value, sizeof(value));
 	c_var = FindConVar(bvar);
 	SetConVarString(c_var, value);
-}
-
-
-public Action:GravityGet(args)
-{
-	new String:userid[128];
-	new String:bvar[128];
-	new Float:value;
-	GetCmdArg(2, userid, sizeof(userid));
-	GetCmdArg(1, bvar, sizeof(bvar));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	value = GetEntityGravity(useridc)
-	c_var = FindConVar(bvar);
-	SetConVarFloat(c_var, value);
-}
-
-public Action:ColorRegister(args)
-{
-	new String:userid[128];
-	new String:red[128];
-	new String:green[128];
-	new String:blue[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, red, sizeof(red));
-	GetCmdArg(3, green, sizeof(green));
-	GetCmdArg(4, blue, sizeof(blue));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	new redi = StringToInt(red);
-	new greeni = StringToInt(green);
-	new bluei = StringToInt(blue);
-	SetEntityRenderMode(useridc, RENDER_TRANSCOLOR);
-	if(redi > 255)
-	{
-		redi = 255;
-	}
-	if(greeni > 255)
-	{
-		greeni = 255;
-	}
-	if(bluei > 255)
-	{
-		bluei = 255;
-	}
-	if(redi < 0)
-	{
-		redi = 0;
-	}
-	if(greeni < 0)
-	{
-		greeni = 0;
-	}
-	if(bluei < 0)
-	{
-		bluei = 0;
-	}
-	if(GetCmdArgs() == 4)
-	{
-		SetEntityRenderColor(useridc, redi, greeni, bluei, 255);
-	}
-	if(GetCmdArgs() > 4)
-	{
-		new String:alpha[128];
-		GetCmdArg(5, alpha, sizeof(alpha));
-		new alphai = StringToInt(alpha);
-		SetEntityRenderColor(useridc, redi, greeni, bluei, alphai);
-		if(GetCmdArgs() > 5)
-		{
-			new String:boole[128];
-			GetCmdArg(6, boole, sizeof(boole));
-			new boolei = StringToInt(boole);
-			if(boolei == 1)
-			{
-				SetEntityRenderColor(GetPlayerWeaponSlot(useridc, 1), redi, greeni, bluei, alphai);
-				SetEntityRenderMode(GetPlayerWeaponSlot(useridc, 1), RENDER_TRANSCOLOR);
-				SetEntityRenderColor(GetPlayerWeaponSlot(useridc, 2), redi, greeni, bluei, alphai);
-				SetEntityRenderMode(GetPlayerWeaponSlot(useridc, 2), RENDER_TRANSCOLOR);
-			}
-		}
-	}	
 }
 
 public Action:ExtingPlayer(args)
@@ -744,173 +560,6 @@ public Action:FirePlayer(args)
 	new useridc = GetClientOfUserId(useridi);
 	new Float:dur = StringToFloat(duration);
 	IgniteEntity(useridc, dur);
-}
-
-public Action:SetGravityPlayer(args)
-{
-	new String:userid[128];
-	new String:gravity[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, gravity, sizeof(gravity));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	new Float:value = StringToFloat(gravity);
-	SetEntityGravity(useridc, value);
-	ServerCommand("es wcsgroup set gravity %i %f", useridi, value)
-}
-
-public Action:StripPlayer(args)
-{
-	new String:userid[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	for (new j = 0; j < 5; j++)
-	{
-		new w = -1;
-		while ((w = GetPlayerWeaponSlot(useridc,j)) != -1)
-			if (IsValidEntity(w)) RemovePlayerItem(useridc,w);
-	}
-	return Plugin_Handled;
-}  
-
-public Action:SpawnPlayer(args)
-{
-	decl String:userid[64];
-	if(b_roundIsOver)
-	{
-		return Plugin_Handled;
-	}
-	
-	GetCmdArg(1, userid, sizeof(userid));
-	new useridc = GetClientOfUserId(StringToInt(userid));
-	if (GetClientTeam(useridc) != 1 && GetClientTeam(useridc) != 0)
-	{
-		CS_RespawnPlayer(useridc);
-		return Plugin_Handled;
-	}
-	return Plugin_Handled;
-}
-
-public Action:DropPlayer(args)
-{
-	decl String:userid[64];
-	decl String:weapon[64];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, weapon, sizeof(weapon));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	new slot = StringToInt(weapon);
-	if(useridc > 0 && IsClientConnected(useridc) && IsClientInGame(useridc) && IsPlayerAlive(useridc))
-	{
-		if(slot > 0 && slot <= 5)
-		{
-			new wpn_ent = GetPlayerWeaponSlot(useridc, slot-1);
-			if(IsValidEntity(wpn_ent))
-			{
-				SDKHooks_DropWeapon(useridc, wpn_ent);
-			}
-		}
-		else
-		{
-			new wpn_ent = Client_GetWeapon(useridc, weapon);
-			if(wpn_ent != INVALID_ENT_REFERENCE)
-			{
-				SDKHooks_DropWeapon(useridc, wpn_ent);
-			}
-		}
-	}
-	
-	return Plugin_Handled;
-}	
-
-public Action:GivePlayer(args)
-{
-	new String:userid[128];
-	new String:weapon[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, weapon, sizeof(weapon));
-
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	if(IsPlayerAlive(useridc))
-	{
-		new String:currmap[128];
-		GetCurrentMap(currmap, sizeof(currmap));
-		if (StrEqual(currmap, "scoutzknivez_lwcs", false) == false)
-		{
-			GivePlayerItem(useridc, weapon);           
-		}
-		else
-		{
-			if (StrContains("weapon_scout;weapon_hegrenade;weapon_knife", weapon, false) != -1)
-			{
-				GivePlayerItem(useridc, weapon); 
-			}
-			else
-			{
-				CPrintToChat(useridc, "{GREEN}[WCS]: {YELLOW}This weapon is restricted on this map!")
-			}
-		}
-		if (StrEqual(currmap, "aim_deagle7k", false) == false)
-		{
-			GivePlayerItem(useridc, weapon);           
-		}
-		else
-		{
-			if (StrContains("weapon_deagle;weapon_hegrenade;weapon_knife", weapon, false) != -1)
-			{
-				GivePlayerItem(useridc, weapon); 
-			}
-			else
-			{
-				CPrintToChat(useridc, "{GREEN}[WCS]: {YELLOW}This weapon is restricted on this map!")
-			}
-		}		
-	}
-	
-	return Plugin_Handled;
-}
-
-public Action:ViewPlayer(args)
-{
-	new String:userid[128];
-	new String:bvar[128];
-	new String:s_target[128]
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, bvar, sizeof(bvar));
-
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-
-	new target = GetClientAimTarget(useridc, true);
-	if (target != -1)
-	{
-		new targetid = GetClientUserId(target);
-		IntToString(targetid, s_target, sizeof(s_target));
-		c_var = FindConVar(bvar);
-		SetConVarString(c_var, s_target);
-	}	
-	return Plugin_Handled;
-}
-
-public Action:ViewIndex(args)
-{
-	new String:userid[128];
-	new String:bvar[128];
-	new String:s_target[128]
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, bvar, sizeof(bvar));
-
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-
-	new target = GetClientAimTarget(useridc, false);
-	IntToString(target, s_target, sizeof(s_target));
-	c_var = FindConVar(bvar);
-	SetConVarString(c_var, s_target);
-	
-	return Plugin_Handled;
 }
 
 
@@ -959,24 +608,6 @@ DealDamage(victim,damage,attacker=0,dmg_type=DMG_GENERIC,String:weapon[]="")
 	}
 }
 
-public Action:ChangeTeam(args)
-{
-	new String:userid[128];
-	new String:team[128];
-	GetCmdArg(1, userid, sizeof(userid));
-	GetCmdArg(2, team, sizeof(team));
-	new useridi = StringToInt(userid);
-	new useridc = GetClientOfUserId(useridi);
-	new teami = StringToInt(team);
-	if(teami == 2||teami == 3)
-	{
-		CS_SwitchTeam(useridc, teami);
-	}
-	if(teami == 0)
-	{
-		ChangeClientTeam(useridc, teami);
-	}
-}
 
 public Action:GetWall_Register(args)
 {
