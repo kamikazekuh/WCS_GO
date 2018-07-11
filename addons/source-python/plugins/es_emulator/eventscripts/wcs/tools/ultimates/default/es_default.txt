@@ -31,7 +31,7 @@ block wcs_ulti_teleport
 		if (server_var(wcs_distance) <= server_var(wcs_range)) do
 		{
 			es_tell server_var(wcs_userid) #multi #green[WCS] You teleported
-			es wcs_pushto server_var(wcs_userid) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2)
+			es wcs_pushto server_var(wcs_userid) server_var(wcs_x2) server_var(wcs_y2) server_var(wcs_z2) 1
 		}
 		else do
 		{
