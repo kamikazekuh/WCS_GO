@@ -166,7 +166,15 @@ def _set_regeneration(command):
 @Repeat
 def info_repeat():
 	for player in mana_players.values():
-		if Player.from_userid(player.userid).dead != 1:
-			player.show_info()
+		if exists(player.userid):
+			if Player.from_userid(player.userid).dead != 1:
+				player.show_info()
 		
 info_repeat.start(0.1)
+
+def exists(userid):
+	try:
+		index_from_userid(userid)
+	except ValueError:
+		return False
+	return True
