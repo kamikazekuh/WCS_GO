@@ -87,7 +87,6 @@ public OnPluginStart()
 	RegServerCmd("wcs_getplayerindex", GetIndex);
 	RegServerCmd("wcs_getgravity", GravityGet);
 	RegServerCmd("wcs_getgun", GunGet);
-	RegServerCmd("wcs_getdistance", DistanceRegister);
 	RegServerCmd("wcs_teleport", TeleportRegister);
 	RegServerCmd("wcs_slap", SlapRegister);
 	RegServerCmd("wcs_thirdperson", ThirdpersonRegister);
@@ -616,34 +615,6 @@ public Action:SlapRegister(args)
 	SlapPlayer(useridc, healthi, false);
 }
 
-public Action:DistanceRegister(args)
-{
-	new String:bvar[128]
-	new String:x1[128];
-	new String:y1[128];
-	new String:z1[128];
-	new String:x2[128];
-	new String:y2[128];
-	new String:z2[128];
-	GetCmdArg(1, bvar, sizeof(bvar));
-	GetCmdArg(2, x1, sizeof(x1));
-	GetCmdArg(3, y1, sizeof(y1));
-	GetCmdArg(4, z1, sizeof(z1));
-	GetCmdArg(5, x2, sizeof(x2));
-	GetCmdArg(6, y2, sizeof(y2));
-	GetCmdArg(7, z2, sizeof(z2));
-	decl Float:vec1[3];
-	decl Float:vec2[3];
-	vec1[0] = StringToFloat(x1);
-	vec1[1] = StringToFloat(y1);
-	vec1[2] = StringToFloat(z1);
-	vec2[0] = StringToFloat(x2);
-	vec2[1] = StringToFloat(y2);
-	vec2[2] = StringToFloat(z2);
-	new Float:distance = GetVectorDistance(vec1, vec2, false);
-	c_var = FindConVar(bvar);
-	SetConVarFloat(c_var, distance);
-}
 
 public Action:GetIndex(args)
 {
