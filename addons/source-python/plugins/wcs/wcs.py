@@ -1576,8 +1576,8 @@ def checkEvent1(userid, event):
 							nol = nol.split('|')
 							nol = [int(x) for x in nol]
 						else:
-							nos = int(db['numberofskills'])
-							nol_tmp = int(db['numberoflevels'])
+							nos = int(race1['numberofskills'])
+							nol_tmp = int(race1['numberoflevels'])
 							nol = []
 							x = 0
 							while x < nos:
@@ -1683,8 +1683,8 @@ def get_cooldown(userid):
 				nol = nol.split('|')
 				nol = [int(x) for x in nol]
 			else:
-				nos = int(db['numberofskills'])
-				nol_tmp = int(db['numberoflevels'])
+				nos = int(race1['numberofskills'])
+				nol_tmp = int(race1['numberoflevels'])
 				nol = []
 				x = 0
 				while x < nos:
