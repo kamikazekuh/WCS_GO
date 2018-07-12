@@ -297,6 +297,31 @@ def pre_hurt(ev):
 				if int(resist_dmg) > 0:
 					victim.health += int(resist_dmg)
 					wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You resisted %s damage!' % int(absorb_dmg))
+					
+@ServerCommand('wcs_dealdamage')
+def _deal_damage(command):
+	victim = int(command[1])
+	attacker = int(command[2])
+	damage	= int(command[3])
+	if len(command) > 4:
+		weapon = str(command[4])
+	else:
+		weapon = None
+	if exists(victim) and exists(attacker):
+		victim_player = Player.from_userid(victim)
+		attacker_player = Player.from_userid(attacker)
+		victim_player.target_name = "wcs_hurtme"
+		entity = Entity.create('point_hurt')
+		entity.set_key_value_string("DamageTarget","wcs_hurtme")
+		entity.damage = damage
+		entity.damage_type = 2
+		if weapon != None:
+			entity.set_key_value_string("classname",weapon)
+		entity.spawn()
+		entity.call_input("Hurt",activator=attacker_player)
+		victim_player.target_name = "wcs_donthurtme"
+		entity.remove()
+		
 	
 @Event('player_death')
 def player_death(ev):
@@ -514,6 +539,9 @@ def viewcoord(command):
 		ConVar(yvar).set_float(view_vec[1])
 		ConVar(zvar).set_float(view_vec[2])
 	
+	
+
+			
 @ServerCommand('wcs_pushto')
 def push_forward(command):
 	userid = int(command[1])
@@ -703,4 +731,5 @@ def exists(userid):
 	except ValueError:
 		return False
 	return True
+
 
