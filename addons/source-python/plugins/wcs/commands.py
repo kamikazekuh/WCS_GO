@@ -286,7 +286,7 @@ def pre_hurt(ev):
 			if absorb > 0:
 				absorb_dmg = damage*absorb
 				if int(absorb_dmg) > 0:
-					player.health += int(absorb_dmg)
+					victim.health += int(absorb_dmg)
 					wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You absorbed %s damage!' % int(absorb_dmg))
 				return
 		resist = wcsgroup.getUser(victim.userid,'resist_'+weapon)
@@ -295,7 +295,7 @@ def pre_hurt(ev):
 			if resist > 0:
 				resist_dmg = damage*resist
 				if int(resist_dmg) > 0:
-					player.health += int(resist_dmg)
+					victim.health += int(resist_dmg)
 					wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You resisted %s damage!' % int(absorb_dmg))
 	
 @Event('player_death')
