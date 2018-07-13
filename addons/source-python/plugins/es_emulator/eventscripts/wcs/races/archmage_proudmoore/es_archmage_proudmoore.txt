@@ -55,8 +55,8 @@ block weapon
 	{
 		if (event_var(es_userdead) = 0) do
 		{
-			es removeweapon event_var(userid) 1
-			es removeweapon event_var(userid) 2
+			es wcs_removeweapon event_var(userid) 1
+			es wcs_removeweapon event_var(userid) 2
 			es_give event_var(userid) weapon_deagle
 			es_give event_var(userid) weapon_m4a1
 			es_tell event_var(userid) #multi #green[WCS]#lightgreen Weapon of the sorcerer - Gave you a deagle and colt
