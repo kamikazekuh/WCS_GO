@@ -72,7 +72,7 @@ def changerace_menu_build(menu, index):
 			if ('|') in nol:
 				nol = nol.split('|')
 			if len(nol) == 1:
-				max_level = nol * nos
+				max_level = int(nol) * nos
 			else:
 				max_level = 0
 				for x in nol:
@@ -135,7 +135,7 @@ def changerace_menu_build(menu, index):
 				if ('|') in nol:
 					nol = nol.split('|')
 				if len(nol) == 1:
-					max_level = nol * nos
+					max_level = int(nol) * nos
 				else:
 					max_level = 0
 					for x in nol:
@@ -261,7 +261,7 @@ def changerace_racename_build(menu, index):
 			if ('|') in nol:
 				nol = nol.split('|')
 			if len(nol) == 1:
-				max_level = nol * nos
+				max_level = int(nol) * nos
 			else:
 				max_level = 0
 				for x in nol:
