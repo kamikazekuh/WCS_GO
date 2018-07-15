@@ -23,7 +23,7 @@ block spawn
 
 block strike
 {
-	if (server_var(wcs_dice) <= 100) do
+	if (server_var(wcs_dice) <= 10) do
 	{
 		es_set wcs_tmp event_var(dmg_health)
 		es playerget health wcs_health event_var(userid)
