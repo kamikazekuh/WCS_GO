@@ -1,18 +1,21 @@
 block spawn
 {
-	es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
-	es_xmath wcs_z1 + 5
-	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 40 3.6 10 50 2 155 0 0 255 2
-	es_xmath wcs_z1 + 10
-	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 50 3.6 10 50 2 155 0 0 255 2
-	es_xmath wcs_z1 + 10
-	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 60 3.6 10 50 2 155 0 0 255 2
-	es_xmath wcs_z1 + 10
-	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 70 3.6 10 50 2 155 0 0 255 2
-	es_xmath wcs_z1 + 10
-	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 80 3.6 10 50 2 155 0 0 255 2
-	es_xmath wcs_z1 + 10
-	es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 90 3.6 10 50 2 155 0 0 255 2
+	if (event_var(userid) > 0) do
+	{
+		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(userid)
+		es_xmath wcs_z1 + 5
+		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 40 3.6 10 50 2 155 0 0 255 2
+		es_xmath wcs_z1 + 10
+		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 50 3.6 10 50 2 155 0 0 255 2
+		es_xmath wcs_z1 + 10
+		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 60 3.6 10 50 2 155 0 0 255 2
+		es_xmath wcs_z1 + 10
+		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 70 3.6 10 50 2 155 0 0 255 2
+		es_xmath wcs_z1 + 10
+		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 80 3.6 10 50 2 155 0 0 255 2
+		es_xmath wcs_z1 + 10
+		es est_effect 10 #a 0 sprites/lgtning.vmt server_var(wcs_x1) server_var(wcs_y1) server_var(wcs_z1) 10 90 3.6 10 50 2 155 0 0 255 2
+	}
 }
 
 block vampire
