@@ -28,6 +28,7 @@ from cvars import ConVar
 from engines.server import execute_server_command, queue_command_string
 from entities.helpers import index_from_edict
 from events import Event
+from events.hooks import PreEvent, EventAction
 from filters.players import PlayerIter
 from listeners import ListenerManager
 from listeners import ListenerManagerDecorator
@@ -1145,7 +1146,14 @@ def round_end(event):
 		else:
 			surxp = config.cfgdata['player_roundsxp']		
 		Delay(1,  wcsplayers[player.userid].give_xp, (surxp, 'for surviving the round'))
-	
+
+@PreEvent('player_death')
+def pre_death(event):
+	weapon = str(event['weapon'])
+	if weapon == "point_hurt":
+		attacker = Player.from_userid(int(event['attacker']))
+		attacker.kills -= 1
+		return EventAction.BLOCK
 
 @Event('player_death')			
 def player_death(event):
