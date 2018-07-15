@@ -25,11 +25,6 @@ block strike
 {
 	if (server_var(wcs_dice) <= 10) do
 	{
-		if (server_var(wcs_dmg) >= event_var(health)) do
-		{
-			es_set wcs_dmg event_var(health)
-			es_math wcs_dmg - 1
-		}
 		es wcs_dealdamage event_var(userid) event_var(attacker) server_var(wcs_dmg)
 		es wcs_centertell event_var(attacker) Critical strike did + server_var(wcs_dmg) damage!
 		es_getplayerlocation wcs_x1 wcs_y1 wcs_z1 event_var(attacker)
