@@ -663,7 +663,11 @@ def _centermessage_command(command):
 		
 @ServerCommand('wcs_centertell')
 def _centertell(command):
-	userid = int(command[1])
+	userid = command[1]
+	if userid != '':
+		userid = int(userid)
+	else:
+		return
 	if exists(userid):
 		command_string = command.arg_string
 		command_string = command_string.replace(str(userid)+" ", '')
