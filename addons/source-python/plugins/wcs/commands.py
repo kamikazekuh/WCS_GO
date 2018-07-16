@@ -309,19 +309,18 @@ def _deal_damage(command):
 		weapon = None
 	if exists(victim) and exists(attacker):
 		victim_player = Player.from_userid(victim)
-		if victim_player.health > 0:
-			attacker_player = Player.from_userid(attacker)
-			victim_player.target_name = "wcs_hurtme"
-			entity = Entity.create('point_hurt')
-			entity.set_key_value_string("DamageTarget","wcs_hurtme")
-			entity.damage = damage
-			entity.damage_type = 2
-			if weapon != None:
-				entity.set_key_value_string("classname",weapon)
-			entity.spawn()
-			entity.call_input("Hurt",activator=attacker_player)
-			victim_player.target_name = "wcs_donthurtme"
-			entity.remove()
+		attacker_player = Player.from_userid(attacker)
+		victim_player.target_name = "wcs_hurtme"
+		entity = Entity.create('point_hurt')
+		entity.set_key_value_string("DamageTarget","wcs_hurtme")
+		entity.damage = damage
+		entity.damage_type = 0
+		if weapon != None:
+			entity.set_key_value_string("classname",weapon)
+		entity.spawn()
+		entity.call_input("Hurt",activator=attacker_player)
+		victim_player.target_name = "wcs_donthurtme"
+		entity.remove()
 		
 	
 @Event('player_death')
