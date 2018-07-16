@@ -102,6 +102,7 @@ player_loaded = {}
 output = Queue()
 wcsplayers = {}
 wcs_rank = {}
+player_isdead = {}
 gamestarted = 0
 saved = 0
 
