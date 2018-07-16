@@ -160,6 +160,7 @@ def load():
 	Thread(target=_load_ranks).start()
 	for player in PlayerIter():
 		wcsplayers[player.userid] = WarcraftPlayer(player.userid)
+		player_isdead[player.userid] = 0
 	global curmap
 	curmap = ConVar("host_map").get_string().strip('.bsp')
 	races = racedb.getAll()
@@ -1149,10 +1150,12 @@ def round_end(event):
 
 @PreEvent('player_death')
 def pre_death(event):
-	weapon = str(event['weapon'])
-	if weapon == "point_hurt":
+	userid = int(event['userid'])
+	if player_isdead[userid] == 0:
+		player_isdead[userid] = 1
 		attacker = Player.from_userid(int(event['attacker']))
 		attacker.kills -= 1
+	elif player_isdead[userid] == 1:
 		return EventAction.BLOCK
 
 @Event('player_death')			
@@ -1317,6 +1320,7 @@ def hostage_rescued(event):
 @Event('player_spawn')			
 def _player_spawn(event):
 	userid = event.get_int('userid')
+	player_isdead[userid] = 0
 	player = Player.from_userid(userid)
 	player.color = Color(255,255,255,255)
 	player.gravity = 1.0
