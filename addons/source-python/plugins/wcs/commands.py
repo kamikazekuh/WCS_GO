@@ -55,6 +55,25 @@ def wcs_resize(command):
 	if exists(userid):
 		player = Player.from_userid(userid)
 		player.set_property_float("m_flModelScale",size)
+		
+@ServerCommand('wcs_aoe')
+def wcs_aoe(command):
+	userid = int(command[1])
+	attacker_userid = int(command[2])
+	radius = float(command[3])
+	damage = int(command[4])
+	if exists(userid):
+		victim = Player.from_userid(userid)
+	else:
+		return
+	if exists(attacker_userid):
+		attacker = Player.from_userid(attacker_userid)
+	else:
+		return
+	for player in PlayerIter('alive'):
+		if player.team == victim.team:
+			if player.origin.get_distance(victim.origin) <= radius:
+				queue_command_string("es wcs_dealdamage %s %s %s" % (player.userid,attacker_userid,damage))
 	
 @ServerCommand('wcs_getplayerindex')
 def _get_index(command):
