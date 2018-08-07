@@ -52,7 +52,7 @@ block shake
 block armor
 {
 	es wcsgroup set spiked_carapace event_var(userid) 1
-	es wcs_absorb event_var(userid) 1 server_var(wcs_gravity)
+	es wcs_absorb event_var(userid) server_var(wcs_gravity)
 	es_tell event_var(userid) #multi #green [WCS]: #lightgreen Spiked carapace - Reduces damage taken, and reflects damage upon the attacker
 }
 
