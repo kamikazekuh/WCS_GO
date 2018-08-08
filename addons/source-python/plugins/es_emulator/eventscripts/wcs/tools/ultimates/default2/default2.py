@@ -9,7 +9,7 @@ from mathlib import Vector
 from engines.server import queue_command_string
 import core
 from entities.constants import MoveType
-
+from events import Event
 from entities.entity import Entity
 from entities.constants import SolidType
 from listeners.tick import Repeat
@@ -19,6 +19,7 @@ from entities.hooks import EntityCondition
 from entities.hooks import EntityPostHook
 from memory import make_object
 from effects.base import TempEntity
+from filters.entities import EntityIter
 from core import SOURCE_ENGINE_BRANCH
 
 if SOURCE_ENGINE_BRANCH == 'css':
@@ -70,14 +71,23 @@ def give_trail(ent,team):
 	entity.life_time = 2
 	entity.create()
 	
-@EntityPostHook(EntityCondition.equals_entity_classname("hegrenade_projectile"), 'start_touch')
-def Entity_StartTouch(args, ret):
-	entity = make_object(Entity, args[1])
-	touching = make_object(Entity, args[0])
-	if touching.classname == "worldspawn":
-		if entity.get_key_value_string('targetname') == "cluster":
-			entity.detonate()
-
+		
+@Event('grenade_bounce')
+def _grenade_bounce(game_event):
+    coords = Vector(*[game_event[x] for x in 'xyz'])
+    for entity in EntityIter('hegrenade_projectile'):
+        if entity.origin == coords:
+            if entity.get_key_value_string('targetname') == "cluster":
+                detonate(entity)
+                break
+    else:
+        return
+			
+def detonate(grenade):
+    grenade.set_property_uchar('m_takedamage', 2)
+    grenade.health = 1
+    grenade.take_damage(1)
+	
 def remove_freeze(player):
 	player.move_type = MoveType.WALK
 
