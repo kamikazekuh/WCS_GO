@@ -9,6 +9,9 @@ block load
 	es_xset wcs_red 0
 	es_xset wcs_blue 0
 	es_xset wcs_green 0
+	es_xset wcs_x 0
+	es_xset wcs_y 0
+	es_xset wcs_z 0
 	es_xset wcs_x3 0
 	es_xset wcs_y3 0
 	es_xset wcs_z3 0
@@ -121,23 +124,21 @@ block wcs_mole_activate
 					}
 					es_set wcs_tmp server_var(mp_freezetime)
 					es_xmath wcs_tmp + 3
+					es_delayed server_var(wcs_tmp) wcs_setfx disguise server_var(wcs_uid) = server_var(wcs_team_target) 0
 					es_delayed server_var(wcs_tmp) es_setpos server_var(wcs_uid) server_var(wcs_x) server_var(wcs_y) server_var(wcs_z)
-					es_keysetvalue "wcsuserdata" server_var(wcs_uid) "ismole" "1"
+					es_delayed server_var(wcs_tmp) es_xtell server_var(wcs_uid) #multi #green[WCS] #lightgreenYou became a #greenmole!
 				}
-				wcs_getlanguage "wcs_lng" "wcs_lng_mole"
-				es_delayed server_var(mp_freezetime) es_xtell server_var(wcs_uid) #multi server_var(wcs_lng)
+				es_tell server_var(wcs_uid) #multi #green[WCS] #lightgreenYou're teleported as a #greenmole #lightgreenafter the #greenfreezetime.!
 			}
-			es_xelse do
+			else do
 			{
-				wcs_getlanguage "wcs_lng" "wcs_lng_molefailed"
-				es_tell server_var(wcs_uid) #multi server_var(wcs_lng)
+				es_tell server_var(wcs_uid) #multi #green[WCS] #lightgreenSorry, Mole failed.
 			}
 		}
-		es_xelse do
+		else do
 		{
-			wcs_getlanguage "wcs_lng" "wcs_lng_molefailed"
-			es_tell server_var(wcs_uid) #multi server_var(wcs_lng)
+			es_tell server_var(wcs_uid) #multi #green[WCS] #lightgreenSorry, Mole failed.
 		}
 	}
-	if (server_var(wcs_debug) = "1") then echo wcs_mole_activate end
 }
+
