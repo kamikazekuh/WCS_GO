@@ -21,11 +21,20 @@ def raceinfo_menu_build(menu, index):
 		else:
 			level = 0
 		raceinfo = wcs.wcs.racedb.getRace(race)
-		nol = int(raceinfo['numberoflevels'])
+		nol = raceinfo['numberoflevels']
 		nos = int(raceinfo['numberofskills'])
-		max_level = nol * nos
-		if level > max_level:
-			level = max_level
+		if ('|') in nol:
+			nol = nol.split('|')
+		if len(nol) == 1:
+			max_level = int(nol) * nos
+		else:
+			max_level = 0
+			for x in nol:
+				max_level += int(x)
+		level_buffer = level
+		max_level = int(max_level)
+		if level_buffer > max_level:
+			level_buffer = max_level
 		if level:
 			option = PagedOption('%s - [%s/%s]' % (race,level,max_level),race)
 		else:
