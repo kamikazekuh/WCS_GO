@@ -24,7 +24,12 @@ def playerinfo_player_select(menu, index, choice):
 	race = wcs.wcs.racedb.getRace(wcs.wcs.wcsplayers[player_entity.userid].currace)
 	name = race['skillnames'].split('|')
 	skills = wcs.wcs.wcsplayers[player_entity.userid].skills.split('|')
-	levels = int(race['numberoflevels'])
+	nol = race['numberoflevels']
+	if ('|') in nol:
+		levels = nol.split('|')
+	else:
+		levels = []
+		levels += int(race['numberofskills']) * [int(nol)]
 	playerinfo_menu = SimpleMenu()
 	playerinfo_menu.select_callback = playerinfo_select
 	playerinfo_menu.append(Text('->1. %s' % player_entity.name))
@@ -33,7 +38,7 @@ def playerinfo_player_select(menu, index, choice):
 	playerinfo_menu.append(Text('-'*25))
 	playerinfo_menu.append(Text('o %s: Level %s' % (str(wcs.wcs.wcsplayers[player_entity.userid].currace), str(wcs.wcs.wcsplayers[player_entity.userid].level))))
 	for skill, level in enumerate(skills):
-		playerinfo_menu.append(Text(' - %s: [%s/%s]' % (name[skill], str(level), str(levels))))
+		playerinfo_menu.append(Text(' - %s: [%s/%s]' % (name[skill], str(level), str(levels[skill]))))
 	playerinfo_menu.append(Text('-'*25))
 	playerinfo_menu.append(Text('Health : %s HP' % player_entity.health))
 	playerinfo_menu.append(Text('Speed : %s%%' % str(round(player_entity.speed*100))))
@@ -51,6 +56,3 @@ def doCommand(userid):
 	index = index_from_userid(userid)
 	#playerinfo_player_menu = PagedMenu(title='Playerinfo Menu', build_callback=playerinfo_player_build, select_callback=playerinfo_player_select)
 	playerinfo_player_menu.send(index)
-
-
-
