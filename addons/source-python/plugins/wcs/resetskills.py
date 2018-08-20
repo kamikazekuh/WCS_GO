@@ -14,23 +14,28 @@ def doCommand(userid):
 		resetskills[userid] = 0
 	if resetskills[userid] == 1 or player_entity.dead:
 		player_entity.client_command("kill", True)
-		'''skills = player.race.skills.split('|')'''
 		race = wcs.wcs.wcsplayers[userid].currace
 		raceinfo = wcs.wcs.racedb.getRace(race)
-		skills = int(raceinfo['numberofskills'])
-		levels = int(raceinfo['numberoflevels'])
 		level = wcs.wcs.wcsplayers[userid].all_races[race]['level']
 		unused = wcs.wcs.wcsplayers[userid].all_races[race]['unused']
+		nol = raceinfo['numberoflevels']
+		nos = int(raceinfo['numberofskills'])
+		if ('|') in nol:
+			nol = nol.split('|')
+		if len(nol) == 1:
+			maxunused = int(nol) * nos
+		else:
+			maxunused = 0
+			for x in nol:
+				maxunused += int(x)
 
-		maxunused = skills*levels
 		v = 0
 		for x in wcs.wcs.wcsplayers[userid].all_races[race]['skills'].split('|'):
 			v += int(x)
 		unused += v
 		if unused > maxunused:
-			playerunused = maxunused
-		else:
-			playerunused = unused
+			unused = maxunused
+		print(unused)
 			
 		skills = []
 		for x in range(1,10):
@@ -38,10 +43,8 @@ def doCommand(userid):
 			if skill in wcs.wcs.racedb.races[race]:
 				skills.append('0')
 		skillst = '|'.join(skills)
-		if playerunused != level:
-			playerunused = level
 		
-		wcs.wcs.wcsplayers[userid].all_races[race]['unused'] = playerunused
+		wcs.wcs.wcsplayers[userid].all_races[race]['unused'] = unused
 		wcs.wcs.wcsplayers[userid].skills = skillst
 		wcs.wcs.wcsplayers[userid].all_races[race]['skills'] = skillst
 		wcs.wcs.wcsplayers[userid].save()
@@ -51,4 +54,3 @@ def doCommand(userid):
 		resetskills[userid] = 1
 		wcs.wcs.tell(userid, '\x04[WCS] \x05Type \x04resetskills \x05again to continue. You will \x04die!')
 		Delay(3.0, resetskills_dict, (userid,))
-	
