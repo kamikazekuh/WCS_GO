@@ -35,7 +35,6 @@ def doCommand(userid):
 		unused += v
 		if unused > maxunused:
 			unused = maxunused
-		print(unused)
 			
 		skills = []
 		for x in range(1,10):
