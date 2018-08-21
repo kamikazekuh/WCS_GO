@@ -11,5 +11,4 @@ block load
 	es_load wcs/races/crypt_lord
 	es_load wcs/races/flame_predator
 	es_load wcs/races/succubus_hunter
-	es_load wcs/races/goblin_tinker
 }
