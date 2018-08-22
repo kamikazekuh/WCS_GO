@@ -451,7 +451,7 @@ class WarcraftPlayer(object):
 				self.all_races[race]['xp'] = info.xp
 				self.all_races[race]['unused'] = info.unused
 				self.all_races[race]['skills'] = info.skills
-				
+				self.all_races[race]['name'] = race
 				
 		output.put(self._on_finish)
 		
