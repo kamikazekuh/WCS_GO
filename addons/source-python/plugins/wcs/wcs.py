@@ -1195,7 +1195,7 @@ def player_death(event):
 								diffience = limit
 						bonus = config.cfgdata['player_difxp']*diffience
 				#Normal XP Gain
-				if attacker_entity.steamid == 'BOT':
+				if victim_entity.steamid == 'BOT':
 					killxp = config.cfgdata['bot_killxp']
 					headshotxp = config.cfgdata['bot_headshotxp']
 					knifexp = config.cfgdata['bot_knifexp']
