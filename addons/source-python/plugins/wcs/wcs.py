@@ -633,7 +633,19 @@ class WarcraftPlayer(object):
 		wcs_rank[self.steamid]['totallevel'] += amount
 
 		if 'BOT' in self.steamid:
-			maxlevel = int(racedb.races[self.currace]['numberoflevels'])
+			nol = racedb.races[self.currace]['numberoflevels']
+			nos = racedb.races[self.currace]['numberofskills'][
+			if '|' in nol:
+				nol = nol.split('|')
+				nol = [int(x) for x in nol]
+			else:
+				nos = int(racedb.races[self.currace]['numberofskills'])
+				nol_tmp = int(racedb.races[self.currace]['numberoflevels'])
+				nol = []
+				x = 0
+				while x < nos:
+					nol.append(nol_tmp)
+					x += 1
 
 			while True:
 				if not self.all_races[self.currace]['unused']:
@@ -643,7 +655,7 @@ class WarcraftPlayer(object):
 				skills = self.all_races[self.currace]['skills'].split('|')
 
 				for skill, level in enumerate(skills):
-					if int(skills[skill]) < maxlevel:
+					if int(skills[skill]) < nol[skill]:
 						possible_choices.append(str(skill+1))
 
 				if not len(possible_choices):
