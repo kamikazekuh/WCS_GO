@@ -21,9 +21,10 @@ def playerinfo_select(menu, index, choice):
 def playerinfo_player_select(menu, index, choice):
 	userid = userid_from_index(index)
 	player_entity = choice.value
-	race = wcs.wcs.racedb.getRace(wcs.wcs.wcsplayers[player_entity.userid].currace)
+	currace = wcs.wcs.wcsplayers[player_entity.userid].currace
+	race = wcs.wcs.racedb.getRace(currace)
 	name = race['skillnames'].split('|')
-	skills = wcs.wcs.wcsplayers[player_entity.userid].skills.split('|')
+	skills = wcs.wcs.wcsplayers[player_entity.userid].all_races[currace]['skills'].split('|')
 	nol = race['numberoflevels']
 	if ('|') in nol:
 		levels = nol.split('|')
@@ -56,3 +57,6 @@ def doCommand(userid):
 	index = index_from_userid(userid)
 	#playerinfo_player_menu = PagedMenu(title='Playerinfo Menu', build_callback=playerinfo_player_build, select_callback=playerinfo_player_select)
 	playerinfo_player_menu.send(index)
+
+
+
