@@ -1468,8 +1468,8 @@ def on_tick():
 				userid = player.userid
 				race = wcsplayers[userid].currace
 				totallevel = wcsplayers[userid].totallevel
-				level = wcsplayers[userid].level
-				xp = wcsplayers[userid].xp
+				level = wcsplayers[userid].all_races[race]['level'] 
+				xp = wcsplayers[userid].all_races[race]['xp'] 
 				if config.cfgdata['experience_system'] == 0:
 					needed = config.cfgdata['interval']*level if level else config.cfgdata['interval']
 				elif config.cfgdata['experience_system'] == 1:
