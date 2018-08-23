@@ -36,7 +36,7 @@ def playerinfo_player_select(menu, index, choice):
 	playerinfo_menu.append(Text('-'*25))
 	playerinfo_menu.append(Text('o Total level %s' % str(wcs.wcs.wcsplayers[player_entity.userid].totallevel)))
 	playerinfo_menu.append(Text('-'*25))
-	playerinfo_menu.append(Text('o %s: Level %s' % (str(wcs.wcs.wcsplayers[player_entity.userid].currace), str(wcs.wcs.wcsplayers[player_entity.userid].level))))
+	playerinfo_menu.append(Text('o %s: Level %s' % (str(wcs.wcs.wcsplayers[player_entity.userid].currace), str(wcs.wcs.wcsplayers[player_entity.userid].all_races[wcs.wcs.wcsplayers[player_entity.userid].currace]['level']))))
 	for skill, level in enumerate(skills):
 		playerinfo_menu.append(Text(' - %s: [%s/%s]' % (name[skill], str(level), str(levels[skill]))))
 	playerinfo_menu.append(Text('-'*25))
