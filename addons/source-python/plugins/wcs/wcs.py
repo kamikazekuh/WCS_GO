@@ -1155,7 +1155,6 @@ def pre_death(event):
 	if player_isdead[userid] == 0:
 		player_isdead[userid] = 1
 		attacker = Player.from_userid(int(event['attacker']))
-		attacker.kills -= 1
 	elif player_isdead[userid] == 1:
 		return EventAction.BLOCK
 
