@@ -634,7 +634,7 @@ class WarcraftPlayer(object):
 
 		if 'BOT' in self.steamid:
 			nol = racedb.races[self.currace]['numberoflevels']
-			nos = racedb.races[self.currace]['numberofskills'][
+			nos = racedb.races[self.currace]['numberofskills']
 			if '|' in nol:
 				nol = nol.split('|')
 				nol = [int(x) for x in nol]
