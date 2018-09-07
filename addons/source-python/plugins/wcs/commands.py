@@ -16,7 +16,7 @@ import random
 from filters.recipients import RecipientFilter
 from engines.precache import Model
 from effects.base import TempEntity
-from mathlib import Vector
+from mathlib import Vector,QAngle
 from messages import Fade, FadeFlags
 from entities import TakeDamageInfo
 from entities.hooks import EntityCondition
@@ -28,15 +28,14 @@ from weapons.entity import Weapon
 import time
 from random import choice
 from core import SOURCE_ENGINE_BRANCH
-
 from engines.trace import GameTrace
 from engines.trace import Ray
 from engines.trace import engine_trace
 from engines.trace import ContentMasks
 from entities.constants import MoveType
-
+from engines.trace import TraceFilterSimple
+from players.helpers import playerinfo_from_index
 from messages.base import Shake
-
 from wcs import changerace
 
 entity_health = {}
@@ -328,6 +327,56 @@ def wcs_evasion(command):
 	chance = int(command[3])
 	wcsgroup.setUser(userid,'evasion',onoff)
 	wcsgroup.setUser(userid,'evasion_chance',chance)
+	
+@ServerCommand('wcs_teleport')
+def _wcs_teleport(command):
+	userid = int(command[1])
+	x = float(command[2])
+	y = float(command[3])
+	z = float(command[4])
+	target_location = Vector(x,y,z,)
+	player = Player.from_userid(userid)
+	origin = player.origin
+	angles = QAngle(*player.get_property_vector('m_angAbsRotation'))
+	forward = Vector()
+	right = Vector()
+	up = Vector()
+	angles.get_angle_vectors(forward, right, up)
+	forward.normalize()
+	forward *= 10.0
+	loop_limit = 100
+	can_teleport = 1
+	while is_player_stuck(player.index, target_location):
+		target_location -= forward
+		loop_limit -= 1
+		if target_location.get_distance(origin) <= 10.0 or loop_limit < 1:
+			can_teleport = 0
+			break
+	if can_teleport == 1:
+		player.teleport(target_location,None,None)
+
+def is_player_stuck(player_index,origin):
+    '''Return whether or not the given player is stuck in solid.'''
+    
+    # Get the player's PlayerInfo instance...
+    player_info = playerinfo_from_index(player_index)
+    
+    # Get the player's origin...
+    #origin = player_info.origin
+    
+    # Get a Ray object based on the player physic box...
+    ray = Ray(origin, origin, player_info.mins,
+        player_info.maxs)
+        
+    # Get a new GameTrace instance...
+    trace = GameTrace()
+    
+    # Do the trace...
+    engine_trace.trace_ray(ray, ContentMasks.PLAYER_SOLID, TraceFilterSimple(
+        PlayerIter()), trace)
+        
+    # Return whether or not the trace did hit...
+    return trace.did_hit()
 	
 @PreEvent('player_hurt')
 def pre_hurt(ev):
