@@ -23,6 +23,8 @@ from entities.hooks import EntityCondition
 from entities.hooks import EntityPreHook
 from memory import make_object
 import wcs
+import math
+from entities import BaseEntityGenerator
 from wcs import wcsgroup
 from weapons.entity import Weapon
 import time
@@ -64,6 +66,51 @@ def wcs_resize(command):
 	if exists(userid):
 		player = Player.from_userid(userid)
 		player.set_property_float("m_flModelScale",size)
+		
+@ServerCommand('wcs_ambush')
+def test(command):
+    player = Player.from_userid(int(command[1]))
+    target = Player.from_userid(int(command[2]))
+    if target:
+        angles = target.get_view_angle()
+        angle = math.radians(target.get_view_angle()[1])  # (0, angle)
+        x = -40 * math.cos(angle)
+        y = -40 * math.sin(angle)
+ 
+        new_position = Vector(
+            target.origin[0] + x,
+            target.origin[1] + y,
+            target.origin[2])
+ 
+        # Check if there's enough space behind the target.
+        trace = check_space(new_position, player.mins, player.maxs)
+       
+        # Did the trace hit something solid?
+        if trace.did_hit():
+            # Increase the height(z) of the new position,
+            # in case the target was on sloped terrain.
+            new_position[2] += 20
+ 
+            # Is there enough space now?
+            trace2 = check_space(new_position, player.mins, player.maxs)
+            if trace2.did_hit():
+                # There's still something solid behind the target.
+                # Could be a wall or some other object.
+                return
+ 
+        # teleport(position, rotation, velocity)
+        player.teleport(new_position, None, None)
+        player.set_view_angle(angles)
+ 
+ 
+def check_space(position, mins, maxs):
+    mask=ContentMasks.ALL
+    generator=BaseEntityGenerator
+    ray = Ray(position, position, mins, maxs)
+ 
+    trace = GameTrace()
+    engine_trace.trace_ray(ray, mask, TraceFilterSimple(generator()), trace)
+    return trace
 		
 @ServerCommand('wcs_aoe')
 def wcs_aoe(command):
