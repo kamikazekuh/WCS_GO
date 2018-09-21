@@ -751,7 +751,7 @@ def set_cooldown(command):
 			cooldown = 0
 		wcsgroup.setUser(userid, 'player_ultimate_cooldown', timed+amount-cooldown)
 	
-@ServerCommand('wcs_get_cooldown')
+@ServerCommand('wcs_getcooldown')
 def get_cooldown(command):
 	userid = int(command[1])
 	var = str(command[2])
