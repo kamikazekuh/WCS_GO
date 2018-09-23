@@ -1022,6 +1022,15 @@ def get_skill_level(command):
 	skills = wcsplayers[userid].all_races[race]['skills'].split('|')
 	if skillnum <= len(skills):
 		ConVar(var).set_string(skills[skillnum-1])
+		
+@ServerCommand('wcs_consolemsg')
+def _wcs_console_message(command):
+	userid = int(command[1])
+	message = ""
+	for x in command:
+		if x != command[1] and x != command[0]:
+			message = message+" "+x
+	Player.from_userid(userid).client_command("echo "+message)
 	
 @ServerCommand('wcs_getinfo')
 def getInfoRegister(command):
