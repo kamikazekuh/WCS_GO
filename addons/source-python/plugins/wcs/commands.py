@@ -675,9 +675,8 @@ def _regeneration(command):
 	if exists(userid):
 		wcsgroup.setUser(userid,'regeneration_active',1)
 		player = Player.from_userid(userid)
-		reg_repeat = Repeat(_regeneration_repeat,(player,amount,maxhp,maxheal,radius))
-		repeat_dict[player.userid] = reg_repeat
-		reg_repeat.start(time)
+		repeat_dict[player.userid] = Repeat(_regeneration_repeat,(player,amount,maxhp,maxheal,radius))
+		repeat_dict[player.userid].start(time)
 	
 def _regeneration_repeat(player,amount,maxhp,maxheal,radius):
 	if exists(player.userid):
@@ -699,7 +698,8 @@ def _regeneration_repeat(player,amount,maxhp,maxheal,radius):
 								else:
 									play.health = maxhp
 		else:
-			repeat_dict[player.userid].stop
+			if repeat_dict[player.userid].status == RepeatStatus.RUNNING:
+				repeat_dict[player.userid].stop
 	
 
 @ServerCommand('wcs_drug')
