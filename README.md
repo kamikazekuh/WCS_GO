@@ -5,8 +5,6 @@ Warcraft mod for Source Python
 Installation:
 
 - Download and install Source-Python from http://builds.sourcepython.com/job/Source.Python/lastSuccessfulBuild/
-- Download and install the latest Metamod from https://www.sourcemm.net/downloads.php?branch=stable
-- Download and install the latest Sourcemod from https://www.sourcemod.net/downloads.php?branch=stable
 - Download everything from https://github.com/kamikazekuh/WCS_GO
 - Download everything from https://github.com/Ayuto/EventScripts-Emulator
   
