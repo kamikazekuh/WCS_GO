@@ -976,6 +976,11 @@ def exists(userid):
 	return True
 
 
-
+def valid_repeat(repeat):
+	try:
+		if repeat.status == RepeatStatus.RUNNIN:
+			return 1
+	except:
+		return -1
 
 
