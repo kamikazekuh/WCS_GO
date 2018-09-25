@@ -698,8 +698,9 @@ def _regeneration_repeat(player,amount,maxhp,maxheal,radius):
 								else:
 									play.health = maxhp
 		else:
-			if repeat_dict[player.userid].status == RepeatStatus.RUNNING:
-				repeat_dict[player.userid].stop
+			if valid_repeat(repeat_dict[player.userid]) == 1:
+				if repeat_dict[player.userid].status == RepeatStatus.RUNNING:
+					repeat_dict[player.userid].stop
 	
 
 @ServerCommand('wcs_drug')
