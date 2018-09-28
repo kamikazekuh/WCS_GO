@@ -1,56 +1,47 @@
-from commands.server import ServerCommand
-from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index, edict_from_userid,inthandle_from_userid
-from players.entity import Player
-from messages import SayText2, HudMsg, TextMsg
-from cvars import ConVar
 from colors import Color
-from engines.server import queue_command_string, execute_server_command
-import string
-from events import Event
-from events.hooks import PreEvent
-from entities.entity import Entity
-from entities.constants import DamageTypes
-from filters.players import PlayerIter
-from listeners.tick import Delay, Repeat
-import random
-from filters.recipients import RecipientFilter
-from engines.precache import Model
-from effects.base import TempEntity
-from mathlib import Vector,QAngle
-from messages import Fade, FadeFlags
-from entities import TakeDamageInfo
-from entities.hooks import EntityCondition
-from entities.hooks import EntityPreHook
-from memory import make_object
-import wcs
-import math
-from entities import BaseEntityGenerator
-from wcs import wcsgroup
-from weapons.entity import Weapon
-import time
-from random import choice
+from commands.server import ServerCommand
 from core import SOURCE_ENGINE_BRANCH
+from cvars import ConVar
+from effects.base import TempEntity
+from engines.precache import Model
+from engines.server import queue_command_string, execute_server_command
+from engines.trace import ContentMasks
+from engines.trace import engine_trace
 from engines.trace import GameTrace
 from engines.trace import Ray
-from engines.trace import engine_trace
-from engines.trace import ContentMasks
-from entities.constants import MoveType
 from engines.trace import TraceFilterSimple
-from players.helpers import playerinfo_from_index
+from entities import BaseEntityGenerator
+from entities import TakeDamageInfo
+from entities.constants import DamageTypes, MoveType
+from entities.entity import Entity
+from entities.hooks import EntityCondition
+from entities.hooks import EntityPreHook
+from events import Event
+from events.hooks import PreEvent
+from filters.players import PlayerIter
+from filters.recipients import RecipientFilter
+from listeners.tick import Delay, Repeat
+import math
+from mathlib import Vector,QAngle
+from memory import make_object
+from messages import Fade, FadeFlags, HudMsg, SayText2, TextMsg
 from messages.base import Shake
+from players.helpers import index_from_userid, playerinfo_from_userid, index_from_playerinfo, userid_from_index, edict_from_userid,inthandle_from_userid,playerinfo_from_index
+from players.entity import Player
+from random import choice,randint
+import string
+import time
+import wcs
 from wcs import changerace
+from wcs import wcsgroup
+from weapons.entity import Weapon
+
+
+
 
 entity_health = {}
 
 weapon_list = ["weapon_ak47","weapon_aug","weapon_awp","weapon_bizon","weapon_c4","weapon_cz75a","weapon_deagle","weapon_decoy","weapon_elite","weapon_famas","weapon_fiveseven","weapon_flashbang","weapon_g3sg1","weapon_galil","weapon_galilar","weapon_glock","weapon_hegrenade","weapon_incgrenade","weapon_hkp2000","weapon_knife","weapon_m249","weapon_m3","weapon_m4a1","weapon_m4a1_silencer","weapon_mac10","weapon_mag7","weapon_molotov","weapon_mp5navy","weapon_mp7","weapon_mp9","weapon_negev","weapon_nova","weapon_p228","weapon_p250","weapon_p90","weapon_sawedoff","weapon_scar17","weapon_scar20","weapon_scout","weapon_sg550","weapon_sg552","weapon_sg556","weapon_ssg08","weapon_smokegrenade","weapon_taser","weapon_tec9","weapon_tmp","weapon_ump45","weapon_usp","weapon_usp_silencer","weapon_xm1014","weapon_revolver"]
-
-beam_blood = Model('decals/bloodstain_003.vmt')
-beam_glow = Model('sprites/light_glow02.vmt')
-beam_chain = Model('sprites/cbbl_smoke.vmt')
-ring_spawn_thunder = Model('sprites/cbbl_smoke.vmt')
-ring_spawn_vampire = Model('decals/bloodstain_003.vmt')
-ring_raging_burn = Model('sprites/xfireball3.vmt')
-inner_fire_follow = Model('sprites/laserbeam.vmt')
 
 anti_falldamage = {}
 repeat_dict = {}
@@ -928,7 +919,7 @@ def pre_hurt(ev):
 		if evasion != None:
 			evasion  = int(evasion)
 			if evasion > 0:
-				if random.randint(0,100) <= int(evasion_chance):
+				if randint(0,100) <= int(evasion_chance):
 					victim.health += damage
 					wcs.wcs.tell(victim.userid,'\x04[WCS] \x05You evaded %s damage!' % damage)			
 	else:
