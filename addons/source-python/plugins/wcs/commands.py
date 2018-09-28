@@ -172,6 +172,13 @@ def _color(command):
 					for weapon in player.weapons():
 						weapon.color = Color(r,g,b,a)
 						
+
+@ServerCommand('wcs_consolemsg')
+def _wcs_console_message(command):
+	userid = int(command[1])
+	message = ' '.join(tuple(command)[2:])
+	Player.from_userid(userid).client_command("echo "+message)
+						
 						
 @ServerCommand('wcs_create_prop')
 def create_prop(command):

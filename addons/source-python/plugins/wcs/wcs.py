@@ -1023,11 +1023,6 @@ def get_skill_level(command):
 	if skillnum <= len(skills):
 		ConVar(var).set_string(skills[skillnum-1])
 		
-@ServerCommand('wcs_consolemsg')
-def _wcs_console_message(command):
-	userid = int(command[1])
-	message = ' '.join(tuple(command)[2:])
-	Player.from_userid(userid).client_command("echo "+message)
 	
 @ServerCommand('wcs_getinfo')
 def getInfoRegister(command):
