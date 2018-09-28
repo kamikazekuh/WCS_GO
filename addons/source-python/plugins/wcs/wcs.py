@@ -1026,10 +1026,7 @@ def get_skill_level(command):
 @ServerCommand('wcs_consolemsg')
 def _wcs_console_message(command):
 	userid = int(command[1])
-	message = ""
-	for x in command:
-		if x != command[1] and x != command[0]:
-			message = message+" "+x
+	message = ' '.join(tuple(command)[2:])
 	Player.from_userid(userid).client_command("echo "+message)
 	
 @ServerCommand('wcs_getinfo')
