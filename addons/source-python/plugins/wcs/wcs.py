@@ -1587,7 +1587,6 @@ def checkEvent1(userid, event):
 				except IndexError:
 					level = None
 				if level:
-					gamestarted = 1
 					if gamestarted:
 						wcs_dice = ConVar('wcs_dice')
 						wcs_dice.set_int(random.randint(0, 100))
