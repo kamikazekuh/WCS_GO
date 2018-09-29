@@ -17,15 +17,18 @@ poison_dict = {}
 timed_dict = {}
 
 for player in PlayerIter('all'):
-	poison_dict[player.userid] = 0
-	timed_dict[player.userid] = 0
+	poison_dict[player.userid] = []
+	timed_dict[player.userid] = []
+	
+# =============================================================================
+# >> SERVER COMMANDS
+# =============================================================================	
 
 @ServerCommand('wcs')
 def register(command):
 	if len(command) >= 4:
 		todo = str(command[1]).lower()
-		userid = str(command[2])
-		userid = int(userid)
+		userid = int(command[2])
 		if todo == 'damage':
 			v,q,w = int(command[3]) if int(command[3]) else None, int(command[5]) if len(command) >= 6 else False, str(command[6]) if len(command) == 7 else None
 			damage(userid, str(command[4]), v, q, w)
@@ -103,23 +106,51 @@ def register(command):
 		elif todo == 'changeteam':
 			if len(command) == 4:
 				changeTeam(userid, str(command[3]))
-				
-				
 
-				
-def remove_poison(userid):
-	if userid in poison_dict:
-		if poison_dict[userid] != 0:
-			poison_dict[userid].stop()		
+# =============================================================================
+# >> EVENTS
+# =============================================================================	
 	
-def remove_timed(userid):
-	if userid in timed_dict:
-		if timed_dict[userid] != 0:
-			timed_dict[userid].stop()
-
-def spawn(userid, force=False):
-	userid = int(userid)
-	Player.from_userid(userid).spawn(force)
+@Event('player_spawn')
+def player_spawn(ev):
+	userid = int(ev['userid'])
+	remove_poison(userid)
+	remove_timed(userid)
+	player = Player.from_userid(ev['userid'])
+	player.set_property_uchar('m_iDefaultFOV', 90)
+	player.set_property_uchar('m_iFOV', 90)
+	player.gravity = 1.0
+	player.client_command('r_screenoverlay 0')
+	
+@Event('round_end')
+def round_end(ev):
+	for player in PlayerIter('all'):
+		if player.userid in poison_dict:
+			for timer in poison_dict[player.userid]:
+				if valid_repeat(timer):
+					timer.stop()
+					poison_dict[player.userid] = []
+		if player.userid in timed_dict:
+			for timer in timed_dict[player.userid]:
+				if valid_repeat(timer):
+					timer.stop()
+					timed_dict[player.userid] = []
+				
+@Event('player_activate')
+def activate(ev):
+	poison_dict[int(ev['userid'])] = []
+	timed_dict[int(ev['userid'])] = []
+	
+# =============================================================================
+# >> HELPER FUNCTIONS
+# =============================================================================	
+	
+def dealTimed(userid, attacker, dmg, time):
+	if userid not in timed_dict:
+		timed_dict[userid] = []
+	timed_repeat = Repeat(_timed_repeat,(userid,attacker,dmg))
+	timed_dict[userid].append(timed_repeat)
+	timed_repeat.start(time,execute_on_start=True)
 	
 def fade(userid, r,g,b,a,time):
 	userid = int(userid)
@@ -168,22 +199,7 @@ def pushto(userid, coord, force):
 
 def damage(victim, dmg, attacker=None, armor=False, weapon=None, solo=None):
 	queue_command_string("wcs_dealdamage %s %s %s" % (victim,attacker,dmg))
-	'''vic_player = Player.from_userid(int(victim))
-	if attacker:
-		atk_player = Player.from_userid(int(attacker))
-		if atk_player.get_weapon(is_filters='secondary'):
-			if weapon == atk_player.get_weapon(is_filters='secondary').classname:
-				wpn_index = player.get_weapon(is_filters='secondary').index
-			else:
-				wpn_index = 0
-		if atk_player.get_weapon(is_filters='primary'):
-			if weapon == atk_player.get_weapon(is_filters='primary').classname:
-				wpn_index = atk_player.get_weapon(is_filters='primary').index
-	if solo == None:
-		if vic_player.health >= int(dmg):		
-			vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)
-	else:
-		vic_player.take_damage(int(dmg),attacker_index=atk_player.index, weapon_index=None,skip_hooks=True)'''
+	
 
 def gravity(userid, value):
 	userid = int(userid)
@@ -210,6 +226,7 @@ def removeWeapon(userid, weapon):
 			if weapon.classname == slot_weapon:
 				player.drop_weapon(weapon)
 				weapon.remove()
+				
 def getViewEntity(userid):
 	userid = int(userid)
 	player = Player.from_userid(userid)
@@ -286,50 +303,36 @@ def drunk(userid, time=0, value=155):
 def remove_drunk(player):
 	player.set_property_uchar('m_iDefaultFOV', 90)
 	player.set_property_uchar('m_iFOV', 90)
+	
+def remove_poison(userid):
+	if userid in poison_dict:
+		for timer in poison_dict[userid]:
+			if valid_repeat(timer):
+				timer.stop()
+				poison_dict[userid] = []
+	
+def remove_timed(userid):
+	if userid in timed_dict:
+		for timer in timed_dict[userid]:
+			if valid_repeat(timer):
+				timer.stop()
+				timed_dict[userid] = []
 
-
-	
-@Event('player_spawn')
-def player_spawn(ev):
-	userid = int(ev['userid'])
-	remove_poison(userid)
-	remove_timed(userid)
-	player = Player.from_userid(ev['userid'])
-	player.set_property_uchar('m_iDefaultFOV', 90)
-	player.set_property_uchar('m_iFOV', 90)
-	player.gravity = 1.0
-	player.client_command('r_screenoverlay 0')
-	
-@Event('round_end')
-def round_end(ev):
-	for player in PlayerIter('all'):
-		if int(player.userid) in poison_dict:
-			if poison_dict[int(player.userid)] != 0:
-				poison_dict[int(player.userid)].stop()
-				poison_dict[int(player.userid)] = 0
-		if int(player.userid) in timed_dict:
-			if timed_dict[int(player.userid)] != 0:
-				timed_dict[int(player.userid)].stop()
-				timed_dict[int(player.userid)] = 0
-	
-def dealTimed(userid, attacker, dmg, time):
+def spawn(userid, force=False):
 	userid = int(userid)
-	if userid not in timed_dict:
-		timed_dict[userid] = 0
-	timed_repeat = Repeat(_timed_repeat,(userid,attacker,dmg))
-	timed_dict[userid] = timed_repeat
-	timed_repeat.start(time,execute_on_start=True)
+	Player.from_userid(userid).spawn(force)
+	
 	
 def _timed_repeat(userid,attacker,dmg):
 	damage(userid,dmg,attacker)
-	#wcs.wcs.tell(int(userid),"\x04[WCS] \x05Poison did \x04%s \x05damage to you!" % (dmg))
+	print('test')
 
 def dealPoison(userid, attacker, dmg, time):
 	userid = int(userid)
 	if userid not in poison_dict:
-		poison_dict[userid] = 0
+		poison_dict[userid] = []
 	poison_repeat = Repeat(_poison_repeat,(userid,attacker,dmg))
-	poison_dict[userid] = poison_repeat
+	poison_dict[userid].append(poison_repeat)
 	poison_repeat.start(time,execute_on_start=True)
 	
 def _poison_repeat(userid,attacker,dmg):
@@ -338,3 +341,11 @@ def _poison_repeat(userid,attacker,dmg):
 
 def changeTeam(userid, team):
 	Player.from_userid(userid).set_team(int(team))
+
+	
+def valid_repeat(repeat):
+	try:
+		if repeat.status == RepeatStatus.RUNNIN:
+			return 1
+	except:
+		return -1
