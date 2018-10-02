@@ -235,26 +235,26 @@ class InI(object):
 	def getRaces(self):
 		try:
 			if self.races != None:
-				user_races = ConfigObj(self.races)
+				user_races = ConfigObj(self.races,encoding="utf-8")
 			else:
 				user_races = {}
 			if self.default_races != None:
-				def_races = ConfigObj(self.default_races)
+				def_races = ConfigObj(self.default_races,encoding="utf-8")
 			else:
 				def_races = {}
 			races_dict = {**def_races,**user_races}
-			return ConfigObj(races_dict)
+			return ConfigObj(races_dict,encoding="utf-8")
 		except:
 			sys.excepthook(*sys.exc_info())
 			return
 
 	@property
 	def getItems(self):
-		return ConfigObj(self.items)
+		return ConfigObj(self.items,encoding="utf-8")
 	
 	@property
 	def getCats(self):
-		return ConfigObj(self.cats)			
+		return ConfigObj(self.cats,encoding="utf-8")			
 ini = InI()
 
 # =============================================================================
@@ -1804,7 +1804,7 @@ def _give_private_race(command):
 	userid = int(command[1])
 	race_name = str(command[2])
 	steamid = Player.from_userid(userid).uniqueid
-	race_dict = ConfigObj(ini.races)
+	race_dict = ConfigObj(ini.races,encoding="utf-8")
 	allowonly = race_dict[race_name]['allowonly']
 	if steamid not in allowonly:
 		if allowonly != "":
