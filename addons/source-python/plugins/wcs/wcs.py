@@ -812,7 +812,7 @@ def _ultimate_command(command, index, team=None):
 	player_entity = Player(index)
 	if int(player_entity.team) > 1 and not int(player_entity.dead):
 		value = wcsgroup.getUser(userid, 'ability')
-		if value == None:
+		if value == "None":
 			returned = checkEvent1(userid, 'player_ability')
 			if returned is not None:
 				if returned is False:
