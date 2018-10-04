@@ -101,7 +101,7 @@ def shopmenu_menu_subcats_build(menu, index):
 	menu.clear()
 	userid = userid_from_index(index)
 	section = menu.title
-	shopmenu_menu_subcats.parent_menu = shopmenu_menu_cats
+	menu.parent_menu = shopmenu_menu_cats
 	items_all = wcs.wcs.ini.getItems
 	items_all.walk(gather_subsection)
 	for item in item_names:
@@ -121,12 +121,13 @@ def shopmenu_menu_subcats_select(menu, index, choice):
 	userid = userid_from_index(index)
 	addItem(userid, choice.value)
 
-shopmenu_menu_subcats = PagedMenu(build_callback=shopmenu_menu_subcats_build, select_callback=shopmenu_menu_subcats_select)
+#shopmenu_menu_subcats = PagedMenu(build_callback=shopmenu_menu_subcats_build, select_callback=shopmenu_menu_subcats_select)
 
 			
 def doCommand1(userid, value):
 	index = index_from_userid(userid)
 	itemkeys = wcs.wcs.ini.getItems
+	shopmenu_menu_subcats = PagedMenu(build_callback=shopmenu_menu_subcats_build, select_callback=shopmenu_menu_subcats_select)
 	shopmenu_menu_subcats.title = value
 	shopmenu_menu_subcats.send(index)
 
@@ -359,7 +360,4 @@ def load():
 
 
 def unload():
-	items.clear()
-
-					
-					
+	items.clear()	
