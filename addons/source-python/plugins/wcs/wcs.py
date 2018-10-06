@@ -1594,6 +1594,8 @@ def checkEvent1(userid, event):
 							wcs_dice = ConVar('wcs_dice'+str(x))
 							wcs_dice.set_int(random.randint(0,100))
 						skill = 'skill'+str(int(index)+1)
+						skill_names = race1['skillnames'].split('|')
+						ulti_name = skill_names[int(index)]
 						cooldown = wcsgroup.getUser(userid, event+'_cooldown')
 						if cooldown is None:
 							cooldown = 0
